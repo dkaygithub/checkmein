@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prismapassword
+      POSTGRES_DB: checkmein
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://prisma:prismapassword@db:5432/checkmein?schema=public
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
