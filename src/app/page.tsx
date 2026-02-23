@@ -75,6 +75,13 @@ export default function Home() {
           >
             View Attendance
           </button>
+          <button
+            className="glass-button"
+            onClick={() => router.push('/admin')}
+            style={{ background: 'rgba(168, 85, 247, 0.2)', borderColor: 'rgba(168, 85, 247, 0.4)' }}
+          >
+            Admin Panel
+          </button>
         </div>
 
         {message && (

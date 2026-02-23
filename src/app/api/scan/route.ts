@@ -55,11 +55,36 @@ export async function POST(req: NextRequest) {
                 data: { departed: new Date() },
             });
 
+            let facilityClosed = false;
+
+            // Check if they were a keyholder
+            if (participant.keyholder) {
+                // Count how many OTHER keyholders are still in the building
+                const remainingKeyholders = await prisma.visit.count({
+                    where: {
+                        departed: null,
+                        participant: { keyholder: true }
+                    }
+                });
+
+                // If 0 remaining, close the facility
+                if (remainingKeyholders === 0) {
+                    facilityClosed = true;
+                    // Forcibly checkout all remaining attendees
+                    await prisma.visit.updateMany({
+                        where: { departed: null },
+                        data: { departed: new Date() }
+                    });
+                    console.log("Facility closed. Forcibly checked out all remaining members.");
+                }
+            }
+
             return NextResponse.json({
-                message: "Checked out successfully",
+                message: facilityClosed ? "Checked out and Facility closed" : "Checked out successfully",
                 type: "checkout",
                 participant,
                 visit: updatedVisit,
+                facilityClosed
             });
         } else {
             // User is not checked in, so we Check them In
