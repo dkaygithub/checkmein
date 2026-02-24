@@ -4,7 +4,7 @@ import { getCurrentUser, requireAdmin } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
     try {
-        const user = await getCurrentUser(req);
+        const user = await getCurrentUser();
         requireAdmin(user);
 
         // Fetch visits intentionally ordered by most recent first
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const user = await getCurrentUser(req);
+        const user = await getCurrentUser();
         requireAdmin(user);
 
         const { visitId, arrived, departed } = await req.json();
@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest) {
         // Log the manual edit in the audit trails (Phase 8 requirement preview)
         await prisma.auditLog.create({
             data: {
-                actorId: user!.id,
+                actorId: (user as any).id,
                 action: "EDIT",
                 tableName: "Visit",
                 affectedEntityId: visitId,
