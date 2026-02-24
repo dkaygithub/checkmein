@@ -100,48 +100,20 @@ export default function Home() {
                   {loading ? 'Processing...' : isCheckedIn ? 'Check Out' : 'Check In'}
                 </button>
               )}
-
-              <div style={{ display: 'flex', gap: '1rem', width: '100%', gridColumn: '1 / -1' }}>
-                <button className="glass-button" onClick={() => router.push('/attendance')} style={{ flex: 1 }}>
-                  View Attendance
-                </button>
-                <button className="glass-button" onClick={() => router.push('/profile')} style={{ flex: 1, background: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 0.4)' }}>
-                  My Profile
-                </button>
-                <button className="glass-button" onClick={() => router.push('/household')} style={{ flex: 1, background: 'rgba(168, 85, 247, 0.2)', borderColor: 'rgba(168, 85, 247, 0.4)' }}>
-                  My Household
-                </button>
-                <button className="glass-button" onClick={() => signOut()} style={{ flex: 1, background: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
-                  Sign Out
-                </button>
-              </div>
             </>
           ) : (
-            <>
+            <div style={{ textAlign: 'center', width: '100%', gridColumn: '1 / -1' }}>
+              <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+                Please sign in to access your dashboard, record attendance, and manage your account.
+              </p>
               <button
                 className="glass-button"
                 onClick={() => signIn('google')}
                 style={{ background: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 0.4)' }}
               >
-                Sign in with Google
+                Sign In To Dashboard
               </button>
-              <button
-                className="glass-button"
-                onClick={() => router.push('/attendance')}
-              >
-                View Attendance
-              </button>
-            </>
-          )}
-
-          {((session?.user as any)?.sysadmin) && (
-            <button
-              className="glass-button"
-              onClick={() => router.push('/admin')}
-              style={{ background: 'rgba(168, 85, 247, 0.2)', borderColor: 'rgba(168, 85, 247, 0.4)', gridColumn: '1 / -1' }}
-            >
-              Admin Panel
-            </button>
+            </div>
           )}
         </div>
 
