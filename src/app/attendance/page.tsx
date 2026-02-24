@@ -164,6 +164,8 @@ export default function AttendanceDashboard() {
 
     const isTwoDeepViolation = unaccompaniedMinors.length > 0 && activeAdultVisits.length < 2;
 
+    const displayResults = searchResults.filter(p => !attendance.some(v => v.participant.id === p.id));
+
     return (
         <main className={styles.main}>
             <div className="glass-container" style={{ width: "100%", maxWidth: "800px" }}>
@@ -185,14 +187,14 @@ export default function AttendanceDashboard() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        {searchResults.length > 0 && searchQuery.length >= 2 && (
+                        {displayResults.length > 0 && searchQuery.length >= 2 && (
                             <div style={{
                                 position: 'absolute', top: '100%', left: 0, right: 0,
                                 background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: '8px', marginTop: '4px', zIndex: 10,
                                 maxHeight: '200px', overflowY: 'auto'
                             }}>
-                                {searchResults.map(p => (
+                                {displayResults.map(p => (
                                     <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                         <div>
                                             <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
