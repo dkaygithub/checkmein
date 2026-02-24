@@ -49,6 +49,7 @@ model Participant {
   lastWaiverSign      DateTime?
   waiverSignedBy      Int?
   lastBackgroundCheck DateTime?
+  notificationSettings Json?
 
   householdId Int?
   household   Household? @relation(fields: [householdId], references: [id])

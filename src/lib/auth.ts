@@ -1,22 +1,13 @@
-import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 
 /**
- * Mock authentication utility for Phase 4 logic while Phase 3 (NextAuth) is skipped.
- * Replaces true Google OAuth session checking.
+ * Returns the currently authenticated NextAuth session user.
  */
-export async function getCurrentUser(req: NextRequest) {
-    // Check for a mock header or default to the sysadmin user (Participant 1)
-    const mockIdHeader = req.headers.get("x-mock-user-id");
-    const userId = mockIdHeader ? parseInt(mockIdHeader, 10) : 1;
-
-    if (isNaN(userId)) return null;
-
-    const user = await prisma.participant.findUnique({
-        where: { id: userId },
-    });
-
-    return user;
+export async function getCurrentUser() {
+    const session = await getServerSession(authOptions);
+    return session?.user || null;
 }
 
 export function requireAdmin(user: any) {
