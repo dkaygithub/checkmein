@@ -18,7 +18,8 @@ export default function ShopOpsHub() {
         );
     }
 
-    const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward || (session?.user as any)?.toolStatuses?.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
+    const isBoardOrAdmin = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+    const isAuthorized = isBoardOrAdmin || (session?.user as any)?.shopSteward || (session?.user as any)?.toolStatuses?.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
 
     if (!session || !isAuthorized) {
         router.push('/');
@@ -47,6 +48,17 @@ export default function ShopOpsHub() {
                         <strong style={{ color: '#fcd34d' }}>Tool Certifications</strong>
                         <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--color-text)' }}>Assign safety levels to members and manage shop tools.</p>
                     </button>
+
+                    {isBoardOrAdmin && (
+                        <button
+                            className="glass-button"
+                            onClick={() => router.push('/shop/tools/new')}
+                            style={{ background: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 0.4)', padding: '2rem', fontSize: '1.25rem', flexDirection: 'column' }}
+                        >
+                            <strong style={{ color: '#93c5fd' }}>Tool Registry</strong>
+                            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--color-text)' }}>Register new tools into the system.</p>
+                        </button>
+                    )}
                 </div>
             </div>
         </main>

@@ -35,11 +35,6 @@ export default function ShopToolsPage() {
     const [message, setMessage] = useState("");
     const [saving, setSaving] = useState(false);
 
-    // New Tool Form
-    const [showNewToolForm, setShowNewToolForm] = useState(false);
-    const [newToolName, setNewToolName] = useState("");
-    const [newToolGuide, setNewToolGuide] = useState("");
-
     // Search filters
     const [userSearchText, setUserSearchText] = useState("");
     const [toolSearchText, setToolSearchText] = useState("");
@@ -84,40 +79,6 @@ export default function ShopToolsPage() {
             setMessage("Network error loading shop data.");
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleCreateTool = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newToolName) return;
-
-        setSaving(true);
-        setMessage("");
-
-        try {
-            const res = await fetch('/api/shop/tools', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: newToolName,
-                    safetyGuide: newToolGuide || null
-                })
-            });
-
-            if (res.ok) {
-                setNewToolName("");
-                setNewToolGuide("");
-                setShowNewToolForm(false);
-                fetchData();
-                setMessage("Tool created successfully.");
-            } else {
-                const data = await res.json();
-                setMessage(data.error || "Failed to create tool.");
-            }
-        } catch (err) {
-            setMessage("Network error creating tool.");
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -185,14 +146,6 @@ export default function ShopToolsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>Tool Certifications</h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                        {currentUserIsBoardOrAdmin && !showNewToolForm && (
-                            <button
-                                onClick={() => setShowNewToolForm(true)}
-                                style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.9rem' }}
-                            >
-                                + Add Tool
-                            </button>
-                        )}
                         <button className="glass-button" onClick={() => router.push('/shop')} style={{ padding: '0.5rem 1rem' }}>
                             &larr; Back to Shop Ops
                         </button>
@@ -200,7 +153,7 @@ export default function ShopToolsPage() {
                 </div>
 
                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
-                    Manage tools and assign safety certification levels to members. Board Members can create tools, and Shop Stewards can assign access.
+                    Manage tools and assign safety certification levels to members. Shop Stewards and certified peers can assign access.
                 </p>
 
                 {message && (
@@ -213,45 +166,6 @@ export default function ShopToolsPage() {
                         color: message.includes('success') ? '#4ade80' : '#f87171',
                     }}>
                         {message}
-                    </div>
-                )}
-
-                {currentUserIsBoardOrAdmin && showNewToolForm && (
-                    <div style={{ marginBottom: '2rem' }}>
-                        <form onSubmit={handleCreateTool} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <h3>Add a New Shop Tool</h3>
-                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-                                <div style={{ flex: '1 1 200px' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Tool Name</label>
-                                    <input
-                                        type="text"
-                                        className="glass-input"
-                                        value={newToolName}
-                                        onChange={e => setNewToolName(e.target.value)}
-                                        required
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-                                <div style={{ flex: '2 1 300px' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Safety Guide URL (Optional)</label>
-                                    <input
-                                        type="url"
-                                        className="glass-input"
-                                        value={newToolGuide}
-                                        onChange={e => setNewToolGuide(e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-                                <button type="submit" className="glass-button" disabled={saving} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
-                                    Save Tool
-                                </button>
-                                <button type="button" className="glass-button" onClick={() => setShowNewToolForm(false)}>
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 )}
 
@@ -274,13 +188,13 @@ export default function ShopToolsPage() {
                     />
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
+                    <table style={{ minWidth: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
                             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                                <th style={{ padding: '1rem 0.5rem', minWidth: '200px' }}>User</th>
+                                <th style={{ padding: '1rem', minWidth: '200px', position: 'sticky', left: 0, backgroundColor: '#1e293b', zIndex: 10, borderRight: '1px solid rgba(255,255,255,0.1)', boxShadow: '2px 0 5px rgba(0,0,0,0.1)' }}>Member</th>
                                 {filteredTools.map(tool => (
-                                    <th key={tool.id} style={{ padding: '1rem 0.5rem', textAlign: 'center', minWidth: '150px' }}>
+                                    <th key={tool.id} style={{ padding: '1rem 0.5rem', textAlign: 'center', minWidth: '160px' }}>
                                         <div style={{ color: '#fcd34d' }}>{tool.name}</div>
                                         {tool.safetyGuide && (
                                             <a href={tool.safetyGuide} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: '#38bdf8' }}>Guide</a>
@@ -292,7 +206,7 @@ export default function ShopToolsPage() {
                         <tbody>
                             {filteredUsers.map(user => (
                                 <tr key={user.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <td style={{ padding: '1rem 0.5rem' }}>
+                                    <td style={{ padding: '1rem', position: 'sticky', left: 0, backgroundColor: '#1e293b', zIndex: 5, borderRight: '1px solid rgba(255,255,255,0.1)', boxShadow: '2px 0 5px rgba(0,0,0,0.1)' }}>
                                         <div style={{ fontWeight: 500 }}>{user.name || 'Unnamed'}</div>
                                         <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{user.email}</div>
                                     </td>
