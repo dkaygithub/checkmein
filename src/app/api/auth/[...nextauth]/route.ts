@@ -70,13 +70,24 @@ export const authOptions: NextAuthOptions = {
             // When user first logs in, stash properties from DB into the token
             if (user) {
                 const dbParticipant = await prisma.participant.findUnique({
-                    where: { email: user.email! }
+                    where: { email: user.email! },
+                    include: {
+                        toolStatuses: {
+                            select: {
+                                toolId: true,
+                                level: true
+                            }
+                        }
+                    }
                 });
 
                 if (dbParticipant) {
                     token.id = dbParticipant.id;
                     token.sysadmin = dbParticipant.sysadmin;
                     token.keyholder = dbParticipant.keyholder;
+                    token.boardMember = dbParticipant.boardMember;
+                    token.shopSteward = dbParticipant.shopSteward;
+                    token.toolStatuses = dbParticipant.toolStatuses;
                 }
             }
             return token;
@@ -87,6 +98,9 @@ export const authOptions: NextAuthOptions = {
                 (session.user as any).id = token.id;
                 (session.user as any).sysadmin = token.sysadmin;
                 (session.user as any).keyholder = token.keyholder;
+                (session.user as any).boardMember = token.boardMember;
+                (session.user as any).shopSteward = token.shopSteward;
+                (session.user as any).toolStatuses = token.toolStatuses || [];
             }
             return session;
         }

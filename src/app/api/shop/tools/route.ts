@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
     const session = await getServerSession(authOptions);
-    const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward;
+    const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward || (session?.user as any)?.toolStatuses?.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
 
     if (!session || !isAuthorized) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -80,11 +80,6 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
     const session = await getServerSession(authOptions);
-    const canAssignLevels = (session?.user as any)?.sysadmin || (session?.user as any)?.shopSteward;
-
-    if (!session || !canAssignLevels) {
-        return NextResponse.json({ error: "Forbidden: Only Admin or Shop Stewards can assign tool access" }, { status: 403 });
-    }
 
     try {
         const body = await req.json();
@@ -92,6 +87,13 @@ export async function PATCH(req: Request) {
 
         if (!targetUserId || !toolId || !level) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        const isSysadminOrSteward = (session?.user as any)?.sysadmin || (session?.user as any)?.shopSteward;
+        const isCertifierForTool = (session?.user as any)?.toolStatuses?.some((ts: any) => ts.toolId === toolId && ts.level === 'MAY_CERTIFY_OTHERS');
+
+        if (!session || (!isSysadminOrSteward && !isCertifierForTool)) {
+            return NextResponse.json({ error: "Forbidden: Not authorized to assign levels for this tool" }, { status: 403 });
         }
 
         if (level === "NONE") {

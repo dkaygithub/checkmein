@@ -18,7 +18,7 @@ export default function ShopOpsHub() {
         );
     }
 
-    const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward;
+    const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward || (session?.user as any)?.toolStatuses?.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
 
     if (!session || !isAuthorized) {
         router.push('/');
