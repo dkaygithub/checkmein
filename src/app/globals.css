@@ -1,16 +1,20 @@
 :root {
   /* Elegant Color Palette */
-  --color-bg-base: #0f172a;      /* Deep modern slate background */
-  --color-bg-accent: #1e293b;    /* Slightly lighter slate */
-  
-  --color-primary: #3b82f6;      /* Vibrant Blue */
+  --color-bg-base: #0f172a;
+  /* Deep modern slate background */
+  --color-bg-accent: #1e293b;
+  /* Slightly lighter slate */
+
+  --color-primary: #3b82f6;
+  /* Vibrant Blue */
   --color-primary-glow: rgba(59, 130, 246, 0.5);
-  
+
   --color-text-main: #f8fafc;
   --color-text-muted: #94a3b8;
 
   /* Glassmorphism Variables */
-  --glass-bg: rgba(255, 255, 255, 0.05); /* Translucent */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  /* Translucent */
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-border-highlight: rgba(255, 255, 255, 0.2);
   --glass-blur: blur(12px);
@@ -20,7 +24,8 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: var(--font-body);
@@ -28,7 +33,7 @@ html, body {
   color: var(--color-text-main);
   min-height: 100vh;
   /* Add a subtle elegant background gradient mesh */
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
   background-attachment: fixed;
@@ -39,7 +44,8 @@ html, body {
 .glass-container {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur); /* Safari support */
+  -webkit-backdrop-filter: var(--glass-blur);
+  /* Safari support */
   border: 1px solid var(--glass-border);
   border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow);
@@ -68,6 +74,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .glass-button:hover {
@@ -79,9 +86,17 @@ html, body {
 
 /* Micro-animations */
 @keyframes subtly-float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .animate-float {

@@ -199,7 +199,7 @@ export default function HouseholdPage() {
     return (
         <main className={styles.main}>
             <div className={`glass-container animate-float ${styles.heroContainer}`} style={{ maxWidth: '800px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>
                         {household?.name ? household.name : 'My Household'}
                     </h1>

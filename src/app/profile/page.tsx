@@ -105,7 +105,7 @@ export default function ProfilePage() {
     return (
         <main className={styles.main}>
             <div className={`glass-container animate-float ${styles.heroContainer}`} style={{ maxWidth: '600px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>My Profile</h1>
                     <button className="glass-button" onClick={() => router.push('/')} style={{ padding: '0.5rem 1rem' }}>
                         &larr; Back
@@ -228,7 +228,9 @@ export default function ProfilePage() {
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                flexWrap: 'wrap',
+                                gap: '1rem'
                             }}>
                                 <div>
                                     <strong style={{ display: 'block' }}>{v.event?.name || 'General Facility Visit'}</strong>

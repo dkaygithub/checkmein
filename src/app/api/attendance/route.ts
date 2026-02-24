@@ -17,6 +17,11 @@ export async function GET() {
                         keyholder: true,
                         sysadmin: true,
                         dob: true,
+                        toolStatuses: {
+                            include: {
+                                tool: true
+                            }
+                        }
                     },
                 },
             },

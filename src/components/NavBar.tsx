@@ -41,6 +41,11 @@ export default function NavBar() {
                             My Household
                         </Link>
                     )}
+                    {((session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward) && (
+                        <Link href="/shop" style={{ color: pathname === '/shop' ? '#fcd34d' : 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 'bold' }}>
+                            Shop Ops
+                        </Link>
+                    )}
                     {((session?.user as any)?.sysadmin) && (
                         <Link href="/admin" style={{ color: pathname === '/admin' ? '#f87171' : 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 'bold' }}>
                             Admin Ops

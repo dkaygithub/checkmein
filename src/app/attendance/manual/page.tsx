@@ -43,7 +43,7 @@ export default function ManualAttendance() {
     return (
         <main className={styles.main}>
             <div className="glass-container" style={{ width: "100%", maxWidth: "600px", margin: "0 auto" }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ margin: 0 }}>Manual Time Entry</h1>
                     <button
                         onClick={() => router.push("/attendance")}

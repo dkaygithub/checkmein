@@ -9,6 +9,10 @@ type Participant = {
     keyholder: boolean;
     sysadmin: boolean;
     dob?: string | null;
+    toolStatuses?: {
+        tool: { name: string };
+        level: string;
+    }[];
 };
 
 const isMinor = (dob: string | undefined | null) => {
@@ -151,6 +155,23 @@ export default function AttendanceDashboard() {
                                             Minor
                                         </span>
                                     )}
+                                    {visit.participant.toolStatuses?.filter(ts => ts.level && ts.level !== 'NONE').map((ts, idx) => (
+                                        <span
+                                            key={idx}
+                                            style={{
+                                                marginLeft: "8px",
+                                                fontSize: "0.75rem",
+                                                background: "rgba(245, 158, 11, 0.2)",
+                                                color: "#fcd34d",
+                                                padding: "2px 8px",
+                                                borderRadius: "4px",
+                                                border: "1px solid rgba(245, 158, 11, 0.4)"
+                                            }}
+                                            title={`Level: ${ts.level}`}
+                                        >
+                                            {ts.tool.name}
+                                        </span>
+                                    ))}
                                 </div>
                                 <div style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
                                     Arrived: {new Date(visit.arrived).toLocaleTimeString()}
