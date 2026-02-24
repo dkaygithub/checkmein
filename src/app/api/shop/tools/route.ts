@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 
         await prisma.auditLog.create({
             data: {
-                userId: (session.user as any).id,
+                participantId: (session.user as any).id,
                 action: 'CREATE',
                 targetType: 'TOOL',
                 targetId: newTool.id,
@@ -100,7 +100,7 @@ export async function PATCH(req: Request) {
             // Delete the certification relation entirely
             await prisma.toolStatus.deleteMany({
                 where: {
-                    userId: targetUserId,
+                    participantId: targetUserId,
                     toolId: toolId
                 }
             });
@@ -109,7 +109,7 @@ export async function PATCH(req: Request) {
             await prisma.toolStatus.upsert({
                 where: {
                     userId_toolId: {
-                        userId: targetUserId,
+                        participantId: targetUserId,
                         toolId: toolId
                     }
                 },
@@ -117,7 +117,7 @@ export async function PATCH(req: Request) {
                     level: level as any
                 },
                 create: {
-                    userId: targetUserId,
+                    participantId: targetUserId,
                     toolId: toolId,
                     level: level as any
                 }
@@ -126,7 +126,7 @@ export async function PATCH(req: Request) {
 
         await prisma.auditLog.create({
             data: {
-                userId: (session.user as any).id,
+                participantId: (session.user as any).id,
                 action: 'EDIT',
                 targetType: 'TOOL_STATUS',
                 targetId: targetUserId,

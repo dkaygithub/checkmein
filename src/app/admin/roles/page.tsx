@@ -23,6 +23,7 @@ export default function RoleAssignmentPage() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [savingId, setSavingId] = useState<number | null>(null);
+    const [userSearchText, setUserSearchText] = useState("");
 
     const currentUserIsSysadmin = (session?.user as any)?.sysadmin || false;
 
@@ -98,6 +99,11 @@ export default function RoleAssignmentPage() {
 
     if (!session) return null;
 
+    const filteredUsers = users.filter(u =>
+    (u.name?.toLowerCase().includes(userSearchText.toLowerCase()) ||
+        u.email.toLowerCase().includes(userSearchText.toLowerCase()))
+    );
+
     return (
         <main className={styles.main}>
             <div className={`glass-container animate-float ${styles.heroContainer}`} style={{ maxWidth: '1000px', width: '100%' }}>
@@ -125,6 +131,17 @@ export default function RoleAssignmentPage() {
                     </div>
                 )}
 
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <input
+                        type="text"
+                        placeholder="Search users by name or email..."
+                        className="glass-input"
+                        style={{ width: '100%', maxWidth: '400px', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                        value={userSearchText}
+                        onChange={e => setUserSearchText(e.target.value)}
+                    />
+                </div>
+
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
@@ -137,7 +154,7 @@ export default function RoleAssignmentPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map(user => (
+                            {filteredUsers.map(user => (
                                 <tr key={user.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                     <td style={{ padding: '1rem 0.5rem' }}>
                                         <div style={{ fontWeight: 500 }}>{user.name || 'Unnamed'}</div>
