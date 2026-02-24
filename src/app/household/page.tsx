@@ -24,6 +24,19 @@ export default function HouseholdPage() {
         dob: ""
     });
 
+    const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+    const [editForm, setEditForm] = useState({
+        name: "",
+        email: "",
+        dob: ""
+    });
+
+    const [visits, setVisits] = useState<any[]>([]);
+    const [settings, setSettings] = useState({
+        emailDependentCheckins: false
+    });
+    const [savingSettings, setSavingSettings] = useState(false);
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push('/');
@@ -34,15 +47,59 @@ export default function HouseholdPage() {
 
     const fetchHousehold = async () => {
         try {
-            const res = await fetch('/api/household');
+            const [res, visitRes, profileRes] = await Promise.all([
+                fetch('/api/household'),
+                fetch('/api/household/visits'),
+                fetch('/api/profile')
+            ]);
             if (res.ok) {
                 const data = await res.json();
                 setHousehold(data.household);
+            }
+            if (visitRes.ok) {
+                const data = await visitRes.json();
+                setVisits(data.visits || []);
+            }
+            if (profileRes.ok) {
+                const data = await profileRes.json();
+                setSettings({
+                    emailDependentCheckins: data.profile.notificationSettings?.emailDependentCheckins || false
+                });
             }
         } catch (error) {
             setMessage("Network error loading household.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        setSavingSettings(true);
+        try {
+            // Fetch current settings to merge
+            const profileRes = await fetch('/api/profile');
+            const profileData = await profileRes.json();
+            const currentSettings = profileData.profile?.notificationSettings || {};
+
+            const res = await fetch('/api/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    notificationSettings: {
+                        ...currentSettings,
+                        emailDependentCheckins: settings.emailDependentCheckins
+                    }
+                })
+            });
+            if (res.ok) {
+                setMessage("Settings updated successfully!");
+            } else {
+                setMessage("Failed to update settings.");
+            }
+        } catch (error) {
+            setMessage("Network error saving settings.");
+        } finally {
+            setSavingSettings(false);
         }
     };
 
@@ -96,6 +153,34 @@ export default function HouseholdPage() {
             }
         } catch (error) {
             setMessage("Network error adding member.");
+        }
+    };
+
+    const handleEditMember = async (e: React.FormEvent, participantId: number) => {
+        e.preventDefault();
+        setMessage("");
+        try {
+            const res = await fetch('/api/household/member', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    participantId,
+                    name: editForm.name,
+                    email: editForm.email,
+                    dob: editForm.dob
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setMessage("Member updated successfully!");
+                setEditingMemberId(null);
+                fetchHousehold();
+            } else {
+                setMessage(data.error || "Failed to update member.");
+            }
+        } catch (error) {
+            setMessage("Network error updating member.");
         }
     };
 
@@ -181,20 +266,77 @@ export default function HouseholdPage() {
                                         padding: '1.5rem',
                                         background: 'rgba(255,255,255,0.05)',
                                         borderRadius: '12px',
-                                        border: '1px solid rgba(255,255,255,0.1)'
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        position: 'relative'
                                     }}>
-                                        <h3 style={{ margin: '0 0 0.5rem 0' }}>{p.name || "Unnamed"}</h3>
-                                        <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{p.email}</p>
-                                        {household.leads?.some((l: any) => l.participantId === p.id) && (
-                                            <span style={{
-                                                display: 'inline-block',
-                                                marginTop: '0.5rem',
-                                                background: 'rgba(168, 85, 247, 0.2)',
-                                                color: '#c084fc',
-                                                padding: '2px 8px',
-                                                borderRadius: '12px',
-                                                fontSize: '0.75rem'
-                                            }}>Household Lead</span>
+                                        {editingMemberId === p.id ? (
+                                            <form onSubmit={(e) => handleEditMember(e, p.id)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', textAlign: 'left' }}>
+                                                <input
+                                                    type="text"
+                                                    className="glass-input"
+                                                    value={editForm.name}
+                                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                                    placeholder="Name"
+                                                    style={{ padding: '0.5rem' }}
+                                                    required
+                                                />
+                                                <input
+                                                    type="email"
+                                                    className="glass-input"
+                                                    value={editForm.email}
+                                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                                    placeholder="Email"
+                                                    style={{ padding: '0.5rem' }}
+                                                />
+                                                <input
+                                                    type="date"
+                                                    className="glass-input"
+                                                    value={editForm.dob}
+                                                    onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })}
+                                                    style={{ padding: '0.5rem' }}
+                                                />
+                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                    <button type="submit" style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.4)', cursor: 'pointer' }}>Save</button>
+                                                    <button type="button" onClick={() => setEditingMemberId(null)} style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', cursor: 'pointer' }}>Cancel</button>
+                                                </div>
+                                            </form>
+                                        ) : (
+                                            <>
+                                                <h3 style={{ margin: '0 0 0.5rem 0' }}>{p.name || "Unnamed"}</h3>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{p.email}</p>
+                                                {household.leads?.some((l: any) => l.participantId === p.id) && (
+                                                    <span style={{
+                                                        display: 'inline-block',
+                                                        marginTop: '0.5rem',
+                                                        background: 'rgba(168, 85, 247, 0.2)',
+                                                        color: '#c084fc',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.75rem'
+                                                    }}>Household Lead</span>
+                                                )}
+                                                {household.leads?.some((l: any) => l.participantId === (session?.user as any)?.id) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingMemberId(p.id);
+                                                            setEditForm({ name: p.name || "", email: p.email || "", dob: p.dob ? new Date(p.dob).toISOString().split('T')[0] : "" });
+                                                        }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: '1rem',
+                                                            right: '1rem',
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            color: '#9ca3af',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.875rem',
+                                                            textDecoration: 'underline'
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 ))}
@@ -259,6 +401,68 @@ export default function HouseholdPage() {
                     </div>
                 )}
             </div>
+
+            {household && household.leads?.some((l: any) => l.participantId === (session?.user as any)?.id) && (
+                <div className="glass-container animate-float" style={{ maxWidth: '800px', marginTop: '2rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Household Settings</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'left' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={settings.emailDependentCheckins}
+                                onChange={(e) => setSettings({ ...settings, emailDependentCheckins: e.target.checked })}
+                                style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                            />
+                            <span style={{ color: 'var(--color-text)' }}>Email me realtime receipts when my dependents check in/out</span>
+                        </label>
+                    </div>
+                    <button
+                        onClick={handleSaveSettings}
+                        className="glass-button"
+                        disabled={savingSettings}
+                        style={{ marginTop: '1.5rem', width: '100%', background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
+                        {savingSettings ? 'Saving...' : 'Update Household Settings'}
+                    </button>
+                </div>
+            )}
+
+            {household && (
+                <div className="glass-container animate-float" style={{ maxWidth: '800px', marginTop: '2rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Household Check-ins</h2>
+                    {visits.length === 0 ? (
+                        <p style={{ color: 'var(--color-text-muted)' }}>No historical visits found for your household.</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left' }}>
+                            {visits.map((v) => (
+                                <div key={v.id} style={{
+                                    padding: '1rem',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <div>
+                                        <strong style={{ display: 'block', color: 'var(--color-primary)' }}>{v.participant?.name || 'Unnamed Member'}</strong>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>{v.event?.name || 'General Facility Visit'} </span>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+                                            &bull; {new Date(v.arrived).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div style={{ textAlign: 'right', fontSize: '0.9rem' }}>
+                                        {v.departed ? (
+                                            <span style={{ color: '#4ade80' }}>Departed {new Date(v.departed).toLocaleTimeString()}</span>
+                                        ) : (
+                                            <span style={{ color: '#fbbf24' }}>Active Visit</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </main>
     );
 }

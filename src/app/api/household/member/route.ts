@@ -1,0 +1,62 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
+export async function PATCH(req: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user || !(session.user as any).id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = (session.user as any).id;
+        const body = await req.json();
+        const { participantId, name, email, dob } = body;
+
+        if (!participantId) {
+            return NextResponse.json({ error: "Participant ID is required" }, { status: 400 });
+        }
+
+        const user = await prisma.participant.findUnique({ where: { id: userId }, include: { householdLeads: true } });
+
+        if (!user?.householdId) {
+            return NextResponse.json({ error: "You must create a household first" }, { status: 400 });
+        }
+
+        const isLead = user.householdLeads.some(lead => lead.householdId === user.householdId);
+        if (!isLead && !user.sysadmin) {
+            return NextResponse.json({ error: "Only household leads can edit members" }, { status: 403 });
+        }
+
+        const targetMember = await prisma.participant.findUnique({ where: { id: participantId } });
+        if (!targetMember || targetMember.householdId !== user.householdId) {
+            return NextResponse.json({ error: "Member not found in your household" }, { status: 404 });
+        }
+
+        const updatedMember = await prisma.participant.update({
+            where: { id: participantId },
+            data: {
+                name: name !== undefined ? name : undefined,
+                email: email ? email.toLowerCase() : targetMember.email, // Don't wipe out email entirely if passed empty string optionally, actually let's allow it if it's a dependent without login. But for safety, keep it simple.
+                dob: dob ? new Date(dob) : targetMember.dob,
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                actorId: userId,
+                action: "EDIT",
+                tableName: "Participant",
+                affectedEntityId: targetMember.id,
+                newData: JSON.stringify(updatedMember)
+            }
+        });
+
+        return NextResponse.json({ member: updatedMember, message: "Member updated successfully." }, { status: 200 });
+
+    } catch (error: any) {
+        console.error("Household Member PATCH Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
