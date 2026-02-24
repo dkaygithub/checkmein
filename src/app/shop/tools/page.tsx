@@ -188,7 +188,7 @@ export default function ShopToolsPage() {
                     />
                 </div>
 
-                <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
+                <div style={{ width: '100%', overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
                     <table style={{ minWidth: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
                             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
