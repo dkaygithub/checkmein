@@ -260,7 +260,7 @@ export default function ShopToolsPage() {
                         type="text"
                         placeholder="Search users by name or email..."
                         className="glass-input"
-                        style={{ flex: '1 1 250px', padding: '0.75rem', background: 'rgba(0,0,0,0.2)' }}
+                        style={{ flex: '1 1 250px', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                         value={userSearchText}
                         onChange={e => setUserSearchText(e.target.value)}
                     />
@@ -268,7 +268,7 @@ export default function ShopToolsPage() {
                         type="text"
                         placeholder="Search tools..."
                         className="glass-input"
-                        style={{ flex: '1 1 250px', padding: '0.75rem', background: 'rgba(0,0,0,0.2)' }}
+                        style={{ flex: '1 1 250px', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                         value={toolSearchText}
                         onChange={e => setToolSearchText(e.target.value)}
                     />
