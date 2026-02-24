@@ -8,6 +8,19 @@ type Participant = {
     email: string;
     keyholder: boolean;
     sysadmin: boolean;
+    dob?: string | null;
+};
+
+const isMinor = (dob: string | undefined | null) => {
+    if (!dob) return false;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age < 18;
 };
 
 type Visit = {
@@ -42,6 +55,8 @@ export default function AttendanceDashboard() {
     }, []);
 
     const keyholdersPresent = attendance.filter((v) => v.participant.keyholder).length;
+    const minorsPresent = attendance.filter((v) => isMinor(v.participant.dob)).length;
+    const adultsPresent = attendance.filter((v) => !isMinor(v.participant.dob)).length;
 
     return (
         <main className={styles.main}>
@@ -50,11 +65,26 @@ export default function AttendanceDashboard() {
                     <h1 className="text-gradient" style={{ margin: 0 }}>Current Attendance</h1>
                     <div style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                        {attendance.length} People Present
+                        <span title={`${minorsPresent} Minors Present`}>{attendance.length} People Present</span>
                     </div>
                 </div>
 
-                {keyholdersPresent === 1 && (
+                {minorsPresent > 0 && adultsPresent < 2 ? (
+                    <div style={{
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid rgba(239, 68, 68, 0.5)',
+                        color: '#fca5a5',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        marginBottom: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                    }}>
+                        <span>🚨</span>
+                        <strong>Critical Warning:</strong> Two-Deep Compliance is failing! There are {minorsPresent} minors present, but only {adultsPresent} adult(s) in the building.
+                    </div>
+                ) : keyholdersPresent === 1 && (
                     <div style={{
                         background: 'rgba(245, 158, 11, 0.2)',
                         border: '1px solid rgba(245, 158, 11, 0.5)',
@@ -105,6 +135,20 @@ export default function AttendanceDashboard() {
                                             }}
                                         >
                                             Keyholder
+                                        </span>
+                                    )}
+                                    {isMinor(visit.participant.dob) && (
+                                        <span
+                                            style={{
+                                                marginLeft: "8px",
+                                                fontSize: "0.75rem",
+                                                background: "rgba(168, 85, 247, 0.2)",
+                                                color: "#c084fc",
+                                                padding: "2px 8px",
+                                                borderRadius: "12px",
+                                            }}
+                                        >
+                                            Minor
                                         </span>
                                     )}
                                 </div>

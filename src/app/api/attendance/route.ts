@@ -16,6 +16,7 @@ export async function GET() {
                         email: true,
                         keyholder: true,
                         sysadmin: true,
+                        dob: true,
                     },
                 },
             },

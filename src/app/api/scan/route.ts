@@ -88,6 +88,24 @@ export async function POST(req: NextRequest) {
             });
         } else {
             // User is not checked in, so we Check them In
+
+            // Phase 2: Check if facility is open (i.e. at least 1 keyholder present)
+            if (!participant.keyholder) {
+                const activeKeyholders = await prisma.visit.count({
+                    where: {
+                        departed: null,
+                        participant: { keyholder: true }
+                    }
+                });
+
+                if (activeKeyholders === 0) {
+                    return NextResponse.json(
+                        { error: "Facility is closed. A Keyholder must check in first." },
+                        { status: 403 }
+                    );
+                }
+            }
+
             const newVisit = await prisma.visit.create({
                 data: {
                     participantId: participant.id,
