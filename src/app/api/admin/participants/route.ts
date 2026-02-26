@@ -73,6 +73,27 @@ export async function POST(req: Request) {
             }
         });
 
+        // If this is a lone adult (no parent email provided), create them their own household and make them lead
+        if (!parentEmail) {
+            const newHousehold = await prisma.household.create({
+                data: {
+                    name: `${name ? name.split(' ').pop() : 'Lone'} Household`,
+                }
+            });
+
+            await prisma.participant.update({
+                where: { id: newParticipant.id },
+                data: { householdId: newHousehold.id }
+            });
+
+            await prisma.householdLead.create({
+                data: {
+                    householdId: newHousehold.id,
+                    participantId: newParticipant.id
+                }
+            });
+        }
+
         return NextResponse.json({ success: true, participant: newParticipant });
     } catch (error: any) {
         console.error("Failed to create participant:", error);

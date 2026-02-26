@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import styles from '../../../page.module.css';
+import styles from '../../page.module.css';
 
 export default function AdminHouseholdsPage() {
     const { data: session, status } = useSession();

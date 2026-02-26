@@ -64,7 +64,7 @@ describe('AuditLog Integration Tests', () => {
     });
 
     it('should generate an AuditLog when a Program is created', async () => {
-        const req = new Request('http://localhost:3000/api/programs', {
+        const req = new Request('http://localhost:4000/api/programs', {
             method: 'POST',
             body: JSON.stringify({ name: 'Audit Test Program', begin: new Date() })
         });
@@ -91,7 +91,7 @@ describe('AuditLog Integration Tests', () => {
     });
 
     it('should generate an AuditLog when Program Settings are updated', async () => {
-        const req = new Request(`http://localhost:3000/api/programs/${testProgramId}/settings`, {
+        const req = new Request(`http://localhost:4000/api/programs/${testProgramId}/settings`, {
             method: 'PATCH',
             body: JSON.stringify({ leadMentorNotificationSettings: { notifyRsvp: true } })
         });
@@ -116,7 +116,7 @@ describe('AuditLog Integration Tests', () => {
     });
 
     it('should generate an AuditLog when an Admin enrolls a participant', async () => {
-        const req = new Request(`http://localhost:3000/api/programs/${testProgramId}/participants`, {
+        const req = new Request(`http://localhost:4000/api/programs/${testProgramId}/participants`, {
             method: 'POST',
             body: JSON.stringify({ participantId: testParticipantId })
         });
@@ -151,7 +151,7 @@ describe('AuditLog Integration Tests', () => {
         });
         testVisitId = visit.id;
 
-        const req = new Request(`http://localhost:3000/api/events/${testEventId}/attendance`, {
+        const req = new Request(`http://localhost:4000/api/events/${testEventId}/attendance`, {
             method: 'POST',
             body: JSON.stringify({ participantIds: [testParticipantId] })
         });
