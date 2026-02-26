@@ -61,9 +61,7 @@ export default function ToolManagementPage() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
 
-    // Create Tool Form (Admin only)
-    const [newToolName, setNewToolName] = useState("");
-    const [newToolGuide, setNewToolGuide] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -171,31 +169,9 @@ export default function ToolManagementPage() {
         }
     };
 
-    const handleCreateTool = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSaving(true);
-        setMessage("");
-
-        try {
-            const res = await fetch('/api/shop/tools', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newToolName, safetyGuide: newToolGuide })
-            });
-
-            if (res.ok) {
-                setMessage("New tool added.");
-                setNewToolName("");
-                setNewToolGuide("");
-                fetchTools();
-            } else {
-                const data = await res.json();
-                setMessage(data.error || "Failed to create tool.");
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
+    const filteredTools = tools.filter(tool =>
+        tool.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const getBadgeStyle = (level: string) => {
         switch (level) {
@@ -207,7 +183,7 @@ export default function ToolManagementPage() {
         }
     };
 
-    const isAdmin = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+
 
     if (loading || status === "loading") {
         return <main className={styles.main}><div className="glass-container animate-float"><h2>Loading...</h2></div></main>;
@@ -234,44 +210,45 @@ export default function ToolManagementPage() {
                     {/* Left Sidebar */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                         <div>
-                            <h3 style={{ marginBottom: '1rem' }}>Select Tool</h3>
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {tools.map(tool => (
-                                    <li key={tool.id}>
-                                        <button
-                                            onClick={() => setSelectedToolId(tool.id)}
-                                            style={{
-                                                width: '100%',
-                                                textAlign: 'left',
-                                                padding: '0.75rem 1rem',
-                                                borderRadius: '8px',
-                                                border: '1px solid',
-                                                borderColor: selectedToolId === tool.id ? '#38bdf8' : 'rgba(255,255,255,0.1)',
-                                                background: selectedToolId === tool.id ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255,255,255,0.05)',
-                                                color: selectedToolId === tool.id ? '#fff' : 'var(--color-text-muted)',
-                                                cursor: 'pointer',
-                                                fontWeight: selectedToolId === tool.id ? 600 : 400,
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {tool.name}
-                                        </button>
-                                    </li>
-                                ))}
-                                {tools.length === 0 && <p style={{ color: 'gray' }}>No tools defined.</p>}
-                            </ul>
-                        </div>
-
-                        {isAdmin && (
-                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <h4 style={{ margin: '0 0 1rem 0' }}>+ Register New Tool</h4>
-                                <form onSubmit={handleCreateTool} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <input type="text" className="glass-input" placeholder="Tool Name" required value={newToolName} onChange={e => setNewToolName(e.target.value)} />
-                                    <input type="url" className="glass-input" placeholder="Safety Guide URL (Optional)" value={newToolGuide} onChange={e => setNewToolGuide(e.target.value)} />
-                                    <button type="submit" className="glass-button" disabled={saving} style={{ marginTop: '0.5rem', padding: '0.5rem', fontSize: '0.9rem' }}>Add Tool</button>
-                                </form>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <h3 style={{ marginBottom: '0.5rem' }}>Select Tool</h3>
+                                <input
+                                    type="text"
+                                    className="glass-input"
+                                    placeholder="Search tools..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    style={{ width: '100%', padding: '0.75rem' }}
+                                />
                             </div>
-                        )}
+                            <div style={{ maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {filteredTools.map(tool => (
+                                        <li key={tool.id}>
+                                            <button
+                                                onClick={() => setSelectedToolId(tool.id)}
+                                                style={{
+                                                    width: '100%',
+                                                    textAlign: 'left',
+                                                    padding: '0.75rem 1rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid',
+                                                    borderColor: selectedToolId === tool.id ? '#38bdf8' : 'rgba(255,255,255,0.1)',
+                                                    background: selectedToolId === tool.id ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                    color: selectedToolId === tool.id ? '#fff' : 'var(--color-text-muted)',
+                                                    cursor: 'pointer',
+                                                    fontWeight: selectedToolId === tool.id ? 600 : 400,
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                {tool.name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                    {filteredTools.length === 0 && <p style={{ color: 'gray' }}>No tools match your search.</p>}
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Content Area */}
