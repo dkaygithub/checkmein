@@ -12,16 +12,52 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [isCheckedIn, setIsCheckedIn] = useState<boolean | null>(null);
 
+  const [isLastKeyholder, setIsLastKeyholder] = useState(false);
+  const [isTwoDeepViolation, setIsTwoDeepViolation] = useState(false);
+
   const checkAttendanceStatus = useCallback(async () => {
     if (!session?.user) return;
     try {
       const res = await fetch('/api/attendance');
       const data = await res.json();
       const currentUserId = (session.user as any).id;
-      const userActiveVisit = data.attendance?.find(
+
+      const attendanceList = data.attendance || [];
+      const userActiveVisit = attendanceList.find(
         (visit: any) => visit.participant.id === currentUserId
       );
       setIsCheckedIn(!!userActiveVisit);
+
+      // Analyze safety status if user is checked in
+      if (userActiveVisit) {
+        const keyholdersPresent = attendanceList.filter((v: any) => v.participant.keyholder).length;
+        setIsLastKeyholder(userActiveVisit.participant.keyholder && keyholdersPresent === 1);
+
+        const isMinor = (dob: string | undefined | null) => {
+          if (!dob) return false;
+          const birthDate = new Date(dob);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+          return age < 18;
+        };
+
+        const activeAdultVisits = attendanceList.filter((v: any) => !isMinor(v.participant.dob));
+        const activeMinorVisits = attendanceList.filter((v: any) => isMinor(v.participant.dob));
+
+        const unaccompaniedMinors = activeMinorVisits.filter((minorVisit: any) => {
+          if (!minorVisit.participant.householdId) return true;
+          return !activeAdultVisits.some(
+            (adultVisit: any) => adultVisit.participant.householdId === minorVisit.participant.householdId
+          );
+        });
+
+        setIsTwoDeepViolation(unaccompaniedMinors.length > 0 && activeAdultVisits.length < 2);
+      } else {
+        setIsLastKeyholder(false);
+        setIsTwoDeepViolation(false);
+      }
     } catch (err) {
       console.error("Failed to fetch attendance status", err);
     }
@@ -80,6 +116,20 @@ export default function Home() {
                   )}
                 </div>
               </div>
+
+              {/* Operational Warnings */}
+              {isTwoDeepViolation && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.5)', color: '#fca5a5', padding: '1rem', borderRadius: '8px', width: '100%', gridColumn: '1 / -1', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <span>🚨</span>
+                  <div><strong>Critical Warning:</strong> Two-Deep Compliance is failing. An unaccompanied minor is present without sufficient adult supervision.</div>
+                </div>
+              )}
+              {isLastKeyholder && (
+                <div style={{ background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.5)', color: '#fcd34d', padding: '1rem', borderRadius: '8px', width: '100%', gridColumn: '1 / -1', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <span>⚠️</span>
+                  <div><strong>You are the last Keyholder present.</strong><br />If you check out now, the facility will be marked as Closed and all remaining occupants will be forcibly checked out.</div>
+                </div>
+              )}
 
               {/* Check-in Toggle Button */}
               {isCheckedIn !== null && (

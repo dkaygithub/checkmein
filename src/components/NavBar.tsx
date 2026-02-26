@@ -41,6 +41,9 @@ export default function NavBar() {
                             My Household
                         </Link>
                     )}
+                    <Link href="/programs" style={{ color: pathname === '/programs' ? 'white' : 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 'bold' }}>
+                        Programs
+                    </Link>
                     {((session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward || (session?.user as any)?.toolStatuses?.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS')) && (
                         <Link href="/shop" style={{ color: pathname === '/shop' ? '#fcd34d' : 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 'bold' }}>
                             Shop Ops

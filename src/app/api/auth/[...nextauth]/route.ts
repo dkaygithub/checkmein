@@ -53,7 +53,7 @@ export const authOptions: NextAuthOptions = {
                     }
 
                     return {
-                        id: dbParticipant.id,
+                        id: dbParticipant.id.toString(),
                         email: dbParticipant.email,
                         name: dbParticipant.name,
                     };

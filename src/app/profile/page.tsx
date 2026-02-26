@@ -19,7 +19,9 @@ export default function ProfilePage() {
         dob: "",
         homeAddress: "",
         emailCheckinReceipts: false,
-        emailNewsletter: false
+        emailNewsletter: false,
+        notifyNewPrograms: true,
+        notifyEventReminders: true
     });
     const [visits, setVisits] = useState<any[]>([]);
 
@@ -43,7 +45,9 @@ export default function ProfilePage() {
                     dob: data.profile.dob ? new Date(data.profile.dob).toISOString().split('T')[0] : "",
                     homeAddress: data.profile.homeAddress || "",
                     emailCheckinReceipts: settings.emailCheckinReceipts || false,
-                    emailNewsletter: settings.emailNewsletter || false
+                    emailNewsletter: settings.emailNewsletter || false,
+                    notifyNewPrograms: settings.notifyNewPrograms !== undefined ? settings.notifyNewPrograms : true,
+                    notifyEventReminders: settings.notifyEventReminders !== undefined ? settings.notifyEventReminders : true
                 });
                 setVisits(data.profile.visits || []);
             } else {
@@ -71,7 +75,9 @@ export default function ProfilePage() {
                     homeAddress: form.homeAddress,
                     notificationSettings: {
                         emailCheckinReceipts: form.emailCheckinReceipts,
-                        emailNewsletter: form.emailNewsletter
+                        emailNewsletter: form.emailNewsletter,
+                        notifyNewPrograms: form.notifyNewPrograms,
+                        notifyEventReminders: form.notifyEventReminders
                     }
                 })
             });
@@ -203,6 +209,24 @@ export default function ProfilePage() {
                             style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
                         />
                         <span style={{ color: 'var(--color-text)' }}>Subscribe to the weekly newsletter</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            checked={form.notifyNewPrograms}
+                            onChange={(e) => setForm({ ...form, notifyNewPrograms: e.target.checked })}
+                            style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: 'var(--color-text)' }}>Notify me when a new program is announced</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            checked={form.notifyEventReminders}
+                            onChange={(e) => setForm({ ...form, notifyEventReminders: e.target.checked })}
+                            style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: 'var(--color-text)' }}>Notify me before my events start</span>
                     </label>
                 </div>
                 <button

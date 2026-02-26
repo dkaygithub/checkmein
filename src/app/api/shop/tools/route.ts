@@ -3,47 +3,41 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
-    const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember || (session?.user as any)?.shopSteward || (session?.user as any)?.toolStatuses?.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
 
-    if (!session || !isAuthorized) {
+    if (!session) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
         const tools = await prisma.tool.findMany({
-            orderBy: { name: 'asc' }
-        });
-
-        const participants = await prisma.participant.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                toolStatuses: {
-                    select: {
-                        toolId: true,
-                        level: true
-                    }
+            orderBy: { name: 'asc' },
+            include: {
+                _count: {
+                    select: { toolStatuses: true }
                 }
-            },
-            orderBy: { name: 'asc' }
+            }
         });
 
-        return NextResponse.json({ tools, participants });
+        return NextResponse.json(tools);
     } catch (error) {
-        console.error("Failed to fetch shop tools data:", error);
-        return NextResponse.json({ error: "Failed to fetch shop tools data" }, { status: 500 });
+        console.error("Failed to fetch tools:", error);
+        return NextResponse.json({ error: "Failed to fetch tools" }, { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
-    const canCreateTools = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
 
-    if (!session || !canCreateTools) {
-        return NextResponse.json({ error: "Forbidden: Only Admin or Board Members can create tools" }, { status: 403 });
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isAuthorized = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+
+    if (!isAuthorized) {
+        return NextResponse.json({ error: "Forbidden: Only admins can create tools" }, { status: 403 });
     }
 
     try {
@@ -63,80 +57,17 @@ export async function POST(req: Request) {
 
         await prisma.auditLog.create({
             data: {
-                participantId: (session.user as any).id,
+                actorId: parseInt((session.user as any).id, 10),
                 action: 'CREATE',
-                targetType: 'TOOL',
-                targetId: newTool.id,
-                details: `Created new tool: ${name}`
+                tableName: 'Tool',
+                affectedEntityId: newTool.id,
+                newData: JSON.stringify(newTool)
             }
         });
 
         return NextResponse.json({ success: true, tool: newTool });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Tool creation error:", error);
-        return NextResponse.json({ error: "Failed to create tool" }, { status: 500 });
-    }
-}
-
-export async function PATCH(req: Request) {
-    const session = await getServerSession(authOptions);
-
-    try {
-        const body = await req.json();
-        const { targetUserId, toolId, level } = body;
-
-        if (!targetUserId || !toolId || !level) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-        }
-
-        const isSysadminOrSteward = (session?.user as any)?.sysadmin || (session?.user as any)?.shopSteward;
-        const isCertifierForTool = (session?.user as any)?.toolStatuses?.some((ts: any) => ts.toolId === toolId && ts.level === 'MAY_CERTIFY_OTHERS');
-
-        if (!session || (!isSysadminOrSteward && !isCertifierForTool)) {
-            return NextResponse.json({ error: "Forbidden: Not authorized to assign levels for this tool" }, { status: 403 });
-        }
-
-        if (level === "NONE") {
-            // Delete the certification relation entirely
-            await prisma.toolStatus.deleteMany({
-                where: {
-                    participantId: targetUserId,
-                    toolId: toolId
-                }
-            });
-        } else {
-            // Upsert the certification level
-            await prisma.toolStatus.upsert({
-                where: {
-                    userId_toolId: {
-                        participantId: targetUserId,
-                        toolId: toolId
-                    }
-                },
-                update: {
-                    level: level as any
-                },
-                create: {
-                    participantId: targetUserId,
-                    toolId: toolId,
-                    level: level as any
-                }
-            });
-        }
-
-        await prisma.auditLog.create({
-            data: {
-                participantId: (session.user as any).id,
-                action: 'EDIT',
-                targetType: 'TOOL_STATUS',
-                targetId: targetUserId,
-                details: `Updated Tool ${toolId} for User ${targetUserId} to Level: ${level}`
-            }
-        });
-
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Tool status assignment error:", error);
-        return NextResponse.json({ error: "Failed to assign tool status" }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to create tool" }, { status: 500 });
     }
 }

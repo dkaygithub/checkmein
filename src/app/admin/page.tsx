@@ -58,10 +58,19 @@ export default function AdminDashboardIndex() {
                     <button
                         className="glass-button"
                         onClick={() => router.push('/admin/roles')}
-                        style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', padding: '2rem', fontSize: '1.25rem', gridColumn: '1 / -1', flexDirection: 'column' }}
+                        style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', padding: '2rem', fontSize: '1.25rem', flexDirection: 'column' }}
                     >
                         <strong>Role Assignment</strong>
                         <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--color-text)' }}>Grant or revoke participant privileges and access levels.</p>
+                    </button>
+
+                    <button
+                        className="glass-button"
+                        onClick={() => router.push('/admin/participants/new')}
+                        style={{ background: 'rgba(245, 158, 11, 0.2)', borderColor: 'rgba(245, 158, 11, 0.4)', padding: '2rem', fontSize: '1.25rem', gridColumn: '1 / -1', flexDirection: 'column' }}
+                    >
+                        <strong>Create Participant</strong>
+                        <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--color-text)' }}>Manually register a new user in the system before their first login.</p>
                     </button>
                 </div>
             </div>

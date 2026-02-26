@@ -1,0 +1,114 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import styles from '../page.module.css';
+
+type ProgramSummary = {
+    id: number;
+    name: string;
+    begin: string | null;
+    end: string | null;
+    memberOnly: boolean;
+};
+
+export default function PublicProgramsDirectory() {
+    const { data: session, status } = useSession();
+    const [programs, setPrograms] = useState<ProgramSummary[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        const fetchPrograms = async () => {
+            try {
+                // Fetch only active programs
+                const res = await fetch('/api/programs?active=true');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPrograms(data);
+                } else {
+                    setMessage("Failed to load program directory.");
+                }
+            } catch (error) {
+                setMessage("Network error loading programs.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPrograms();
+    }, []);
+
+    if (loading) {
+        return (
+            <main className={styles.main}>
+                <div className="glass-container animate-float">
+                    <h2>Loading Programs...</h2>
+                </div>
+            </main>
+        );
+    }
+
+    return (
+        <main className={styles.main}>
+            <div className={`glass-container animate-float ${styles.heroContainer}`} style={{ maxWidth: '1000px', width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>Programs Directory</h1>
+                        <p style={{ color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+                            Discover courses, certifications, and group activities at the Treehouse.
+                        </p>
+                    </div>
+                    {((session?.user as any)?.sysadmin || (session?.user as any)?.boardMember) && (
+                        <Link href="/admin/programs/new" style={{ padding: '0.6rem 1.2rem', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)', borderRadius: '8px', color: '#4ade80', textDecoration: 'none', fontWeight: 500 }}>
+                            + New Program
+                        </Link>
+                    )}
+                </div>
+
+                {message && (
+                    <div style={{
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        color: '#f87171',
+                    }}>
+                        {message}
+                    </div>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    {programs.map(program => (
+                        <div key={program.id} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <h3 style={{ margin: 0 }}>{program.name}</h3>
+                                {program.memberOnly && (
+                                    <span style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#d8b4fe', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(168, 85, 247, 0.4)' }}>
+                                        Member Only
+                                    </span>
+                                )}
+                            </div>
+                            <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem', flex: 1 }}>
+                                {program.begin ? new Date(program.begin).toLocaleDateString() : 'Start Date TBD'}
+                                {program.end ? ` - ${new Date(program.end).toLocaleDateString()}` : ' (Ongoing)'}
+                            </p>
+
+                            <Link href={`/programs/${program.id}`} style={{ display: 'block', textAlign: 'center', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '0.75rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, marginTop: '1.5rem' }}>
+                                View Details
+                            </Link>
+                        </div>
+                    ))}
+
+                    {programs.length === 0 && !loading && (
+                        <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+                            No active programs currently available. Check back soon!
+                        </div>
+                    )}
+                </div>
+            </div>
+        </main>
+    );
+}

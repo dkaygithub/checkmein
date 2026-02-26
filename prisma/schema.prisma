@@ -160,10 +160,15 @@ model CorporationMember {
 
 model Program {
   id           Int       @id @default(autoincrement())
-  name         String
-  leadMentorId Int?
-  begin        DateTime?
-  end          DateTime?
+  name            String
+  leadMentorId    Int?
+  begin           DateTime?
+  end             DateTime?
+  isPublished                  Boolean   @default(false)
+  memberOnly                   Boolean   @default(false)
+  minAge                       Int?
+  maxParticipants              Int?
+  leadMentorNotificationSettings Json?
 
   volunteers   ProgramVolunteer[]
   participants ProgramParticipant[]

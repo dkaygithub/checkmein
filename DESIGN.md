@@ -227,6 +227,7 @@ PaidOn datetime
 ShopifyLink string
 QuickBooksInvoice string
 CustomNote string
+
 Events
 ID int
 Program int?
