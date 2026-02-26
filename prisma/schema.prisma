@@ -37,7 +37,7 @@ enum AuditAction {
 model Participant {
   id            Int       @id @default(autoincrement())
   googleId      String?   @unique
-  email         String    @unique
+  email         String?   @unique
   name          String?
   emailVerified DateTime?
   image         String?

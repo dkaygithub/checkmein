@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import styles from "../page.module.css";
@@ -7,6 +8,20 @@ import styles from "../page.module.css";
 export default function AdminDashboardIndex() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [orphans, setOrphans] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (status === "authenticated" && ((session?.user as any)?.sysadmin || (session?.user as any)?.boardMember)) {
+            fetch('/api/admin/orphans')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.orphans) {
+                        setOrphans(data.orphans);
+                    }
+                })
+                .catch(console.error);
+        }
+    }, [status, session]);
 
     if (status === "loading") {
         return (
@@ -35,6 +50,20 @@ export default function AdminDashboardIndex() {
                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
                     Welcome to the CheckMeIn Administration Hub. From here you can access operational tools to manage facility events and overrides.
                 </p>
+
+                {orphans.length > 0 && (
+                    <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.5)', color: '#fca5a5', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', gap: '12px' }}>
+                        <span style={{ fontSize: '1.25rem' }}>🚨</span>
+                        <div>
+                            <strong>Attention Required:</strong> There are {orphans.length} student(s) registered whose parents have not yet claimed their accounts.
+                            <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.9rem' }}>
+                                {orphans.map(o => (
+                                    <li key={o.id}>{o.name || o.email || `Student ID ${o.id}`}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                )}
 
                 <div className={styles.actionGrid}>
                     <button
