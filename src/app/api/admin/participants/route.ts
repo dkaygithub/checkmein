@@ -74,8 +74,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ success: true, participant: newParticipant });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to create participant:", error);
-        return NextResponse.json({ error: "Failed to create participant" }, { status: 500 });
+        return NextResponse.json({ error: `Failed to create participant: ${error.message || error}` }, { status: 500 });
     }
 }

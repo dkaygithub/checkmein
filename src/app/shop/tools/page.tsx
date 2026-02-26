@@ -93,7 +93,7 @@ export default function ToolManagementPage() {
 
     const fetchAllParticipants = async () => {
         try {
-            const res = await fetch('/api/household/member');
+            const res = await fetch('/api/shop/members');
             if (res.ok) {
                 const data = await res.json();
                 setAllParticipants(data.members || []);
