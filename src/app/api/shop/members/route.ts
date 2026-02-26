@@ -26,6 +26,12 @@ export async function GET(req: Request) {
 
     try {
         const members = await prisma.participant.findMany({
+            where: {
+                OR: [
+                    { household: { memberships: { some: { active: true } } } },
+                    { memberships: { some: { active: true } } }
+                ]
+            },
             select: {
                 id: true,
                 name: true,

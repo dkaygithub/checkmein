@@ -86,6 +86,15 @@ export default function AdminDashboardIndex() {
 
                     <button
                         className="glass-button"
+                        onClick={() => router.push('/admin/households')}
+                        style={{ background: 'rgba(236, 72, 153, 0.2)', borderColor: 'rgba(236, 72, 153, 0.4)', padding: '2rem', fontSize: '1.25rem', flexDirection: 'column' }}
+                    >
+                        <strong>Manage Memberships</strong>
+                        <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--color-text)' }}>Grant or revoke official facility memberships for households.</p>
+                    </button>
+
+                    <button
+                        className="glass-button"
                         onClick={() => router.push('/admin/roles')}
                         style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', padding: '2rem', fontSize: '1.25rem', flexDirection: 'column' }}
                     >
