@@ -19,7 +19,7 @@ export default function CreateToolPage() {
         if (status === "unauthenticated") {
             router.push('/');
         }
-    }, [status]);
+    }, [status, router]);
 
     const handleCreateTool = async (e: React.FormEvent) => {
         e.preventDefault();

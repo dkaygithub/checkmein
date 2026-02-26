@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -37,8 +37,18 @@ export default function NewParticipantPage() {
         return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
     }
 
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push('/');
+        } else if (status === "authenticated") {
+            const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+            if (!isAuthorized) {
+                router.push('/');
+            }
+        }
+    }, [status, session, router]);
+
     if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
-        router.push('/');
         return null;
     }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { Prisma } from '@prisma/client';
 import prisma from "@/lib/prisma";
 
 export async function GET(req: Request) {
@@ -122,7 +123,7 @@ export async function POST(req: Request) {
                 tableName: 'ToolStatus',
                 affectedEntityId: pId,
                 secondaryAffectedEntity: tId,
-                oldData: currentStatus ? JSON.stringify(currentStatus) : null,
+                oldData: currentStatus ? JSON.stringify(currentStatus) : Prisma.JsonNull,
                 newData: JSON.stringify(upsertedCert)
             }
         });

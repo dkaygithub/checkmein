@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -9,12 +10,17 @@ export default function ShopStewardPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push('/');
+        }
+    }, [status, router]);
+
     if (status === "loading") {
         return <main className={styles.main}><div className="glass-container animate-float"><h2>Loading...</h2></div></main>;
     }
 
     if (status === "unauthenticated") {
-        router.push('/');
         return null;
     }
 

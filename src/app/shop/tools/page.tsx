@@ -67,10 +67,13 @@ export default function ToolManagementPage() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            fetchTools();
-            fetchAllParticipants();
+            // Only fetch if we haven't already, preventing infinite loops
+            if (tools.length === 0 && allParticipants.length === 0) {
+                fetchTools();
+                fetchAllParticipants();
+            }
         }
-    }, [status]);
+    }, [status, router]); // removed tools/allParticipants to prevent loop, relying on initial fetch
 
     useEffect(() => {
         if (selectedToolId) {

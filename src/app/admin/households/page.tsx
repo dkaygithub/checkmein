@@ -18,9 +18,14 @@ export default function AdminHouseholdsPage() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            fetchHouseholds();
+            const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+            if (!isAuthorized) {
+                router.push('/');
+            } else {
+                fetchHouseholds();
+            }
         }
-    }, [status]);
+    }, [status, session, router]);
 
     const fetchHouseholds = async () => {
         try {
@@ -62,7 +67,6 @@ export default function AdminHouseholdsPage() {
     }
 
     if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
-        router.push('/');
         return null;
     }
 
