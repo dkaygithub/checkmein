@@ -50,14 +50,14 @@ export default function CreateToolPage() {
         return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
     }
 
-    const isBoardMember = (session?.user as any)?.boardMember;
+    const isAdmin = (session?.user as any)?.boardMember || (session?.user as any)?.sysadmin;
 
-    if (!isBoardMember) {
+    if (!isAdmin) {
         return (
             <main className={styles.main}>
                 <div className="glass-container animate-float">
                     <h2>Access Denied</h2>
-                    <p style={{ color: '#ef4444' }}>Forbidden: Only Board Members can define new tools.</p>
+                    <p style={{ color: '#ef4444' }}>Forbidden: Only Admins and Board Members can define new tools.</p>
                     <button className="glass-button" onClick={() => router.push('/shop')}>Back to Shop Ops</button>
                 </div>
             </main>

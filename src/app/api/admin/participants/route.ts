@@ -49,9 +49,10 @@ export async function POST(req: Request) {
 
             // Ensure parent has a household
             if (!parent.householdId) {
+                const parentLastName = parent.name?.trim().split(/\s+/).pop() || "";
                 const household = await prisma.household.create({
                     data: {
-                        name: `${parent.name || 'Family'} Household`,
+                        name: parentLastName ? `${parentLastName} Household` : "Household",
                     }
                 });
                 await prisma.participant.update({
@@ -75,9 +76,10 @@ export async function POST(req: Request) {
 
         // If this is a lone adult (no parent email provided), create them their own household and make them lead
         if (!parentEmail) {
+            const lastName = name?.trim().split(/\s+/).pop() || "";
             const newHousehold = await prisma.household.create({
                 data: {
-                    name: `${name ? name.split(' ').pop() : 'Lone'} Household`,
+                    name: lastName ? `${lastName} Household` : "Household",
                 }
             });
 

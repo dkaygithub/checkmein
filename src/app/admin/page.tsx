@@ -11,6 +11,17 @@ export default function AdminDashboardIndex() {
     const [orphans, setOrphans] = useState<any[]>([]);
 
     useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push('/');
+        } else if (status === "authenticated") {
+            const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+            if (!isAuthorized) {
+                router.push('/');
+            }
+        }
+    }, [status, session, router]);
+
+    useEffect(() => {
         if (status === "authenticated" && ((session?.user as any)?.sysadmin || (session?.user as any)?.boardMember)) {
             fetch('/api/admin/orphans')
                 .then(res => res.json())
@@ -32,17 +43,6 @@ export default function AdminDashboardIndex() {
             </main>
         );
     }
-
-    useEffect(() => {
-        if (status === "unauthenticated") {
-            router.push('/');
-        } else if (status === "authenticated") {
-            const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
-            if (!isAuthorized) {
-                router.push('/');
-            }
-        }
-    }, [status, session, router]);
 
     if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
         return null;

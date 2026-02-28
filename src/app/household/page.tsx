@@ -14,9 +14,7 @@ export default function HouseholdPage() {
     const [message, setMessage] = useState("");
     const [addingMember, setAddingMember] = useState(false);
 
-    // New states for household creation form
     const [creatingHousehold, setCreatingHousehold] = useState(false);
-    const [householdName, setHouseholdName] = useState("");
 
     const [memberForm, setMemberForm] = useState({
         name: "",
@@ -103,14 +101,13 @@ export default function HouseholdPage() {
         }
     };
 
-    const handleCreateHousehold = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleCreateHousehold = async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/household', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: householdName })
+                body: JSON.stringify({})
             });
             if (res.ok) {
                 const data = await res.json();
@@ -201,7 +198,7 @@ export default function HouseholdPage() {
             <div className={`glass-container animate-float ${styles.heroContainer}`} style={{ maxWidth: '800px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>
-                        {household?.name ? household.name : 'My Household'}
+                        {household?.name || 'My Household'}
                     </h1>
                     <button className="glass-button" onClick={() => router.push('/')} style={{ padding: '0.5rem 1rem' }}>
                         &larr; Back
@@ -227,34 +224,9 @@ export default function HouseholdPage() {
                             You are not currently part of a family household structure. Create one to add dependents or combine billing.
                         </p>
 
-                        {!creatingHousehold ? (
-                            <button className="glass-button" onClick={() => setCreatingHousehold(true)} style={{ background: 'rgba(168, 85, 247, 0.2)', borderColor: 'rgba(168, 85, 247, 0.4)' }}>
-                                Register New Household
-                            </button>
-                        ) : (
-                            <form onSubmit={handleCreateHousehold} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px', margin: '0 auto', textAlign: 'left' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Household Name</label>
-                                    <input
-                                        type="text"
-                                        className="glass-input"
-                                        value={householdName}
-                                        onChange={(e) => setHouseholdName(e.target.value)}
-                                        placeholder="e.g. The Smith Family"
-                                        required
-                                        autoFocus
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button type="submit" className="glass-button" style={{ flex: 1, background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
-                                        Create
-                                    </button>
-                                    <button type="button" className="glass-button" onClick={() => setCreatingHousehold(false)} style={{ flex: 1 }}>
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        )}
+                        <button className="glass-button" onClick={handleCreateHousehold} style={{ background: 'rgba(168, 85, 247, 0.2)', borderColor: 'rgba(168, 85, 247, 0.4)' }}>
+                            Register New Household
+                        </button>
                     </div>
                 ) : (
                     <div>

@@ -1,107 +1,96 @@
-# Comprehensive Critical User Journeys (CUJs)
+# CheckMeIn — Critical User Journeys (CUJs)
 
-This document defines the essential flows for all personas in the CheckMeIn-next ecosystem. These journeys ensure that the product meets both functional requirements and UX standards for a Lead PM/UX professional.
-
----
-
-## 1. Universal Personas
-
-### Participant (Generic User)
-*The base persona for anyone interacting with the system.*
-
-- **CUJ 1.1: First-Time Onboarding**
-  - As a new visitor, I want to create an account using my Google credentials and provide my basic information (DOB, Address) so I can begin my membership journey.
-- **CUJ 1.2: Facility Check-In (Scanner)**
-  - As an authenticated participant, I scan my QR code at the Raspberry Pi kiosk to record my arrival.
-- **CUJ 1.3: Facility Check-Out (Scanner)**
-  - As a checked-in participant, I scan my QR code again to record my departure.
-- **CUJ 1.4: Self-Correction (Manual Check-Out)**
-  - As a participant who forgot to scan out, I log in remotely to the web portal to manually record my departure time.
-- **CUJ 1.5: Program RSVP**
-  - As a participant, I view the schedule of upcoming programs and indicate my intent to attend (RSVP) so the leader knows to expect me.
-- **CUJ 1.6: Personal Notification Management**
-  - As a participant, I want to toggle my notification preferences (Email, Text, Slack) for entry/exit events.
-
-### Member
-*A participant with an active paid membership.*
-
-- **CUJ 2.1: Membership Lifecycle (Purchase/Renewal)**
-  - As a participant, I follow the link to Shopify to pay for membership, and upon completion, I see my status updated to "Member" in the application.
-- **CUJ 2.2: Signature Compliance**
-  - As a member, I receive a notification to sign updated waivers or membership agreements and complete them via the integrated e-signature platform.
-- **CUJ 2.3: Member-Only Access**
-  - As a member, I can view and register for programs that are hidden from non-member participants.
+All user-facing flows implemented in the system, organized by persona.
 
 ---
 
-## 2. Family & Student Personas
+## 1. Any Visitor (Unauthenticated)
 
-### Parent/Guardian (Household Lead)
-*Manages a household and its dependents.*
-
-- **CUJ 3.1: Household Creation & Expansion**
-  - As a primary account holder, I create a "Household" entity and invite my spouse (another adult) and children (dependents) to join.
-- **CUJ 3.2: Proxy Management (Student Profile)**
-  - As a parent, I update my student's email/phone and sign waivers on their behalf because they are under 18.
-- **CUJ 3.3: Dependent Supervision (Notifications)**
-  - As a parent, I receive real-time notifications when my student checks in or out of the building.
-- **CUJ 3.4: Student RSVP**
-  - As a parent, I indicate "Attending" or "Not Attending" for my student for an upcoming program.
-
-### Student
-*A participant under 18 with restricted permissions.*
-
-- **CUJ 4.1: Restricted Data Ownership**
-  - As a student, I can view my profile but am prevented from changing my own contact info or address (must be done by Parent).
-- **CUJ 4.2: Aging Out Flow**
-  - As a student turning 18, I want to be "promoted" to a primary account holder for my own (new) household.
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 1.1 | **Google Sign-In** | `/` | Sign in with Google OAuth. On first login, a Participant record is auto-created and linked. |
+| 1.2 | **Browse Public Programs** | `/programs` | View the directory of active programs (public ones visible without login, member-only hidden). |
 
 ---
 
-## 3. Operations Personas
+## 2. Participant (Authenticated User)
 
-### Keyholder
-*Responsible for opening and closing the physical space.*
-
-- **CUJ 5.1: Opening the Facility**
-  - As the first person to arrive, I scan my badge. The system recognizes me as a Keyholder and transitions the facility status from "Closed" to "Open".
-- **CUJ 5.2: Two-Deep Compliance Monitoring**
-  - As a Keyholder, I view the dashboard to ensure at least one other adult/keyholder is present when students are in the building.
-- **CUJ 5.3: Closing Enforcement (Forced Check-Out)**
-  - As the last Keyholder leaving, I signal "Facility Closing" on the kiosk. The system automatically checks out any "ghost" users remaining and notifies them.
-
-### Tool Certifier / Shop Steward
-*Manages safety and tool proficiency.*
-
-- **CUJ 6.1: Safety Certification Walkthrough**
-  - As a Tool Certifier, after training a member on the CNC Lathe, I update their proficiency level (Basic -> Certified) in their digital profile.
-- **CUJ 6.2: Shop Status Oversight**
-  - As a Shop Steward, I view the "Currently in Attendance" list to see the safety levels of everyone currently in the shop area.
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 2.1 | **Dashboard / Home** | `/` | After login, see personalized dashboard with check-in status, quick links, and minor indicators for household children. |
+| 2.2 | **Toggle Check-In / Check-Out** | `/` | One-click button to check in or out of the facility. |
+| 2.3 | **View Attendance Log** | `/attendance` | See who is currently checked in, search participants, and view their own attendance status. |
+| 2.4 | **Manual Time Entry** | `/attendance/manual` | Self-correct a forgotten badge scan by entering arrival/departure times retroactively. |
+| 2.5 | **Edit Profile** | `/profile` | Update personal info (name, phone, address, DOB) and notification preferences (email, text, Slack toggles for entry/exit events). |
+| 2.6 | **View Program Details & Enroll** | `/programs/[id]` | View a program's schedule and self-enroll (with age/capacity validation; admins can override). |
+| 2.7 | **My Upcoming Events** | `/dashboard/events` | See all upcoming events for enrolled programs and RSVP (Yes / Maybe / No). |
+| 2.8 | **My Enrolled Programs** | `/dashboard/programs` | View list of programs the participant is currently enrolled in. |
 
 ---
 
-## 4. Leadership & Administrative Personas
+## 3. Household Lead (Parent / Guardian)
 
-### Program Leader / Core Volunteer
-*Manages specific educational or community programs.*
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 3.1 | **Create Household** | `/household` | If not in a household, create one (auto-joined as lead). |
+| 3.2 | **Add Adult to Household** | `/household` | Invite another adult by email. If the email has no existing account, a placeholder is created and linked on first Google login. |
+| 3.3 | **Add/Edit Dependent (Minor)** | `/household` | Add children to the household with name, DOB, and optional email. Edit existing member details. |
+| 3.4 | **Notification Settings** | `/household` | Configure per-member notifications — toggle email/text/Slack alerts for entry and exit events. |
+| 3.5 | **View Household Visits** | `/household` | See recent visit history (arrival/departure) for all household members. |
 
-- **CUJ 7.1: Program Creation & Scheduling**
-  - As a Program Leader, I create a new program (e.g., "Robotics 101"), set the recurrence, and define the expected participant list.
-- **CUJ 7.2: Attendance Validation**
-  - At the end of a session, I review the automated check-in list for my program and manually adjust entries for any student who forgot to scan.
+---
 
-### Board Member / Auditor
-*High-level oversight.*
+## 4. Keyholder
 
-- **CUJ 8.1: Compliance Reporting**
-  - As a Board Member, I generate a report of total volunteer hours and participant attendance for last month to present at the board meeting.
-- **CUJ 8.2: Audit Trail Inspection**
-  - As an auditor, I search the Audit Log for a specific date to see who modified a member's payment record.
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 4.1 | **Force Check-Out** | `/attendance` | As a keyholder viewing the attendance dashboard, force-checkout any currently checked-in participant (e.g., ghost users at closing time). |
+| 4.2 | **Manual Check-In (on behalf)** | `/attendance` | Search for a participant and check them in on their behalf (e.g., they forgot their badge). |
 
-### System Administrator
-*Technical management.*
+---
 
-- **CUJ 9.1: Temporary Privilege Escallation**
-  - As a sysadmin, I explicitly "Enable Admin Mode" to perform a sensitive task (like changing a user's Google ID mapping), knowing that my actions are being recorded in a high-priority audit log.
-- **CUJ 9.2: Role Assignment**
-  - As a sysadmin, I assign the "Keyholder" or "Tool Certifier" roles to trusted members.
+## 5. Tool Certifier / Shop Steward
+
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 5.1 | **Shop Ops Hub** | `/shop` | Central landing page for shop operations; links to Create Tool and Manage Certifications (role-gated). |
+| 5.2 | **Grant/Change Certification** | `/shop/tools` | Select a tool, select a member, and grant a certification level (Basic → DoF → Certified → Certifier). Includes promotion/demotion confirmation dialog. |
+| 5.3 | **View Certified Members per Tool** | `/shop/tools` | After selecting a tool, see all certified members and their levels. |
+| 5.4 | **Search Tools** | `/shop/tools` | Filter the tool list by name using the search input. |
+
+---
+
+## 6. Program Leader / Admin
+
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 6.1 | **Create Program** | `/admin/programs/new` | Define a new program with name, date range, and member-only flag. |
+| 6.2 | **Manage Program Settings** | `/admin/programs/[id]` | Edit program name, dates, lead mentor, min age, max participants, member-only flag, and published status. |
+| 6.3 | **Manage Program Roster** | `/admin/programs/[id]` | Add/remove enrolled participants and volunteers from a program. |
+| 6.4 | **Browse All Programs** | `/admin/programs` | View table of all programs with counts (participants, volunteers, events). Filter by active-only. |
+| 6.5 | **Create Event (for a Program)** | `/admin/events/new` | Schedule a one-time or recurring event tied to a program, with day-of-week selection. |
+
+---
+
+## 7. Board Member / Sysadmin
+
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 7.1 | **Admin Hub** | `/admin` | Central admin dashboard with alerts (orphan students) and links to all admin tools. |
+| 7.2 | **Role Assignment** | `/admin/roles` | Toggle roles (Sysadmin, Board Member, Keyholder, Shop Steward) for any participant. |
+| 7.3 | **Manage Memberships** | `/admin/households` | View all households and grant/revoke active facility membership per household. |
+| 7.4 | **Register New Participant** | `/admin/participants/new` | Manually pre-create a user (adult or minor) before their first Google login. For minors, associate with a parent email (auto-creates parent placeholder if needed). |
+| 7.5 | **Orphan Student Alerts** | `/admin` | Dashboard alert showing students whose parent accounts have not yet been claimed. |
+| 7.6 | **View/Edit Historical Visits** | `/admin/events/visits` | View all past visit records and edit arrival/departure times (with date filtering). |
+| 7.7 | **Audit Raw Badge Events** | `/admin/events/badges` | View raw RFID badge tap log (sysadmin only) for audit purposes. |
+| 7.8 | **Create Tool** | `/shop/tools/new` | Register a new piece of shop equipment with an optional safety guide URL. |
+
+---
+
+## 8. System / Background
+
+| # | Journey | Route | Description |
+|---|---------|-------|-------------|
+| 8.1 | **Badge Scan (Kiosk)** | `POST /api/scan` | Raspberry Pi kiosk posts badge scans; system auto-creates visit (check-in) or closes visit (check-out). |
+| 8.2 | **Cron: Event Reminders** | `GET /api/cron/reminders` | Scheduled job sends reminders for upcoming events. |
+| 8.3 | **Audit Logging** | Various APIs | All sensitive mutations (role changes, certification changes, visit edits) log to the `AuditLog` table with actor, action, old/new data. |

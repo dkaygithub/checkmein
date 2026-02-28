@@ -33,10 +33,6 @@ export default function NewParticipantPage() {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
-    if (status === "loading") {
-        return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
-    }
-
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push('/');
@@ -47,6 +43,10 @@ export default function NewParticipantPage() {
             }
         }
     }, [status, session, router]);
+
+    if (status === "loading") {
+        return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
+    }
 
     if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
         return null;

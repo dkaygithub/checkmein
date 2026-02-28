@@ -24,17 +24,19 @@ export default function ShopStewardPage() {
         return null;
     }
 
+    const isSysadmin = (session?.user as any)?.sysadmin;
     const isBoardMember = (session?.user as any)?.boardMember;
+    const isAdmin = isSysadmin || isBoardMember;
 
     // Certifier check: either Shop Steward, Board Member, Admin, or explicitly has MAY_CERTIFY_OTHERS
     const certs = (session?.user as any)?.toolStatuses || [];
     const hasCertifierAuth = certs.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
-    const isCertifier = (session?.user as any)?.sysadmin ||
+    const isCertifier = isSysadmin ||
         isBoardMember ||
         (session?.user as any)?.shopSteward ||
         hasCertifierAuth;
 
-    if (!isCertifier && !isBoardMember) {
+    if (!isCertifier && !isAdmin) {
         return (
             <main className={styles.main}>
                 <div className="glass-container animate-float">
@@ -60,7 +62,7 @@ export default function ShopStewardPage() {
                 </div>
 
                 <div className={styles.actionGrid}>
-                    {isBoardMember && (
+                    {isAdmin && (
                         <button
                             className="glass-button"
                             onClick={() => router.push('/shop/tools/new')}
@@ -76,7 +78,7 @@ export default function ShopStewardPage() {
                         <button
                             className="glass-button"
                             onClick={() => router.push('/shop/tools')}
-                            style={{ background: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgba(234, 179, 8, 0.4)', padding: '2.5rem', fontSize: '1.25rem', flexDirection: 'column', gridColumn: isBoardMember ? 'span 1' : '1 / -1' }}
+                            style={{ background: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgba(234, 179, 8, 0.4)', padding: '2.5rem', fontSize: '1.25rem', flexDirection: 'column', gridColumn: isAdmin ? 'span 1' : '1 / -1' }}
                         >
                             <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>&#128203;</span>
                             <strong>Manage Certifications</strong>

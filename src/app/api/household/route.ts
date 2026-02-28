@@ -35,18 +35,19 @@ export async function POST(req: NextRequest) {
         }
 
         const userId = (session.user as any).id;
-        const body = await req.json().catch(() => ({}));
-        const name = body.name?.trim() || "My Household";
-
         const user = await prisma.participant.findUnique({ where: { id: userId } });
         if (user?.householdId) {
             return NextResponse.json({ error: "User already belongs to a household" }, { status: 400 });
         }
 
+        // Derive household name from the lead's last name
+        const lastName = user?.name?.trim().split(/\s+/).pop() || "";
+        const householdName = lastName ? `${lastName} Household` : "Household";
+
         // Create a new household and set the user as the lead and a member
         const household = await prisma.household.create({
             data: {
-                name: name,
+                name: householdName,
                 address: user?.homeAddress || "",
                 leads: {
                     create: { participantId: userId }

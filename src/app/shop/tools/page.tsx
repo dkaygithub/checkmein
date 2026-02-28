@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -32,6 +32,7 @@ type ParticipantOption = {
 export default function ToolManagementPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const hasFetched = useRef(false);
 
     const [tools, setTools] = useState<Tool[]>([]);
     const [selectedToolId, setSelectedToolId] = useState<number | null>(null);
@@ -66,14 +67,12 @@ export default function ToolManagementPage() {
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push('/');
-        } else if (status === "authenticated") {
-            // Only fetch if we haven't already, preventing infinite loops
-            if (tools.length === 0 && allParticipants.length === 0) {
-                fetchTools();
-                fetchAllParticipants();
-            }
+        } else if (status === "authenticated" && !hasFetched.current) {
+            hasFetched.current = true;
+            fetchTools();
+            fetchAllParticipants();
         }
-    }, [status, router]); // removed tools/allParticipants to prevent loop, relying on initial fetch
+    }, [status]);
 
     useEffect(() => {
         if (selectedToolId) {
