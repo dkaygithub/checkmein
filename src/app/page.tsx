@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signIn, signOut } from "next-auth/react";
 import styles from './page.module.css';
+import DevLoginPicker from '@/components/DevLoginPicker';
 
 export default function Home() {
   const router = useRouter();
@@ -163,6 +164,7 @@ export default function Home() {
               >
                 Sign In To Dashboard
               </button>
+              {process.env.NEXT_PUBLIC_DEV_AUTH && <DevLoginPicker />}
             </div>
           )}
         </div>
