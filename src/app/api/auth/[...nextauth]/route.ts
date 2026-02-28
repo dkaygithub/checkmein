@@ -12,9 +12,22 @@ const prismaAdapterClient = {
     user: prismaAdapterCore.participant,
 };
 
+// Wrap the adapter so `getUser` can handle string IDs from CredentialsProvider.
+// NextAuth always coerces IDs to strings, but our Participant.id is an Int.
+const baseAdapter = PrismaAdapter(prismaAdapterClient) as any;
+const patchedAdapter = {
+    ...baseAdapter,
+    getUser: async (id: string) => {
+        const numericId = parseInt(id, 10);
+        if (isNaN(numericId)) return null;
+        const user = await prisma.participant.findUnique({ where: { id: numericId } });
+        return user ? { ...user, id: String(user.id) } : null;
+    },
+};
+
 export const authOptions: NextAuthOptions = {
-    // Explicitly pass mapped Prisma adapter
-    adapter: PrismaAdapter(prismaAdapterClient) as any,
+    // Explicitly pass mapped Prisma adapter (patched for credentials compat)
+    adapter: patchedAdapter,
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
