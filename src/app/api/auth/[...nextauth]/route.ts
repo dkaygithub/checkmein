@@ -25,6 +25,13 @@ const patchedAdapter = {
     },
 };
 
+// Bootstrap sysadmin emails — comma-separated list from env.
+// Any account matching these emails will be auto-promoted to sysadmin on login.
+const BOOTSTRAP_SYSADMINS = (process.env.BOOTSTRAP_SYSADMINS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
 export const authOptions: NextAuthOptions = {
     // Explicitly pass mapped Prisma adapter (patched for credentials compat)
     adapter: patchedAdapter,
@@ -95,6 +102,19 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (dbParticipant) {
+                    // Auto-promote bootstrap sysadmins on first login
+                    if (
+                        !dbParticipant.sysadmin &&
+                        dbParticipant.email &&
+                        BOOTSTRAP_SYSADMINS.includes(dbParticipant.email.toLowerCase())
+                    ) {
+                        await prisma.participant.update({
+                            where: { id: dbParticipant.id },
+                            data: { sysadmin: true },
+                        });
+                        dbParticipant.sysadmin = true;
+                    }
+
                     token.id = dbParticipant.id;
                     token.sysadmin = dbParticipant.sysadmin;
                     token.keyholder = dbParticipant.keyholder;
