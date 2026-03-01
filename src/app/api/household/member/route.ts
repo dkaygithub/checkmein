@@ -38,8 +38,8 @@ export async function PATCH(req: NextRequest) {
             where: { id: participantId },
             data: {
                 name: name !== undefined ? name : undefined,
-                email: email ? email.toLowerCase() : targetMember.email, // Don't wipe out email entirely if passed empty string optionally, actually let's allow it if it's a dependent without login. But for safety, keep it simple.
-                dob: dob ? new Date(dob) : targetMember.dob,
+                email: email !== undefined ? (email === "" ? null : email.toLowerCase()) : undefined,
+                dob: dob !== undefined ? (dob === "" ? null : new Date(dob + "T12:00:00Z")) : undefined,
             }
         });
 

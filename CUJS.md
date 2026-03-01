@@ -34,7 +34,7 @@ All user-facing flows implemented in the system, organized by persona.
 |---|---------|-------|-------------|
 | 3.1 | **Create Household** | `/household` | If not in a household, create one (auto-joined as lead). |
 | 3.2 | **Add Adult to Household** | `/household` | Invite another adult by email. If the email has no existing account, a placeholder is created and linked on first Google login. |
-| 3.3 | **Add/Edit Dependent (Minor)** | `/household` | Add children to the household with name, DOB, and optional email. Edit existing member details. |
+| 3.3 | **Add/Edit Household Members** | `/household` | Add members to the household with name, DOB, and optional email. Edit existing member details (name, email, DOB). |
 | 3.4 | **Notification Settings** | `/household` | Configure per-member notifications — toggle email/text/Slack alerts for entry and exit events. |
 | 3.5 | **View Household Visits** | `/household` | See recent visit history (arrival/departure) for all household members. |
 
