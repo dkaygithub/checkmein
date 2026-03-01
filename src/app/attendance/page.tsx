@@ -35,6 +35,7 @@ export default function AttendanceDashboard() {
     const { data: session } = useSession();
     const [attendance, setAttendance] = useState<Visit[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [checkingOut, setCheckingOut] = useState<number | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -50,11 +51,15 @@ export default function AttendanceDashboard() {
         try {
             const res = await fetch("/api/attendance");
             const data = await res.json();
-            if (data.attendance) {
+            if (res.ok && data.attendance) {
                 setAttendance(data.attendance);
+                setError(null);
+            } else if (!res.ok) {
+                setError(data.error || "Failed to load attendance");
             }
         } catch (error) {
             console.error("Failed to fetch attendance:", error);
+            setError("Network error");
         } finally {
             setLoading(false);
         }
@@ -252,6 +257,10 @@ export default function AttendanceDashboard() {
 
                 {loading ? (
                     <p style={{ color: "var(--color-text-muted)" }}>Loading attendance...</p>
+                ) : error ? (
+                    <div style={{ textAlign: "center", padding: "3rem", color: "#fca5a5", background: "rgba(239, 68, 68, 0.1)", borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
+                        <p>{error === "Unauthorized" ? "Access Denied: Please sign in to view attendance." : error}</p>
+                    </div>
                 ) : attendance.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "3rem", color: "var(--color-text-muted)" }}>
                         <p>The facility is currently empty.</p>
