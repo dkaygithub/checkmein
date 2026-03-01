@@ -1,10 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
 
 export async function POST(req: NextRequest) {
     console.log("--> API /api/scan HIT");
     try {
-        const body = await req.json();
+        const rawBody = await req.text();
+
+        // Verify kiosk signature if public key is configured
+        const pubKey = getKioskPublicKey();
+        if (pubKey) {
+            const result = verifyKioskSignature(
+                "POST",
+                "/api/scan",
+                rawBody,
+                req.headers.get("x-kiosk-timestamp"),
+                req.headers.get("x-kiosk-signature"),
+                pubKey
+            );
+            if (!result.ok) {
+                console.log(`Kiosk signature rejected: ${result.error}`);
+                return NextResponse.json({ error: result.error }, { status: result.status });
+            }
+        }
+
+        const body = JSON.parse(rawBody);
         const participantId = body.participantId;
         console.log(`Parsed body, participantId: ${participantId}`);
 

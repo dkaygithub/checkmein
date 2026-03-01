@@ -1,11 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
+import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
-        // Find all active visits where departed is null
+        // Allow access if: valid session OR valid kiosk signature
+        const session = await getServerSession(authOptions);
+        const hasKioskHeaders = req.headers.get("x-kiosk-signature");
+        const pubKey = getKioskPublicKey();
+
+        if (!session && pubKey && hasKioskHeaders) {
+            // Kiosk request — verify signature
+            const result = verifyKioskSignature(
+                "GET",
+                "/api/attendance",
+                "",
+                req.headers.get("x-kiosk-timestamp"),
+                req.headers.get("x-kiosk-signature"),
+                pubKey
+            );
+            if (!result.ok) {
+                return NextResponse.json({ error: result.error }, { status: result.status });
+            }
+        } else if (!session && pubKey) {
+            // No session and no kiosk headers — reject
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        // If no pubKey configured, allow all (dev mode)
         const activeVisits = await prisma.visit.findMany({
             where: {
                 departed: null,
