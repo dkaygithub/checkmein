@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
+import { sendCheckinNotifications } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
     console.log("--> API /api/scan HIT");
@@ -75,6 +76,11 @@ export async function POST(req: NextRequest) {
                 data: { departed: new Date() },
             });
 
+            // Fire-and-forget: send check-out notifications
+            sendCheckinNotifications(participant.id, 'checkout').catch(err =>
+                console.error('Checkout notification error:', err)
+            );
+
             let facilityClosed = false;
 
             // Check if they were a keyholder
@@ -132,6 +138,11 @@ export async function POST(req: NextRequest) {
                     arrived: new Date(),
                 },
             });
+
+            // Fire-and-forget: send check-in notifications
+            sendCheckinNotifications(participant.id, 'checkin').catch(err =>
+                console.error('Checkin notification error:', err)
+            );
 
             return NextResponse.json({
                 message: "Checked in successfully",

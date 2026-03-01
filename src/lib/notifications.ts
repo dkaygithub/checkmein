@@ -1,10 +1,8 @@
 import prisma from "./prisma";
+import { sendEmail } from "./email";
 
 /**
- * Service to handle sending notifications to users via their defined preferences
- * (Email, Text, Slack as per DESIGN.md).
- * 
- * Note: Actual integrations (SendGrid, Twilio, Slack Webhooks) would be configured here.
+ * Service to handle sending notifications to users via their defined preferences.
  */
 
 export type NotificationEvent =
@@ -13,7 +11,9 @@ export type NotificationEvent =
     | 'EVENT_STARTING_SOON'
     | 'ATTENDANCE_VALIDATED'
     | 'RSVP_UPDATED'
-    | 'PROGRAM_ASSIGNMENT';
+    | 'PROGRAM_ASSIGNMENT'
+    | 'CHECKIN'
+    | 'CHECKOUT';
 
 export async function sendNotification(userId: number, eventType: NotificationEvent, payload: Record<string, any>) {
     try {
@@ -22,7 +22,7 @@ export async function sendNotification(userId: number, eventType: NotificationEv
             select: { email: true, notificationSettings: true, name: true }
         });
 
-        if (!user) return;
+        if (!user || !user.email) return;
 
         // Construct message based on type
         let message = "";
@@ -41,6 +41,14 @@ export async function sendNotification(userId: number, eventType: NotificationEv
                 subject = `Attendance Verified: ${payload.eventName}`;
                 message = `Hi ${user.name}, your attendance at ${payload.eventName} has been recorded by administrators.`;
                 break;
+            case 'CHECKIN':
+                subject = `✅ Checked In — ${user.name}`;
+                message = `Hi ${user.name}, you arrived at Innovation Treehouse at ${payload.time}.`;
+                break;
+            case 'CHECKOUT':
+                subject = `👋 Checked Out — ${user.name}`;
+                message = `Hi ${user.name}, you departed Innovation Treehouse at ${payload.time}.`;
+                break;
             default:
                 message = `System Action: ${eventType}`;
         }
@@ -48,19 +56,105 @@ export async function sendNotification(userId: number, eventType: NotificationEv
         // Check user preferences
         const settings = user.notificationSettings as any;
         const wantsEmail = settings?.email !== false; // Active by default
-        const wantsText = !!settings?.sms;
 
         if (wantsEmail) {
-            console.log(`[Email -> ${user.email}] SUBJ: ${subject} | BODY: ${message}`);
-            // await emailClient.send({...})
-        }
-
-        if (wantsText) {
-            console.log(`[SMS -> User ID ${userId}] ${message}`);
-            // await smsClient.send({...})
+            await sendEmail(user.email, subject, `<p>${message}</p>`);
         }
 
     } catch (error) {
         console.error("Failed to sequence notification:", error);
+    }
+}
+
+/**
+ * Send check-in/out notifications based on user & household preferences.
+ * 
+ * Handles two notification settings:
+ * - emailCheckinReceipts: send to the participant themselves
+ * - emailDependentCheckins: send to household leads when a dependent checks in/out
+ */
+export async function sendCheckinNotifications(participantId: number, type: 'checkin' | 'checkout') {
+    try {
+        const participant = await prisma.participant.findUnique({
+            where: { id: participantId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                notificationSettings: true,
+                householdId: true,
+            }
+        });
+
+        if (!participant) return;
+
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        const dateStr = now.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const action = type === 'checkin' ? 'checked in to' : 'checked out of';
+        const emoji = type === 'checkin' ? '✅' : '👋';
+        const name = participant.name || 'A member';
+
+        // 1. Send receipt to the participant themselves if they opted in
+        const settings = participant.notificationSettings as any;
+        if (settings?.emailCheckinReceipts && participant.email) {
+            const subject = `${emoji} ${name} ${action} Innovation Treehouse`;
+            const html = `
+                <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+                    <h2 style="color: #6366f1;">${emoji} Visit ${type === 'checkin' ? 'Started' : 'Ended'}</h2>
+                    <p><strong>${name}</strong> ${action} Innovation Treehouse.</p>
+                    <p style="color: #6b7280;">📅 ${dateStr}<br/>🕐 ${timeStr}</p>
+                </div>
+            `;
+            await sendEmail(participant.email, subject, html);
+        }
+
+        // 2. Notify household leads if the participant is in a household
+        if (participant.householdId) {
+            const householdLeads = await prisma.householdLead.findMany({
+                where: { householdId: participant.householdId },
+                include: {
+                    participant: {
+                        select: {
+                            id: true,
+                            email: true,
+                            name: true,
+                            notificationSettings: true
+                        }
+                    }
+                }
+            });
+
+            for (const lead of householdLeads) {
+                // Don't double-notify if the lead IS the participant
+                if (lead.participant.id === participant.id) continue;
+
+                const leadSettings = lead.participant.notificationSettings as any;
+                if (leadSettings?.emailDependentCheckins && lead.participant.email) {
+                    const subject = `${emoji} ${name} ${action} Innovation Treehouse`;
+                    const html = `
+                        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+                            <h2 style="color: #6366f1;">${emoji} Household Member ${type === 'checkin' ? 'Arrival' : 'Departure'}</h2>
+                            <p>Hi ${lead.participant.name || 'there'},</p>
+                            <p>Your household member <strong>${name}</strong> ${action} Innovation Treehouse.</p>
+                            <p style="color: #6b7280;">📅 ${dateStr}<br/>🕐 ${timeStr}</p>
+                        </div>
+                    `;
+                    await sendEmail(lead.participant.email, subject, html);
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error("Failed to send checkin notifications:", error);
     }
 }
