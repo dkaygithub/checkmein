@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
 import { sendCheckinNotifications } from "@/lib/notifications";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(req: NextRequest) {
     console.log("--> API /api/scan HIT");
     try {
         const rawBody = await req.text();
 
-        // Verify kiosk signature if public key is configured
+        let authStatus = "unauthorized";
+        let kioskError = "";
+
+        // 1. Kiosk Signature Authorization
         const pubKey = getKioskPublicKey();
         if (pubKey) {
-            const result = verifyKioskSignature(
+            const signatureResult = verifyKioskSignature(
                 "POST",
                 "/api/scan",
                 rawBody,
@@ -19,10 +24,16 @@ export async function POST(req: NextRequest) {
                 req.headers.get("x-kiosk-signature"),
                 pubKey
             );
-            if (!result.ok) {
-                console.log(`Kiosk signature rejected: ${result.error}`);
-                return NextResponse.json({ error: result.error }, { status: result.status });
+            if (signatureResult.ok) {
+                authStatus = "kiosk";
+            } else {
+                kioskError = signatureResult.error;
             }
+        } else {
+            // Dev mode: no key configured, treat as kiosk authorized if it looks like a kiosk request
+            // or if we just want to allow everything in dev.
+            // Following the pattern in /api/attendance/route.ts:
+            authStatus = "kiosk";
         }
 
         const body = JSON.parse(rawBody);
@@ -36,6 +47,33 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // 2. Web Session Authorization (only if not already authorized as a kiosk)
+        let isWebAuthorized = false;
+        let pendingHouseholdCheck = false;
+        let user: any = null;
+
+        if (authStatus !== "kiosk") {
+            const session = await getServerSession(authOptions);
+            user = session?.user as any;
+
+            if (user) {
+                const isSelf = participantId === Number(user.id);
+                const isAdmin = user.sysadmin || user.keyholder || user.boardMember;
+
+                if (isSelf || isAdmin) {
+                    isWebAuthorized = true;
+                    authStatus = "web";
+                } else if (user.householdId && user.householdLead) {
+                    pendingHouseholdCheck = true;
+                }
+            }
+        }
+
+        if (authStatus === "unauthorized" && !pendingHouseholdCheck) {
+            console.log(`Scan rejected: Kiosk error (${kioskError || "missing"}) and no valid web session.`);
+            return NextResponse.json({ error: "Unauthorized: Missing kiosk signature or invalid session" }, { status: 401 });
+        }
+
         console.log("Checking if participant exists...");
         const participant = await prisma.participant.findUnique({
             where: { id: participantId },
@@ -47,6 +85,14 @@ export async function POST(req: NextRequest) {
                 { error: `Participant ${participantId} not found.` },
                 { status: 404 }
             );
+        }
+
+        if (pendingHouseholdCheck) {
+            if (participant.householdId === user.householdId) {
+                isWebAuthorized = true;
+            } else {
+                return NextResponse.json({ error: "Forbidden: You are not authorized to scan this user." }, { status: 403 });
+            }
         }
 
         console.log("Logging raw badge event...");

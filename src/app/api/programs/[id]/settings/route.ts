@@ -34,13 +34,41 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const body = await req.json();
-        const { leadMentorNotificationSettings } = body;
+        const {
+            name,
+            leadMentorId,
+            begin,
+            end,
+            isPublished,
+            memberOnly,
+            minAge,
+            maxParticipants,
+            leadMentorNotificationSettings
+        } = body;
+
+        // Build data object for Prisma
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (begin !== undefined) updateData.begin = begin ? new Date(begin) : null;
+        if (end !== undefined) updateData.end = end ? new Date(end) : null;
+        if (isPublished !== undefined) updateData.isPublished = isPublished;
+        if (memberOnly !== undefined) updateData.memberOnly = memberOnly;
+        if (minAge !== undefined) updateData.minAge = minAge;
+        if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;
+        if (leadMentorNotificationSettings !== undefined) updateData.leadMentorNotificationSettings = leadMentorNotificationSettings === null ? null : (leadMentorNotificationSettings as any);
+
+        // leadMentorId can only be changed by SysAdmin or Board
+        if (leadMentorId !== undefined) {
+            if (isSysAdminOrBoard) {
+                updateData.leadMentorId = leadMentorId;
+            } else if (leadMentorId !== currentProgram.leadMentorId) {
+                return NextResponse.json({ error: "Forbidden: Only administrators can reassign lead mentors" }, { status: 403 });
+            }
+        }
 
         const updatedProgram = await prisma.program.update({
             where: { id: programId },
-            data: {
-                leadMentorNotificationSettings: leadMentorNotificationSettings !== undefined ? (leadMentorNotificationSettings as any) : undefined
-            }
+            data: updateData
         });
 
         await prisma.auditLog.create({
@@ -49,7 +77,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 action: 'EDIT',
                 tableName: 'Program',
                 affectedEntityId: programId,
-                newData: { leadMentorNotificationSettings } as any
+                newData: updateData
             }
         });
 
