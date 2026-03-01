@@ -120,6 +120,7 @@ export const authOptions: NextAuthOptions = {
                     token.keyholder = dbParticipant.keyholder;
                     token.boardMember = dbParticipant.boardMember;
                     token.shopSteward = dbParticipant.shopSteward;
+                    token.householdId = dbParticipant.householdId;
                     token.toolStatuses = dbParticipant.toolStatuses;
                 }
             }
@@ -133,6 +134,7 @@ export const authOptions: NextAuthOptions = {
                 (session.user as any).keyholder = token.keyholder;
                 (session.user as any).boardMember = token.boardMember;
                 (session.user as any).shopSteward = token.shopSteward;
+                (session.user as any).householdId = token.householdId;
                 (session.user as any).toolStatuses = token.toolStatuses || [];
             }
             return session;

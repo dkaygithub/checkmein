@@ -63,10 +63,11 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: Request) {
     const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
+    const user = session?.user as any;
 
-    // Only Sysadmins can force a checkout from the attendance dashboard
-    if (!(session?.user as any)?.sysadmin) {
-        return NextResponse.json({ error: "Forbidden: Only Admins can force checkout" }, { status: 403 });
+    if (!user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
@@ -75,6 +76,27 @@ export async function DELETE(req: Request) {
 
         if (!visitId) {
             return NextResponse.json({ error: "visitId is required" }, { status: 400 });
+        }
+
+        const visit = await prisma.visit.findUnique({
+            where: { id: visitId },
+            include: { participant: true }
+        });
+
+        if (!visit) {
+            return NextResponse.json({ error: "Visit not found" }, { status: 404 });
+        }
+
+        // Check permissions:
+        // 1. User checking out themselves
+        // 2. User is the household lead checking out a family member
+        // 3. User is an admin (sysadmin, keyholder, board member)
+        const isSelf = visit.participantId === Number(user.id);
+        const isHouseholdCheckOut = Boolean(user.householdId && visit.participant.householdId === user.householdId && user.householdLead);
+        const isAdmin = user.sysadmin || user.keyholder || user.boardMember;
+
+        if (!isSelf && !isHouseholdCheckOut && !isAdmin) {
+            return NextResponse.json({ error: "Forbidden: You are not authorized to check out this user." }, { status: 403 });
         }
 
         const updatedVisit = await prisma.visit.update({
@@ -90,19 +112,19 @@ export async function DELETE(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-    const currentUserIsKeyholderOrAdmin = (session?.user as any)?.sysadmin || (session?.user as any)?.keyholder;
+    const user = session?.user as any;
+
+    if (!user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const isAdmin = user.sysadmin || user.keyholder || user.boardMember;
 
     try {
         const body = await req.json();
         const { type, message, participantId } = body;
 
-        // Manual Check-in by a Keyholder
+        // Manual Check-in explicitly via the Dashboard
         if (type === 'MANUAL_CHECKIN') {
-            if (!currentUserIsKeyholderOrAdmin) {
-                return NextResponse.json({ error: "Forbidden: Only Keyholders can manually check members in" }, { status: 403 });
-            }
-
             if (!participantId) {
                 return NextResponse.json({ error: "participantId is required" }, { status: 400 });
             }
@@ -114,6 +136,13 @@ export async function POST(req: Request) {
 
             if (!participant) {
                 return NextResponse.json({ error: "Participant not found" }, { status: 404 });
+            }
+
+            // Check Permissions
+            const isSelf = participant.id === Number(user.id);
+            const isHouseholdCheckIn = Boolean(user.householdId && participant.householdId === user.householdId && user.householdLead);
+            if (!isSelf && !isHouseholdCheckIn && !isAdmin) {
+                return NextResponse.json({ error: "Forbidden: You are not authorized to check in this user." }, { status: 403 });
             }
 
             // Verify they aren't already checked in

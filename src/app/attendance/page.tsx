@@ -37,6 +37,7 @@ export default function AttendanceDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [checkingOut, setCheckingOut] = useState<number | null>(null);
+    const [household, setHousehold] = useState<any>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -45,7 +46,30 @@ export default function AttendanceDashboard() {
 
     const currentUserIsSysadmin = (session?.user as any)?.sysadmin || false;
     const currentUserIsKeyholder = (session?.user as any)?.keyholder || false;
-    const canManuallyCheckIn = currentUserIsSysadmin || currentUserIsKeyholder;
+    const currentUserIsBoardMember = (session?.user as any)?.boardMember || false;
+    const currentUserHouseholdId = (session?.user as any)?.householdId || null;
+    const canManuallyCheckInGlobal = currentUserIsSysadmin || currentUserIsKeyholder || currentUserIsBoardMember;
+    const canCheckInHousehold = Boolean(currentUserHouseholdId);
+
+
+    const fetchHousehold = async () => {
+        if (!currentUserHouseholdId) return;
+        try {
+            const res = await fetch("/api/household");
+            if (res.ok) {
+                const data = await res.json();
+                setHousehold(data.household);
+            }
+        } catch (error) {
+            console.error("Failed to fetch household:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (canCheckInHousehold) {
+            fetchHousehold();
+        }
+    }, [canCheckInHousehold]);
 
     const fetchAttendance = async () => {
         try {
@@ -174,6 +198,23 @@ export default function AttendanceDashboard() {
     return (
         <main className={styles.main}>
             <div className="glass-container" style={{ width: "100%", maxWidth: "800px" }}>
+                <div style={{ marginBottom: '2rem' }}>
+                    {!attendance.some(v => v.participant.id === (session?.user as any)?.id) ? (
+                        <button
+                            onClick={() => handleManualCheckIn((session?.user as any)?.id)}
+                            disabled={checkingInId === (session?.user as any)?.id}
+                            className="glass-button primary"
+                            style={{ padding: '1rem 2rem', fontSize: '1.1rem', fontWeight: 600, width: '100%' }}
+                        >
+                            {checkingInId === (session?.user as any)?.id ? 'Checking In...' : 'Check Me In'}
+                        </button>
+                    ) : (
+                        <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', color: '#6ee7b7', textAlign: 'center' }}>
+                            You are currently checked in!
+                        </div>
+                    )}
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h1 className="text-gradient" style={{ margin: 0 }}>Current Attendance</h1>
                     <div style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -182,7 +223,29 @@ export default function AttendanceDashboard() {
                     </div>
                 </div>
 
-                {canManuallyCheckIn && (
+                {canCheckInHousehold && household && household.leads?.some((l:any) => l.participantId === (session?.user as any)?.id) && (
+                    <div style={{ marginBottom: '2rem' }}>
+                        <h3 style={{ marginBottom: '1rem', color: 'var(--color-primary-light)' }}>Check In Household Members</h3>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {household.participants?.filter((p:any) => !attendance.some(v => v.participant.id === p.id)).map((p:any) => (
+                                <button
+                                    key={p.id}
+                                    onClick={() => handleManualCheckIn(p.id)}
+                                    disabled={checkingInId === p.id}
+                                    className="glass-button"
+                                    style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                >
+                                    {checkingInId === p.id ? '...' : <span>{p.name || p.email}</span>}
+                                </button>
+                            ))}
+                            {household.participants?.filter((p:any) => !attendance.some(v => v.participant.id === p.id)).length === 0 && (
+                                <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.875rem' }}>All household members are currently checked in!</span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {canManuallyCheckInGlobal && (
                     <div style={{ marginBottom: '2rem', position: 'relative' }}>
                         <input
                             type="text"
@@ -314,7 +377,7 @@ export default function AttendanceDashboard() {
                                     <div style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
                                         Arrived: {new Date(visit.arrived).toLocaleTimeString()}
                                     </div>
-                                    {currentUserIsSysadmin && (
+                                    {(currentUserIsSysadmin || currentUserIsKeyholder || currentUserIsBoardMember || visit.participant.id === (session?.user as any)?.id || (household?.leads?.some((l:any) => l.participantId === (session?.user as any)?.id) && visit.participant.householdId === currentUserHouseholdId)) && (
                                         <button
                                             onClick={() => handleForceCheckout(visit.id)}
                                             disabled={checkingOut === visit.id}
