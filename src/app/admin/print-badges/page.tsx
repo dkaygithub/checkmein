@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { pdf } from "@react-pdf/renderer";
 import BadgeDocument from "@/components/admin/BadgeDocument";
+import StickerDocument from "@/components/admin/StickerDocument";
 import styles from "../../page.module.css";
 
 export default function PrintBadgesPage() {
@@ -105,6 +106,45 @@ export default function PrintBadgesPage() {
         }
     };
 
+    const generateStickerPdf = async () => {
+        if (selectedIds.size === 0) return;
+        setIsGenerating(true);
+
+        try {
+            const selectedParticipants = participants.filter(p => selectedIds.has(p.id));
+
+            // Add QR code data URIs
+            const badgesWithQr = await Promise.all(
+                selectedParticipants.map(async (p) => {
+                    const qrDataUri = await QRCode.toDataURL(p.id.toString(), {
+                        width: 200,
+                        margin: 1,
+                        color: { dark: '#000000', light: '#FFFFFF' }
+                    });
+                    return { ...p, qrDataUri };
+                })
+            );
+
+            const blob = await pdf(<StickerDocument badges={badgesWithQr} />).toBlob();
+
+            // Trigger download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `stickers-${Date.now()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+        } catch (e) {
+            console.error("Failed to generate stickers PDF", e);
+            alert("Failed to generate stickers PDF. Please try again.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     if (status === "loading") return null;
 
     return (
@@ -148,7 +188,15 @@ export default function PrintBadgesPage() {
                         onClick={generatePdf}
                         disabled={selectedIds.size === 0 || isGenerating}
                     >
-                        {isGenerating ? 'Generating...' : `Generate PDF (${selectedIds.size})`}
+                        {isGenerating ? 'Generating...' : `Generate Badge (${selectedIds.size})`}
+                    </button>
+                    <button
+                        className="glass-button"
+                        style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
+                        onClick={generateStickerPdf}
+                        disabled={selectedIds.size === 0 || isGenerating}
+                    >
+                        {isGenerating ? 'Generating...' : `Generate Sticker (${selectedIds.size})`}
                     </button>
                 </div>
 
