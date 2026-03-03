@@ -30,6 +30,7 @@ export default function HouseholdPage() {
     });
 
     const [visits, setVisits] = useState<any[]>([]);
+    const [filterDate, setFilterDate] = useState("");
     const [settings, setSettings] = useState({
         emailDependentCheckins: false
     });
@@ -41,13 +42,13 @@ export default function HouseholdPage() {
         } else if (status === "authenticated") {
             fetchHousehold();
         }
-    }, [status, router]);
+    }, [status, router, filterDate]);
 
     const fetchHousehold = async () => {
         try {
             const [res, visitRes, profileRes] = await Promise.all([
                 fetch('/api/household'),
-                fetch('/api/household/visits'),
+                fetch(`/api/household/visits?date=${filterDate}`),
                 fetch('/api/profile')
             ]);
             if (res.ok) {
@@ -400,7 +401,29 @@ export default function HouseholdPage() {
 
             {household && (
                 <div className="glass-container animate-float" style={{ maxWidth: '800px', marginTop: '2rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Household Check-ins</h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Household Check-ins</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <label htmlFor="history-date" style={{ fontSize: '0.9rem', color: 'var(--color-primary)' }}>Lookup Date:</label>
+                            <input
+                                id="history-date"
+                                type="date"
+                                className="glass-input"
+                                value={filterDate || new Date().toISOString().split('T')[0]}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                style={{ padding: '0.3rem 0.5rem', width: 'auto' }}
+                            />
+                        </div>
+                    </div>
+
+                    <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+                        {filterDate ? (
+                            <>Showing activity from <strong>{new Date(new Date(filterDate).getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</strong> to <strong>{new Date(new Date(filterDate).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</strong></>
+                        ) : (
+                            <>Showing activity for the <strong>past 7 days</strong></>
+                        )}
+                    </p>
+
                     {visits.length === 0 ? (
                         <p style={{ color: 'var(--color-text-muted)' }}>No historical visits found for your household.</p>
                     ) : (

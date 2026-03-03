@@ -24,14 +24,16 @@ export default function ProfilePage() {
         notifyEventReminders: true
     });
     const [visits, setVisits] = useState<any[]>([]);
+    const [filterDate, setFilterDate] = useState("");
 
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
             fetchProfile();
+            fetchVisits();
         }
-    }, [status, router]);
+    }, [status, router, filterDate]);
 
     const fetchProfile = async () => {
         try {
@@ -49,7 +51,6 @@ export default function ProfilePage() {
                     notifyNewPrograms: settings.notifyNewPrograms !== undefined ? settings.notifyNewPrograms : true,
                     notifyEventReminders: settings.notifyEventReminders !== undefined ? settings.notifyEventReminders : true
                 });
-                setVisits(data.profile.visits || []);
             } else {
                 setMessage("Failed to load profile.");
             }
@@ -57,6 +58,18 @@ export default function ProfilePage() {
             setMessage("Network error loading profile.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchVisits = async () => {
+        try {
+            const res = await fetch(`/api/profile/visits?date=${filterDate}`);
+            if (res.ok) {
+                const data = await res.json();
+                setVisits(data.visits || []);
+            }
+        } catch (error) {
+            console.error("Error fetching visits:", error);
         }
     };
 
@@ -236,7 +249,29 @@ export default function ProfilePage() {
             </div>
 
             <div className="glass-container animate-float" style={{ maxWidth: '600px', marginTop: '2rem' }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Recent Check-ins</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Recent Check-ins</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <label htmlFor="history-date" style={{ fontSize: '0.9rem', color: 'var(--color-primary)' }}>Lookup Date:</label>
+                        <input
+                            id="history-date"
+                            type="date"
+                            className="glass-input"
+                            value={filterDate || new Date().toISOString().split('T')[0]}
+                            onChange={(e) => setFilterDate(e.target.value)}
+                            style={{ padding: '0.3rem 0.5rem', width: 'auto' }}
+                        />
+                    </div>
+                </div>
+
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+                    {filterDate ? (
+                        <>Showing activity from <strong>{new Date(new Date(filterDate).getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</strong> to <strong>{new Date(new Date(filterDate).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</strong></>
+                    ) : (
+                        <>Showing activity for the <strong>past 7 days</strong></>
+                    )}
+                </p>
+
                 {visits.length === 0 ? (
                     <p style={{ color: 'var(--color-text-muted)' }}>No historical visits found.</p>
                 ) : (

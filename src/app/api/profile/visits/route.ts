@@ -29,37 +29,26 @@ export async function GET(req: NextRequest) {
             startDate.setDate(endDate.getDate() - 7);
         }
 
-        // Find the user's household
-        const user = await prisma.participant.findUnique({
-            where: { id: userId },
-            select: { householdId: true }
-        });
-
-        if (!user || !user.householdId) {
-            return NextResponse.json({ visits: [] }, { status: 200 }); // Not in a household
-        }
-
-        // Fetch visits for anyone in this household within the date range
         const visits = await prisma.visit.findMany({
             where: {
-                participant: {
-                    householdId: user.householdId
-                },
+                participantId: userId,
                 arrived: {
                     gte: startDate,
                     lte: endDate
                 }
             },
             orderBy: { arrived: 'desc' },
-            include: {
-                participant: { select: { id: true, name: true } },
-                event: { select: { id: true, name: true } }
+            select: {
+                id: true,
+                arrived: true,
+                departed: true,
+                event: { select: { name: true } }
             }
         });
 
         return NextResponse.json({ visits }, { status: 200 });
     } catch (error: any) {
-        console.error("Household Visits GET Error:", error);
+        console.error("Profile Visits GET Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
