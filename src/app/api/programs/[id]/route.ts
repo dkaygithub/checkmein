@@ -26,7 +26,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 participants: {
                     include: { participant: true }
                 },
-                events: true,
+                events: {
+                    orderBy: {
+                        start: 'asc'
+                    }
+                },
                 fees: true
             }
         });
