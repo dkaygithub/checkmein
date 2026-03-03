@@ -24,15 +24,35 @@ export async function GET(request: NextRequest) {
     // Schema shows Participant: id, googleId, email, name, emailVerified, image, dob, ...
     // No createdAt. Let's just filter by ID descending to approximate recency.
 
-    let whereClause: any = {};
+    const andClauses: any[] = [];
+
+    if (filter === 'adults') {
+        const eighteenYearsAgo = new Date(now);
+        eighteenYearsAgo.setFullYear(now.getFullYear() - 18);
+        andClauses.push({
+            OR: [
+                { dob: { lte: eighteenYearsAgo } },
+                { dob: null }
+            ]
+        });
+        andClauses.push({
+            OR: [
+                { memberships: { some: { active: true } } },
+                { household: { memberships: { some: { active: true } } } }
+            ]
+        });
+    }
+
     if (q) {
-        whereClause = {
+        andClauses.push({
             OR: [
                 { name: { contains: q, mode: 'insensitive' } },
                 { email: { contains: q, mode: 'insensitive' } },
             ]
-        };
+        });
     }
+
+    const whereClause = andClauses.length > 0 ? { AND: andClauses } : {};
 
     // Since we don't have a creation date on Participant, we will return top 100 recent participants by default 
     // or search matches.

@@ -80,7 +80,7 @@ export default function CreateProgramPage() {
             <div className={`glass-container animate-float ${styles.heroContainer}`} style={{ maxWidth: '800px', width: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>Create Program</h1>
-                    <button className="glass-button" onClick={() => router.push('/admin/programs')} style={{ padding: '0.5rem 1rem' }}>
+                    <button className="glass-button" onClick={() => router.push('/programs')} style={{ padding: '0.5rem 1rem' }}>
                         &larr; Back to Programs
                     </button>
                 </div>

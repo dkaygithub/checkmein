@@ -18,7 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
 
         const body = await req.json();
-        const { participantId, isCore } = body;
+        const { participantId } = body;
 
         if (!participantId) {
             return NextResponse.json({ error: "participantId is required" }, { status: 400 });
@@ -41,7 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             data: {
                 programId,
                 participantId,
-                isCore: isCore || false
+                isCore: false
             }
         });
 
@@ -121,5 +121,69 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     } catch (error) {
         console.error("Volunteer removal error:", error);
         return NextResponse.json({ error: "Failed to remove volunteer" }, { status: 500 });
+    }
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+        const programId = parseInt(id, 10);
+        if (isNaN(programId)) {
+            return NextResponse.json({ error: "Invalid program ID" }, { status: 400 });
+        }
+
+        const body = await req.json();
+        const { participantId, isCore } = body;
+
+        if (!participantId || isCore === undefined) {
+            return NextResponse.json({ error: "participantId and isCore are required" }, { status: 400 });
+        }
+
+        const currentProgram = await prisma.program.findUnique({ where: { id: programId } });
+        if (!currentProgram) {
+            return NextResponse.json({ error: "Program not found" }, { status: 404 });
+        }
+
+        const currentUserId = (session.user as any).id;
+        const isLeadMentor = currentProgram.leadMentorId === currentUserId;
+        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+
+        if (!isLeadMentor && !isSysAdminOrBoard) {
+            return NextResponse.json({ error: "Forbidden: Not authorized to modify volunteers" }, { status: 403 });
+        }
+
+        const assignment = await prisma.programVolunteer.update({
+            where: {
+                programId_participantId: {
+                    programId,
+                    participantId
+                }
+            },
+            data: {
+                isCore
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                actorId: currentUserId,
+                action: 'EDIT',
+                tableName: 'ProgramVolunteer',
+                affectedEntityId: participantId,
+                secondaryAffectedEntity: programId,
+                newData: JSON.stringify(assignment)
+            }
+        });
+
+        return NextResponse.json({ success: true, assignment });
+    } catch (error) {
+        console.error("Volunteer toggle error:", error);
+        return NextResponse.json({ error: "Failed to toggle volunteer" }, { status: 500 });
     }
 }

@@ -31,6 +31,7 @@ type ProgramDetail = {
         start: string;
         end: string;
     }[];
+    leadMentor: { name: string | null; email: string } | null;
 };
 
 type ParticipantOption = {
@@ -45,7 +46,6 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
     const router = useRouter();
 
     const [program, setProgram] = useState<ProgramDetail | null>(null);
-    const [allParticipants, setAllParticipants] = useState<ParticipantOption[]>([]);
 
     // Form States
     const [begin, setBegin] = useState("");
@@ -54,10 +54,24 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
     const [maxParticipants, setMaxParticipants] = useState("");
     const [isPublished, setIsPublished] = useState(false);
     const [memberOnly, setMemberOnly] = useState(false);
+    const [leadMentorIdInput, setLeadMentorIdInput] = useState("");
 
-    // Volunteer Form
     const [newVolId, setNewVolId] = useState("");
-    const [newVolCore, setNewVolCore] = useState(false);
+
+    const [newPartId, setNewPartId] = useState("");
+
+    const [volSearch, setVolSearch] = useState("");
+    const [volResults, setVolResults] = useState<ParticipantOption[]>([]);
+    const [volSearching, setVolSearching] = useState(false);
+
+    const [mentorSearch, setMentorSearch] = useState("");
+    const [mentorResults, setMentorResults] = useState<ParticipantOption[]>([]);
+    const [mentorSearching, setMentorSearching] = useState(false);
+    const [isEditingMentor, setIsEditingMentor] = useState(false);
+
+    const [partSearch, setPartSearch] = useState("");
+    const [partResults, setPartResults] = useState<ParticipantOption[]>([]);
+    const [partSearching, setPartSearching] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -69,9 +83,70 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
             router.push('/');
         } else if (status === "authenticated") {
             fetchProgram();
-            fetchAllParticipants();
         }
     }, [status, router, id]);
+
+    const searchParticipants = async (query: string, setResults: any, setLocalLoading: any) => {
+        if (!query.trim()) {
+            setResults([]);
+            return;
+        }
+        setLocalLoading(true);
+        try {
+            const res = await fetch(`/api/programs/${id}/eligible-participants?q=${encodeURIComponent(query)}`);
+            if (res.ok) {
+                const data = await res.json();
+                setResults(data.members || []);
+            }
+        } finally {
+            setLocalLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (volSearch && !newVolId) {
+                searchParticipants(volSearch, setVolResults, setVolSearching);
+            } else if (!volSearch) {
+                setVolResults([]);
+            }
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [volSearch, newVolId, id]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (mentorSearch && !leadMentorIdInput) {
+                const searchMentors = async () => {
+                    setMentorSearching(true);
+                    try {
+                        const res = await fetch(`/api/admin/participants/search?q=${encodeURIComponent(mentorSearch)}&filter=adults`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            setMentorResults(data.participants || []);
+                        }
+                    } finally {
+                        setMentorSearching(false);
+                    }
+                };
+                searchMentors();
+            } else if (!mentorSearch) {
+                setMentorResults([]);
+            }
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [mentorSearch, leadMentorIdInput]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (partSearch && !newPartId) {
+                searchParticipants(partSearch, setPartResults, setPartSearching);
+            } else if (!partSearch) {
+                setPartResults([]);
+            }
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [partSearch, newPartId, id]);
 
     const fetchProgram = async () => {
         try {
@@ -84,9 +159,15 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 if (data.begin) setBegin(data.begin.split('T')[0]);
                 if (data.end) setEnd(data.end.split('T')[0]);
                 setMinAge(data.minAge !== null ? String(data.minAge) : "");
-                setMaxParticipants(data.maxParticipants !== null ? String(data.maxParticipants) : "");
                 setIsPublished(Boolean(data.isPublished));
                 setMemberOnly(Boolean(data.memberOnly));
+                setLeadMentorIdInput(data.leadMentorId !== null ? String(data.leadMentorId) : "");
+                if (data.leadMentor) {
+                    setMentorSearch(`${data.leadMentor.name || 'Unnamed'} (${data.leadMentor.email})`);
+                } else {
+                    setMentorSearch("");
+                }
+                setIsEditingMentor(false);
             } else if (res.status === 404) {
                 setMessage("Program not found.");
             } else {
@@ -99,17 +180,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
         }
     };
 
-    const fetchAllParticipants = async () => {
-        try {
-            const res = await fetch('/api/household/member'); // Getting all available members/participants
-            if (res.ok) {
-                const data = await res.json();
-                setAllParticipants(data.members || []);
-            }
-        } catch {
-            // silent fail
-        }
-    };
+
 
     const handleSaveGeneral = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -126,7 +197,8 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                     minAge: minAge ? parseInt(minAge) : null,
                     maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
                     isPublished,
-                    memberOnly
+                    memberOnly,
+                    leadMentorId: leadMentorIdInput ? parseInt(leadMentorIdInput) : null
                 })
             });
 
@@ -154,13 +226,12 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    participantId: parseInt(newVolId),
-                    isCore: newVolCore
+                    participantId: parseInt(newVolId)
                 })
             });
             if (res.ok) {
                 setNewVolId("");
-                setNewVolCore(false);
+                setVolSearch("");
                 fetchProgram();
             }
         } finally {
@@ -180,9 +251,25 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
         } catch { }
     };
 
+    const handleToggleCore = async (participantId: number, isCore: boolean) => {
+        setSaving(true);
+        try {
+            const res = await fetch(`/api/programs/${id}/volunteers`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ participantId, isCore })
+            });
+            if (res.ok) {
+                fetchProgram();
+            }
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleAddParticipant = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newVolId) return; // Reusing state for the same lookup
+        if (!newPartId) return;
 
         setSaving(true);
         setMessage("");
@@ -191,12 +278,14 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    participantId: parseInt(newVolId),
+                    participantId: parseInt(newPartId),
                     override: true
                 })
             });
             if (res.ok) {
-                setNewVolId("");
+                setNewPartId("");
+                setPartResults([]);
+                setPartSearch("");
                 fetchProgram();
             } else {
                 const data = await res.json();
@@ -233,7 +322,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
         <main className={styles.main}>
             <div className="glass-container animate-float">
                 <h2>{message || "Not Found"}</h2>
-                <button className="glass-button" onClick={() => router.push('/admin/programs')}>Back</button>
+                <button className="glass-button" onClick={() => router.push('/programs')}>Back</button>
             </div>
         </main>
     );
@@ -245,11 +334,15 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
             <main className={styles.main}>
                 <div className="glass-container animate-float">
                     <h2>Forbidden: Not authorized to manage this program.</h2>
-                    <button className="glass-button" onClick={() => router.push('/admin/programs')}>Back</button>
+                    <button className="glass-button" onClick={() => router.push('/programs')}>Back</button>
                 </div>
             </main>
         );
     }
+
+    const sortedVolunteers = program.volunteers ? [...program.volunteers].sort((a, b) => (b.isCore ? 1 : 0) - (a.isCore ? 1 : 0)) : [];
+
+    const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
 
     return (
         <main className={styles.main}>
@@ -258,7 +351,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>
                         {program.name} {program.isPublished ? <span style={{ fontSize: '1rem', background: '#4ade80', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle' }}>Published</span> : <span style={{ fontSize: '1rem', background: '#fbbf24', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle' }}>Draft</span>}
                     </h1>
-                    <button className="glass-button" onClick={() => router.push('/admin/programs')} style={{ padding: '0.5rem 1rem' }}>
+                    <button className="glass-button" onClick={() => router.push('/programs')} style={{ padding: '0.5rem 1rem' }}>
                         &larr; Back to Programs
                     </button>
                 </div>
@@ -286,7 +379,102 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
 
                 {activeTab === 'general' && (
                     <form onSubmit={handleSaveGeneral}>
+                        <div style={{ display: 'grid', gap: '2rem', marginBottom: '2rem' }}>
+                            {/* Metadata Stats Row */}
+                            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{program.participants?.length || 0} {program.maxParticipants ? `/ ${program.maxParticipants}` : ''}</div>
+                                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Participants Enrolled</div>
+                                </div>
+                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', height: '2rem' }}></div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{program.volunteers?.length || 0}</div>
+                                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Assigned Volunteers</div>
+                                </div>
+                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', height: '2rem' }}></div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{program.events?.length || 0}</div>
+                                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Scheduled Sessions</div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                            <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Lead Mentor / Program Coordinator</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                    {isSysAdminOrBoard ? (
+                                        <>
+                                            {program.leadMentor && !isEditingMentor ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                                                    <span style={{ fontSize: '1.1rem', color: '#4ade80' }}>
+                                                        {program.leadMentor.name || 'Unnamed'} ({program.leadMentor.email})
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setIsEditingMentor(true); setMentorSearch(""); setLeadMentorIdInput(""); }}
+                                                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                                                    >
+                                                        Change
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div style={{ position: 'relative', flex: 1, minWidth: '250px' }}>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                        <input
+                                                            type="text"
+                                                            className="glass-input"
+                                                            value={mentorSearch}
+                                                            onChange={e => { setMentorSearch(e.target.value); setLeadMentorIdInput(""); }}
+                                                            style={{ width: '100%', padding: '0.75rem' }}
+                                                            placeholder="Search Adult Members..."
+                                                        />
+                                                        {program.leadMentor && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setIsEditingMentor(false);
+                                                                    setLeadMentorIdInput(String(program.leadMentorId));
+                                                                    setMentorSearch(`${program.leadMentor?.name || 'Unnamed'} (${program.leadMentor?.email})`);
+                                                                }}
+                                                                style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '0.5rem', fontSize: '0.9rem' }}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {mentorSearching && <div style={{ position: 'absolute', right: '10px', top: '15px', color: 'gray', fontSize: '0.8rem' }}>Loading...</div>}
+                                                    {mentorResults.length > 0 && !leadMentorIdInput && (
+                                                        <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginTop: '4px' }}>
+                                                            {mentorResults.map(p => (
+                                                                <div key={p.id} onClick={() => { setLeadMentorIdInput(p.id.toString()); setMentorSearch(`${p.name || 'Unnamed'} (${p.email})`); setMentorResults([]); }} style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
+                                                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{p.email}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {program.leadMentor ? (
+                                                <span style={{ fontSize: '1.1rem', color: '#4ade80' }}>
+                                                    {program.leadMentor.name || 'Unnamed'} ({program.leadMentor.email})
+                                                </span>
+                                            ) : (
+                                                <span style={{ fontSize: '1rem', color: 'gray' }}>No Lead Mentor Assigned</span>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                                {!isSysAdminOrBoard && <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>*Only Administrators/Board Members can change the Lead Mentor ID.</p>}
+                                {isSysAdminOrBoard && <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#fcd34d' }}>*You have permission to reassign this program. Enter the Participant ID of the new Lead Mentor.</p>}
+                            </div >
+
                             <div>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Start Date</label>
                                 <input type="date" className="glass-input" value={begin} onChange={e => setBegin(e.target.value)} style={{ width: '100%', padding: '0.75rem' }} />
@@ -310,125 +498,149 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <input type="checkbox" id="isPublished" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem' }} />
-                                <label htmlFor="isPublished" style={{ fontWeight: 500, cursor: 'pointer' }}>Published (Visible to public)</label>
+                                <label htmlFor="isPublished" style={{ fontWeight: 500, cursor: 'pointer' }}>Published (Visible to all participants)</label>
                             </div>
-                        </div>
+                        </div >
                         <button type="submit" className="glass-button" disabled={saving} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
                             {saving ? "Saving..." : "Save Settings"}
                         </button>
-                    </form>
-                )}
+                    </form >
+                )
+                }
 
-                {activeTab === 'roster' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-                        {/* Volunteers Section */}
-                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
-                            <h3 style={{ margin: '0 0 1rem 0' }}>Volunteers ({program.volunteers.length})</h3>
+                {
+                    activeTab === 'roster' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                            {/* Volunteers Section */}
+                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
+                                <h3 style={{ margin: '0 0 1rem 0' }}>Volunteers ({program.volunteers.length})</h3>
 
-                            <form onSubmit={handleAddVolunteer} style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                                <div style={{ flex: 1, minWidth: '200px' }}>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.25rem' }}>Assign Volunteer</label>
-                                    <select className="glass-input" value={newVolId} onChange={e => setNewVolId(e.target.value)} style={{ width: '100%', padding: '0.5rem' }} required>
-                                        <option value="">-- Select Member --</option>
-                                        {allParticipants.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name || 'Unnamed'} ({p.email})</option>
+                                <form onSubmit={handleAddVolunteer} style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                    <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.25rem' }}>Assign Volunteer (Name/Email)</label>
+                                        <input type="text" className="glass-input" value={volSearch} onChange={e => { setVolSearch(e.target.value); setNewVolId(""); }} placeholder="Start typing to search..." style={{ width: '100%', padding: '0.5rem' }} />
+                                        {volSearching && <div style={{ position: 'absolute', right: '10px', top: '35px', color: 'gray', fontSize: '0.8rem' }}>Loading...</div>}
+                                        {volResults.length > 0 && !newVolId && (
+                                            <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginTop: '4px' }}>
+                                                {volResults.map(p => (
+                                                    <div key={p.id} onClick={() => { setNewVolId(p.id.toString()); setVolSearch(`${p.name || 'Unnamed'} (${p.email})`); setVolResults([]); }} style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{p.email}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button type="submit" className="glass-button" disabled={saving || !newVolId} style={{ padding: '0.5rem 1rem' }}>Add</button>
+                                </form>
+
+                                {program.volunteers.length === 0 ? <p style={{ color: 'gray', margin: 0 }}>No volunteers assigned.</p> :
+                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        {sortedVolunteers.map(v => (
+                                            <li key={v.participantId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.75rem 1rem', borderRadius: '4px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                                    <span style={{ fontWeight: 500 }}>
+                                                        {v.participant.name || 'Unnamed'} <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 400 }}>({v.participant.email})</span>
+                                                    </span>
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer', background: v.isCore ? 'rgba(234, 179, 8, 0.2)' : 'rgba(255,255,255,0.1)', color: v.isCore ? '#eab308' : '#cbd5e1', padding: '0.2rem 0.5rem', borderRadius: '4px', border: v.isCore ? '1px solid rgba(234, 179, 8, 0.5)' : '1px solid transparent' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={v.isCore}
+                                                            onChange={e => handleToggleCore(v.participantId, e.target.checked)}
+                                                            disabled={saving}
+                                                            style={{ cursor: 'pointer' }}
+                                                        />
+                                                        Core Staff
+                                                    </label>
+                                                </div>
+                                                <button onClick={() => handleRemoveVolunteer(v.participantId)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.25rem 0.5rem' }}>Remove</button>
+                                            </li>
                                         ))}
-                                    </select>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.5rem' }}>
-                                    <input type="checkbox" id="isCore" checked={newVolCore} onChange={e => setNewVolCore(e.target.checked)} />
-                                    <label htmlFor="isCore">Core Staff</label>
-                                </div>
-                                <button type="submit" className="glass-button" disabled={saving || !newVolId} style={{ padding: '0.5rem 1rem' }}>Add</button>
-                            </form>
+                                    </ul>
+                                }
+                            </div>
 
-                            {program.volunteers.length === 0 ? <p style={{ color: 'gray', margin: 0 }}>No volunteers assigned.</p> :
-                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {program.volunteers.map(v => (
-                                        <li key={v.participantId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
-                                            <span>
-                                                {v.participant.name || 'Unnamed'} ({v.participant.email})
-                                                {v.isCore && <span style={{ marginLeft: '0.5rem', background: '#eab308', color: '#000', fontSize: '0.8rem', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>Core</span>}
-                                            </span>
-                                            <button onClick={() => handleRemoveVolunteer(v.participantId)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>Remove</button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            }
-                        </div>
+                            {/* Participants Section */}
+                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
+                                <h3 style={{ margin: '0 0 1rem 0' }}>Enrolled Participants ({program.participants.length})</h3>
 
-                        {/* Participants Section */}
-                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
-                            <h3 style={{ margin: '0 0 1rem 0' }}>Enrolled Participants ({program.participants.length})</h3>
+                                <form onSubmit={handleAddParticipant} style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                    <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.25rem' }}>Assign Participant (Name/Email)</label>
+                                        <input type="text" className="glass-input" value={partSearch} onChange={e => { setPartSearch(e.target.value); setNewPartId(""); }} placeholder="Start typing to search..." style={{ width: '100%', padding: '0.5rem' }} />
+                                        {partSearching && <div style={{ position: 'absolute', right: '10px', top: '35px', color: 'gray', fontSize: '0.8rem' }}>Loading...</div>}
+                                        {partResults.length > 0 && !newPartId && (
+                                            <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginTop: '4px' }}>
+                                                {partResults.map(p => (
+                                                    <div key={p.id} onClick={() => { setNewPartId(p.id.toString()); setPartSearch(`${p.name || 'Unnamed'} (${p.email})`); setPartResults([]); }} style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{p.email}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button type="submit" className="glass-button" disabled={saving || !newPartId} style={{ padding: '0.5rem 1rem' }}>Enroll</button>
+                                </form>
 
-                            <form onSubmit={handleAddParticipant} style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                                <div style={{ flex: 1, minWidth: '200px' }}>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.25rem' }}>Assign Participant</label>
-                                    <select className="glass-input" value={newVolId} onChange={e => setNewVolId(e.target.value)} style={{ width: '100%', padding: '0.5rem' }} required>
-                                        <option value="">-- Select Member --</option>
-                                        {allParticipants.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name || 'Unnamed'} ({p.email})</option>
+                                {program.participants.length === 0 ? <p style={{ color: 'gray', margin: 0 }}>No participants yet.</p> :
+                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        {program.participants.map(p => (
+                                            <li key={p.participantId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
+                                                <span>{p.participant.name || 'Unnamed'} ({p.participant.email})</span>
+                                                <button onClick={() => handleRemoveParticipant(p.participantId)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>Remove</button>
+                                            </li>
                                         ))}
-                                    </select>
-                                </div>
-                                <button type="submit" className="glass-button" disabled={saving || !newVolId} style={{ padding: '0.5rem 1rem' }}>Enroll</button>
-                            </form>
-
-                            {program.participants.length === 0 ? <p style={{ color: 'gray', margin: 0 }}>No participants yet.</p> :
-                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {program.participants.map(p => (
-                                        <li key={p.participantId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
-                                            <span>{p.participant.name || 'Unnamed'} ({p.participant.email})</span>
-                                            <button onClick={() => handleRemoveParticipant(p.participantId)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>Remove</button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            }
+                                    </ul>
+                                }
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
-                {activeTab === 'events' && (
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ margin: 0 }}>Events ({program.events.length})</h3>
-                            <button className="glass-button" onClick={() => router.push(`/admin/events/new?programId=${program.id}`)} style={{ padding: '0.5rem 1rem', background: 'rgba(56, 189, 248, 0.2)', borderColor: 'rgba(56, 189, 248, 0.5)' }}>
-                                + Schedule Session
-                            </button>
-                        </div>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                                        <th style={{ padding: '0.75rem' }}>Event Name</th>
-                                        <th style={{ padding: '0.75rem' }}>Start Time</th>
-                                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {program.events.map(ev => (
-                                        <tr key={ev.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <td style={{ padding: '0.75rem', fontWeight: 500 }}>{ev.name}</td>
-                                            <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)' }}>{new Date(ev.start).toLocaleString()}</td>
-                                            <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                                                <Link href={`/admin/events/${ev.id}`} style={{ color: '#60a5fa', textDecoration: 'none' }}>
-                                                    Attendance &rarr;
-                                                </Link>
-                                            </td>
+                {
+                    activeTab === 'events' && (
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{ margin: 0 }}>Events ({program.events.length})</h3>
+                                <button className="glass-button" onClick={() => router.push(`/admin/events/new?programId=${program.id}`)} style={{ padding: '0.5rem 1rem', background: 'rgba(56, 189, 248, 0.2)', borderColor: 'rgba(56, 189, 248, 0.5)' }}>
+                                    + Schedule Session
+                                </button>
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                                            <th style={{ padding: '0.75rem' }}>Event Name</th>
+                                            <th style={{ padding: '0.75rem' }}>Start Time</th>
+                                            <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
                                         </tr>
-                                    ))}
-                                    {program.events.length === 0 && (
-                                        <tr>
-                                            <td colSpan={3} style={{ padding: '1.5rem', textAlign: 'center', color: 'gray' }}>No events scheduled.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {program.events.map(ev => (
+                                            <tr key={ev.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <td style={{ padding: '0.75rem', fontWeight: 500 }}>{ev.name}</td>
+                                                <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)' }}>{new Date(ev.start).toLocaleString()}</td>
+                                                <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                                                    <Link href={`/admin/events/${ev.id}`} style={{ color: '#60a5fa', textDecoration: 'none' }}>
+                                                        Attendance &rarr;
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {program.events.length === 0 && (
+                                            <tr>
+                                                <td colSpan={3} style={{ padding: '1.5rem', textAlign: 'center', color: 'gray' }}>No events scheduled.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
-            </div>
-        </main>
+            </div >
+        </main >
     );
 }

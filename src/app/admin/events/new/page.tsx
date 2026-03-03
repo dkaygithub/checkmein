@@ -100,7 +100,7 @@ function NewEventForm() {
 
             if (res.ok) {
                 const data = await res.json();
-                router.push(programId ? `/admin/programs/${programId}` : '/admin/programs');
+                router.push(programId ? `/admin/programs/${programId}` : '/programs');
             } else {
                 const err = await res.json();
                 setMessage(err.error || "Failed to create event");
@@ -120,7 +120,7 @@ function NewEventForm() {
         <div className={`glass-container ${styles.heroContainer}`} style={{ maxWidth: '800px', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 className="text-gradient" style={{ margin: 0 }}>Schedule Event</h1>
-                <Link href={programId ? `/admin/programs/${programId}` : '/admin/programs'} style={{ color: 'white', textDecoration: 'none' }} className="glass-button">
+                <Link href={programId ? `/admin/programs/${programId}` : '/programs'} style={{ color: 'white', textDecoration: 'none' }} className="glass-button">
                     Cancel
                 </Link>
             </div>

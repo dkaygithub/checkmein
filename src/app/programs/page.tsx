@@ -12,6 +12,11 @@ type ProgramSummary = {
     end: string | null;
     memberOnly: boolean;
     leadMentorId: number | null;
+    _count: {
+        participants: number;
+        volunteers: number;
+        events: number;
+    };
 };
 
 export default function PublicProgramsDirectory() {
@@ -19,12 +24,16 @@ export default function PublicProgramsDirectory() {
     const [programs, setPrograms] = useState<ProgramSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
+    const [activeOnly, setActiveOnly] = useState(true);
+
+    const isAuthorized = session && ((session.user as any)?.sysadmin || (session.user as any)?.boardMember);
 
     useEffect(() => {
         const fetchPrograms = async () => {
+            setLoading(true);
             try {
-                // Fetch only active programs
-                const res = await fetch('/api/programs?active=true');
+                const query = (isAuthorized && !activeOnly) ? '' : '?active=true';
+                const res = await fetch(`/api/programs${query}`);
                 if (res.ok) {
                     const data = await res.json();
                     setPrograms(data);
@@ -39,7 +48,7 @@ export default function PublicProgramsDirectory() {
         };
 
         fetchPrograms();
-    }, []);
+    }, [activeOnly, isAuthorized]);
 
     if (loading) {
         return (
@@ -61,10 +70,16 @@ export default function PublicProgramsDirectory() {
                             Discover courses, certifications, and group activities at the Treehouse.
                         </p>
                     </div>
-                    {((session?.user as any)?.sysadmin || (session?.user as any)?.boardMember) && (
-                        <Link href="/admin/programs/new" style={{ padding: '0.6rem 1.2rem', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)', borderRadius: '8px', color: '#4ade80', textDecoration: 'none', fontWeight: 500 }}>
-                            + New Program
-                        </Link>
+                    {isAuthorized && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }} />
+                                Show active only
+                            </label>
+                            <Link href="/admin/programs/new" style={{ padding: '0.6rem 1.2rem', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)', borderRadius: '8px', color: '#4ade80', textDecoration: 'none', fontWeight: 500 }}>
+                                + New Program
+                            </Link>
+                        </div>
                     )}
                 </div>
 
@@ -92,10 +107,27 @@ export default function PublicProgramsDirectory() {
                                     </span>
                                 )}
                             </div>
-                            <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem', flex: 1 }}>
+                            <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', flex: 1 }}>
                                 {program.begin ? new Date(program.begin).toLocaleDateString() : 'Start Date TBD'}
                                 {program.end ? ` - ${new Date(program.end).toLocaleDateString()}` : ' (Ongoing)'}
                             </p>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+                                <div style={{ textAlign: 'center', flex: 1 }}>
+                                    <strong style={{ color: 'white', fontSize: '1rem' }}>{program._count.participants}</strong>
+                                    <div style={{ color: 'var(--color-text-muted)' }}>Enrolled</div>
+                                </div>
+                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch', margin: '0 0.5rem' }}></div>
+                                <div style={{ textAlign: 'center', flex: 1 }}>
+                                    <strong style={{ color: 'white', fontSize: '1rem' }}>{program._count.volunteers}</strong>
+                                    <div style={{ color: 'var(--color-text-muted)' }}>Volunteers</div>
+                                </div>
+                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch', margin: '0 0.5rem' }}></div>
+                                <div style={{ textAlign: 'center', flex: 1 }}>
+                                    <strong style={{ color: 'white', fontSize: '1rem' }}>{program._count.events}</strong>
+                                    <div style={{ color: 'var(--color-text-muted)' }}>Sessions</div>
+                                </div>
+                            </div>
 
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                                 <Link href={`/programs/${program.id}`} style={{ flex: 1, display: 'block', textAlign: 'center', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '0.75rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 500 }}>

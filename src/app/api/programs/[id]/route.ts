@@ -66,6 +66,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             }
         }
 
+        let leadMentor = null;
+        if (program.leadMentorId) {
+            leadMentor = await prisma.participant.findUnique({
+                where: { id: program.leadMentorId },
+                select: { id: true, name: true, email: true }
+            });
+        }
+        (program as any).leadMentor = leadMentor;
+
         return NextResponse.json(program);
     } catch (error) {
         console.error("Failed to fetch program:", error);

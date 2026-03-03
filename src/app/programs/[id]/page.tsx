@@ -11,6 +11,7 @@ type ProgramDetail = {
     begin: string | null;
     end: string | null;
     leadMentorId: number | null;
+    leadMentor?: { name: string | null; email: string } | null;
     participants: { participantId: number }[];
 };
 
@@ -128,11 +129,18 @@ export default function ProgramEnrollmentPage({ params }: { params: Promise<{ id
                 </div>
 
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
-                    <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text-muted)' }}>Schedule</h3>
-                    <p style={{ margin: 0, fontSize: '1.1rem' }}>
-                        <strong>Starts:</strong> {program.begin ? new Date(program.begin).toLocaleDateString() : 'TBD'} <br /><br />
-                        <strong>Ends:</strong> {program.end ? new Date(program.end).toLocaleDateString() : 'Ongoing'}
-                    </p>
+                    <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text-muted)' }}>Details</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '1.1rem' }}>
+                        {program.leadMentor && (
+                            <div>
+                                <strong>Lead Mentor:</strong> {program.leadMentor.name || 'Unnamed'}
+                            </div>
+                        )}
+                        <div>
+                            <strong>Starts:</strong> {program.begin ? new Date(program.begin).toLocaleDateString() : 'TBD'} <br /><br />
+                            <strong>Ends:</strong> {program.end ? new Date(program.end).toLocaleDateString() : 'Ongoing'}
+                        </div>
+                    </div>
                 </div>
 
                 {message && (
