@@ -42,14 +42,15 @@ jobs:
       run: npx prisma generate
 
     - name: Sync Database Schema
-      run: npx prisma db push
+      run: |
+        npx prisma db push --accept-data-loss
       env:
-        DATABASE_URL: postgresql://user:password@localhost:5432/checkmein_test
+        DATABASE_URL: postgresql://user:password@127.0.0.1:5432/checkmein_test
 
     - name: Run Tests
       run: npm run test
       env:
-        DATABASE_URL: postgresql://user:password@localhost:5432/checkmein_test
+        DATABASE_URL: postgresql://user:password@127.0.0.1:5432/checkmein_test
         NEXTAUTH_SECRET: "test-secret-at-least-32-characters-long-so-it-passes"
         NEXTAUTH_URL: "http://localhost:4000"
         GOOGLE_CLIENT_ID: "dummy-id"
