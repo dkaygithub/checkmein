@@ -59,15 +59,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             }
 
             // Check Age
-            if (currentProgram.minAge !== null) {
+            if (currentProgram.minAge !== null || currentProgram.maxAge !== null) {
                 if (!participantData?.dob) {
                     return NextResponse.json({ error: "Participant Date of Birth is missing.", requiresOverride: true }, { status: 400 });
                 }
                 const ageDifMs = Date.now() - new Date(participantData.dob).getTime();
                 const ageDate = new Date(ageDifMs);
                 const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-                if (age < currentProgram.minAge) {
+                if (currentProgram.minAge !== null && age < currentProgram.minAge) {
                     return NextResponse.json({ error: `Participant must be at least ${currentProgram.minAge} years old.`, requiresOverride: true }, { status: 400 });
+                }
+                if (currentProgram.maxAge !== null && age > currentProgram.maxAge) {
+                    return NextResponse.json({ error: `Participant maximum age is ${currentProgram.maxAge} years old.`, requiresOverride: true }, { status: 400 });
                 }
             }
         }

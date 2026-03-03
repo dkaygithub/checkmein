@@ -14,6 +14,7 @@ type ProgramDetail = {
     leadMentorId: number | null;
     isPublished: boolean;
     minAge: number | null;
+    maxAge: number | null;
     maxParticipants: number | null;
     memberOnly: boolean;
     participants: {
@@ -38,6 +39,7 @@ type ParticipantOption = {
     id: number;
     name: string | null;
     email: string;
+    dob?: string | null;
 };
 
 export default function ProgramDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -51,6 +53,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
     const [begin, setBegin] = useState("");
     const [end, setEnd] = useState("");
     const [minAge, setMinAge] = useState("");
+    const [maxAge, setMaxAge] = useState("");
     const [maxParticipants, setMaxParticipants] = useState("");
     const [isPublished, setIsPublished] = useState(false);
     const [memberOnly, setMemberOnly] = useState(false);
@@ -159,6 +162,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 if (data.begin) setBegin(data.begin.split('T')[0]);
                 if (data.end) setEnd(data.end.split('T')[0]);
                 setMinAge(data.minAge !== null ? String(data.minAge) : "");
+                setMaxAge(data.maxAge !== null ? String(data.maxAge) : "");
                 setIsPublished(Boolean(data.isPublished));
                 setMemberOnly(Boolean(data.memberOnly));
                 setLeadMentorIdInput(data.leadMentorId !== null ? String(data.leadMentorId) : "");
@@ -195,6 +199,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                     begin: begin || null,
                     end: end || null,
                     minAge: minAge ? parseInt(minAge) : null,
+                    maxAge: maxAge ? parseInt(maxAge) : null,
                     maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
                     isPublished,
                     memberOnly,
@@ -488,6 +493,10 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                 <input type="number" className="glass-input" value={minAge} onChange={e => setMinAge(e.target.value)} placeholder="e.g. 14" style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
                             <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Maximum Age (Optional)</label>
+                                <input type="number" className="glass-input" value={maxAge} onChange={e => setMaxAge(e.target.value)} placeholder="e.g. 18" style={{ width: '100%', padding: '0.75rem' }} />
+                            </div>
+                            <div>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Max Participants (Optional)</label>
                                 <input type="number" className="glass-input" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} placeholder="e.g. 20" style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
@@ -571,12 +580,25 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                         {partSearching && <div style={{ position: 'absolute', right: '10px', top: '35px', color: 'gray', fontSize: '0.8rem' }}>Loading...</div>}
                                         {partResults.length > 0 && !newPartId && (
                                             <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginTop: '4px' }}>
-                                                {partResults.map(p => (
-                                                    <div key={p.id} onClick={() => { setNewPartId(p.id.toString()); setPartSearch(`${p.name || 'Unnamed'} (${p.email})`); setPartResults([]); }} style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
-                                                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{p.email}</div>
-                                                    </div>
-                                                ))}
+                                                {partResults.map(p => {
+                                                    let warning = null;
+                                                    if (p.dob) {
+                                                        const ageDifMs = Date.now() - new Date(p.dob).getTime();
+                                                        const ageDate = new Date(ageDifMs);
+                                                        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+                                                        if (program?.minAge !== null && program?.minAge !== undefined && age < program.minAge) warning = `⚠️ Too Young (${age})`;
+                                                        if (program?.maxAge !== null && program?.maxAge !== undefined && age > program.maxAge) warning = `⚠️ Too Old (${age})`;
+                                                    }
+                                                    return (
+                                                        <div key={p.id} onClick={() => { setNewPartId(p.id.toString()); setPartSearch(`${p.name || 'Unnamed'} (${p.email})`); setPartResults([]); }} style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div>
+                                                                <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
+                                                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{p.email}</div>
+                                                            </div>
+                                                            {warning && <div style={{ fontSize: '0.75rem', color: '#fbbf24', background: 'rgba(251, 191, 36, 0.2)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{warning}</div>}
+                                                        </div>
+                                                    )
+                                                })}
                                             </div>
                                         )}
                                     </div>

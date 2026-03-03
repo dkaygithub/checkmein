@@ -167,6 +167,7 @@ model Program {
   isPublished                  Boolean   @default(false)
   memberOnly                   Boolean   @default(false)
   minAge                       Int?
+  maxAge                       Int?
   maxParticipants              Int?
   leadMentorNotificationSettings Json?
 

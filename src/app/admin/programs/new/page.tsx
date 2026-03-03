@@ -12,6 +12,8 @@ export default function CreateProgramPage() {
     const [name, setName] = useState("");
     const [begin, setBegin] = useState("");
     const [end, setEnd] = useState("");
+    const [minAge, setMinAge] = useState("");
+    const [maxAge, setMaxAge] = useState("");
     const [memberOnly, setMemberOnly] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
@@ -43,7 +45,9 @@ export default function CreateProgramPage() {
                     name,
                     begin: begin || null,
                     end: end || null,
-                    memberOnly
+                    memberOnly,
+                    minAge: minAge ? parseInt(minAge) : null,
+                    maxAge: maxAge ? parseInt(maxAge) : null
                 })
             });
 
@@ -116,6 +120,28 @@ export default function CreateProgramPage() {
                                     required
                                     style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                                 />
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Min Age (Optional)</label>
+                                    <input
+                                        type="number"
+                                        className="glass-input"
+                                        value={minAge}
+                                        onChange={e => setMinAge(e.target.value)}
+                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Max Age (Optional)</label>
+                                    <input
+                                        type="number"
+                                        className="glass-input"
+                                        value={maxAge}
+                                        onChange={e => setMaxAge(e.target.value)}
+                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                    />
+                                </div>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <div style={{ flex: 1 }}>

@@ -102,7 +102,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { name, leadMentorId, begin, end, memberOnly } = body;
+        const { name, leadMentorId, begin, end, memberOnly, minAge, maxAge } = body;
 
         if (!name) {
             return NextResponse.json({ error: "Program name is required" }, { status: 400 });
@@ -114,7 +114,9 @@ export async function POST(req: Request) {
                 leadMentorId: leadMentorId || null,
                 begin: begin ? new Date(begin) : null,
                 end: end ? new Date(end) : null,
-                memberOnly: memberOnly || false
+                memberOnly: memberOnly || false,
+                minAge: minAge || null,
+                maxAge: maxAge || null
             }
         });
 
