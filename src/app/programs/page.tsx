@@ -11,6 +11,8 @@ type ProgramSummary = {
     begin: string | null;
     end: string | null;
     memberOnly: boolean;
+    phase: string;
+    enrollmentStatus: string;
     leadMentorId: number | null;
     _count: {
         participants: number;
@@ -104,6 +106,11 @@ export default function PublicProgramsDirectory() {
                                 {program.memberOnly && (
                                     <span style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#d8b4fe', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(168, 85, 247, 0.4)' }}>
                                         Member Only
+                                    </span>
+                                )}
+                                {program.enrollmentStatus === 'CLOSED' && (
+                                    <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(239, 68, 68, 0.4)', marginLeft: '0.5rem' }}>
+                                        Enrollment Closed
                                     </span>
                                 )}
                             </div>

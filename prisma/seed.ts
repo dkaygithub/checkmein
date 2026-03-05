@@ -248,7 +248,8 @@ async function main() {
                 leadMentorId: boardMember.id,
                 begin: new Date(),
                 end: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-                isPublished: true,
+                phase: 'UPCOMING',
+                enrollmentStatus: 'OPEN',
                 memberOnly: false,
                 minAge: 8,
                 maxParticipants: 20,

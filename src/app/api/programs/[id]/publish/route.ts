@@ -18,10 +18,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
 
         const body = await req.json();
-        const { isPublished } = body;
+        const { publish } = body;
 
-        if (typeof isPublished !== 'boolean') {
-            return NextResponse.json({ error: "isPublished boolean state is required" }, { status: 400 });
+        if (publish !== true) {
+            return NextResponse.json({ error: "publish must be true" }, { status: 400 });
         }
 
         const currentProgram = await prisma.program.findUnique({
@@ -41,7 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ error: "Forbidden: Not authorized to publish this program" }, { status: 403 });
         }
 
-        if (isPublished) {
+        if (publish) {
             // Validation rules for publishing
             if (!currentProgram.leadMentorId) {
                 return NextResponse.json({ error: "Cannot publish a program without a Lead Mentor assigned" }, { status: 400 });
@@ -53,7 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         const updatedProgram = await prisma.program.update({
             where: { id: programId },
-            data: { isPublished }
+            data: { phase: 'UPCOMING', enrollmentStatus: 'OPEN' }
         });
 
         await prisma.auditLog.create({
@@ -62,7 +62,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 action: 'EDIT',
                 tableName: 'Program',
                 affectedEntityId: programId,
-                newData: { isPublished } as any
+                newData: { phase: 'UPCOMING', enrollmentStatus: 'OPEN' } as any
             }
         });
 

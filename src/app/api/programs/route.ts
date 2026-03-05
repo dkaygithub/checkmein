@@ -62,12 +62,12 @@ export async function GET(req: Request) {
             if (userId && !isNaN(userId)) {
                 andClauses.push({
                     OR: [
-                        { isPublished: true },
+                        { phase: { not: 'PLANNING' } },
                         { leadMentorId: userId }
                     ]
                 });
             } else {
-                andClauses.push({ isPublished: true });
+                andClauses.push({ phase: { not: 'PLANNING' } });
             }
         }
 

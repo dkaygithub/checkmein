@@ -39,7 +39,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             leadMentorId,
             begin,
             end,
-            isPublished,
+            phase,
+            enrollmentStatus,
             memberOnly,
             minAge,
             maxParticipants,
@@ -51,7 +52,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         if (name !== undefined) updateData.name = name;
         if (begin !== undefined) updateData.begin = begin ? new Date(begin) : null;
         if (end !== undefined) updateData.end = end ? new Date(end) : null;
-        if (isPublished !== undefined) updateData.isPublished = isPublished;
+        if (phase !== undefined) updateData.phase = phase;
+        if (enrollmentStatus !== undefined) updateData.enrollmentStatus = enrollmentStatus;
         if (memberOnly !== undefined) updateData.memberOnly = memberOnly;
         if (minAge !== undefined) updateData.minAge = minAge;
         if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;

@@ -34,6 +34,18 @@ enum AuditAction {
   BECOME_ADMIN
 }
 
+enum ProgramPhase {
+  PLANNING
+  UPCOMING
+  RUNNING
+  FINISHED
+}
+
+enum EnrollmentStatus {
+  OPEN
+  CLOSED
+}
+
 model Participant {
   id            Int       @id @default(autoincrement())
   googleId      String?   @unique
@@ -164,7 +176,8 @@ model Program {
   leadMentorId    Int?
   begin           DateTime?
   end             DateTime?
-  isPublished                  Boolean   @default(false)
+  phase                        ProgramPhase @default(PLANNING)
+  enrollmentStatus             EnrollmentStatus @default(CLOSED)
   memberOnly                   Boolean   @default(false)
   minAge                       Int?
   maxAge                       Int?

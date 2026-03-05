@@ -12,7 +12,8 @@ type ProgramDetail = {
     begin: string | null;
     end: string | null;
     leadMentorId: number | null;
-    isPublished: boolean;
+    phase: string;
+    enrollmentStatus: string;
     minAge: number | null;
     maxAge: number | null;
     maxParticipants: number | null;
@@ -55,7 +56,8 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
     const [minAge, setMinAge] = useState("");
     const [maxAge, setMaxAge] = useState("");
     const [maxParticipants, setMaxParticipants] = useState("");
-    const [isPublished, setIsPublished] = useState(false);
+    const [phase, setPhase] = useState("PLANNING");
+    const [enrollmentStatus, setEnrollmentStatus] = useState("CLOSED");
     const [memberOnly, setMemberOnly] = useState(false);
     const [leadMentorIdInput, setLeadMentorIdInput] = useState("");
 
@@ -163,7 +165,8 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 if (data.end) setEnd(data.end.split('T')[0]);
                 setMinAge(data.minAge !== null ? String(data.minAge) : "");
                 setMaxAge(data.maxAge !== null ? String(data.maxAge) : "");
-                setIsPublished(Boolean(data.isPublished));
+                setPhase(data.phase || "PLANNING");
+                setEnrollmentStatus(data.enrollmentStatus || "CLOSED");
                 setMemberOnly(Boolean(data.memberOnly));
                 setLeadMentorIdInput(data.leadMentorId !== null ? String(data.leadMentorId) : "");
                 if (data.leadMentor) {
@@ -201,7 +204,8 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                     minAge: minAge ? parseInt(minAge) : null,
                     maxAge: maxAge ? parseInt(maxAge) : null,
                     maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
-                    isPublished,
+                    phase,
+                    enrollmentStatus,
                     memberOnly,
                     leadMentorId: leadMentorIdInput ? parseInt(leadMentorIdInput) : null
                 })
@@ -354,7 +358,11 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
             <div className={`glass-container ${styles.heroContainer}`} style={{ maxWidth: '1000px', width: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>
-                        {program.name} {program.isPublished ? <span style={{ fontSize: '1rem', background: '#4ade80', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle' }}>Published</span> : <span style={{ fontSize: '1rem', background: '#fbbf24', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle' }}>Draft</span>}
+                        {program.name}
+                        {program.phase === 'PLANNING' && <span style={{ fontSize: '1rem', background: '#e2e8f0', color: '#0f172a', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Planning</span>}
+                        {program.phase === 'UPCOMING' && <span style={{ fontSize: '1rem', background: '#fbbf24', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Upcoming</span>}
+                        {program.phase === 'RUNNING' && <span style={{ fontSize: '1rem', background: '#38bdf8', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Running</span>}
+                        {program.phase === 'FINISHED' && <span style={{ fontSize: '1rem', background: '#10b981', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Finished</span>}
                     </h1>
                     <button className="glass-button" onClick={() => router.push('/programs')} style={{ padding: '0.5rem 1rem' }}>
                         &larr; Back to Programs
@@ -505,9 +513,21 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                 <input type="checkbox" id="memberOnly" checked={memberOnly} onChange={e => setMemberOnly(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem' }} />
                                 <label htmlFor="memberOnly" style={{ fontWeight: 500, cursor: 'pointer' }}>Member-Only Program</label>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input type="checkbox" id="isPublished" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem' }} />
-                                <label htmlFor="isPublished" style={{ fontWeight: 500, cursor: 'pointer' }}>Published (Visible to all participants)</label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontWeight: 500 }}>Program Phase</label>
+                                <select className="glass-input" value={phase} onChange={e => setPhase(e.target.value)} style={{ padding: '0.75rem', width: '100%', background: 'rgba(0,0,0,0.5)' }}>
+                                    <option value="PLANNING">Planning (Draft)</option>
+                                    <option value="UPCOMING">Upcoming (Published)</option>
+                                    <option value="RUNNING">Currently Running</option>
+                                    <option value="FINISHED">Finished</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontWeight: 500 }}>Enrollment Status</label>
+                                <select className="glass-input" value={enrollmentStatus} onChange={e => setEnrollmentStatus(e.target.value)} style={{ padding: '0.75rem', width: '100%', background: 'rgba(0,0,0,0.5)' }}>
+                                    <option value="OPEN">Open for Enrollment</option>
+                                    <option value="CLOSED">Closed for Enrollment (Full / Stopped)</option>
+                                </select>
                             </div>
                         </div >
                         <button type="submit" className="glass-button" disabled={saving} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>

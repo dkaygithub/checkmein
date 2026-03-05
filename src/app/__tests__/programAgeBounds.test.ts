@@ -72,7 +72,8 @@ describe('Program Age Bounds Integration Tests', () => {
                 minAge: 14,
                 maxAge: 18,
                 begin: new Date(),
-                isPublished: true
+                phase: 'UPCOMING',
+                enrollmentStatus: 'OPEN'
             }
         });
         testProgramId = program.id;

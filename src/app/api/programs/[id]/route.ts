@@ -109,7 +109,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const body = await req.json();
-        const { name, leadMentorId, begin, end, memberOnly, isPublished, minAge, maxAge, maxParticipants, leadMentorNotificationSettings } = body;
+        const { name, leadMentorId, begin, end, memberOnly, phase, enrollmentStatus, minAge, maxAge, maxParticipants, leadMentorNotificationSettings } = body;
 
         const updatedProgram = await prisma.program.update({
             where: { id: programId },
@@ -119,7 +119,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 ...(begin !== undefined && { begin: begin ? new Date(begin) : null }),
                 ...(end !== undefined && { end: end ? new Date(end) : null }),
                 ...(memberOnly !== undefined && { memberOnly }),
-                ...(isPublished !== undefined && { isPublished }),
+                ...(phase !== undefined && { phase }),
+                ...(enrollmentStatus !== undefined && { enrollmentStatus }),
                 ...(minAge !== undefined && { minAge }),
                 ...(maxAge !== undefined && { maxAge }),
                 ...(maxParticipants !== undefined && { maxParticipants }),
