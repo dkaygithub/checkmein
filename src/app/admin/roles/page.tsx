@@ -101,7 +101,7 @@ export default function RoleAssignmentPage() {
 
     const filteredUsers = users.filter(u =>
     (u.name?.toLowerCase().includes(userSearchText.toLowerCase()) ||
-        u.email.toLowerCase().includes(userSearchText.toLowerCase()))
+        u.email?.toLowerCase().includes(userSearchText.toLowerCase()))
     );
 
     return (
