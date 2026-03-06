@@ -15,6 +15,7 @@ interface RowPreview {
         parentEmail: string;
         dob: string;
         address: string;
+        sameHouseholdAs: string;
     };
     status: RowStatus;
     action: string;
@@ -56,12 +57,13 @@ export async function POST(req: NextRequest) {
         const headers = rawData[0].map((h: any) => String(h).trim().toLowerCase());
         const rows = rawData.slice(1);
 
-        const emailIndex = headers.findIndex(h => h.includes("email") && !h.includes("parent"));
+        const emailIndex = headers.findIndex(h => h.includes("email") && !h.includes("parent") && !h.includes("household"));
         const parentEmailIndex = headers.findIndex(h => h.includes("parent email"));
         const firstNameIndex = headers.findIndex(h => h.includes("first name"));
         const lastNameIndex = headers.findIndex(h => h.includes("last name"));
         const dobIndex = headers.findIndex(h => h.includes("dob"));
         const addressIndex = headers.findIndex(h => h.includes("address"));
+        const sameHouseholdIndex = headers.findIndex(h => h.includes("same household as"));
 
         if (firstNameIndex === -1 || lastNameIndex === -1) {
             return NextResponse.json({ error: "Missing required 'First Name' or 'Last Name' columns." }, { status: 400 });
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
             const parentEmail = parentEmailIndex !== -1 ? row[parentEmailIndex]?.toString().trim() || "" : "";
             const dobString = dobIndex !== -1 ? row[dobIndex]?.toString().trim() || "" : "";
             const address = addressIndex !== -1 ? row[addressIndex]?.toString().trim() || "" : "";
+            const sameHouseholdAs = sameHouseholdIndex !== -1 ? row[sameHouseholdIndex]?.toString().trim() || "" : "";
 
             // Skip fully empty rows
             if (!firstName && !lastName && !email && !parentEmail) {
@@ -95,7 +98,7 @@ export async function POST(req: NextRequest) {
             if (!firstName && !lastName) {
                 previews.push({
                     rowNumber,
-                    data: { firstName, lastName, email, parentEmail, dob: dobString, address },
+                    data: { firstName, lastName, email, parentEmail, dob: dobString, address, sameHouseholdAs },
                     status: "error",
                     action: "Cannot import — missing both first and last name",
                     warnings: [],
@@ -119,14 +122,14 @@ export async function POST(req: NextRequest) {
             // Check: minor without parent email
             if (parsedDob) {
                 const age = (Date.now() - parsedDob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-                if (age < 18 && !parentEmail) {
-                    warnings.push("Minor (under 18) without a parent email");
+                if (age < 18 && !parentEmail && !sameHouseholdAs) {
+                    warnings.push("Minor (under 18) without a parent email or household reference");
                 }
             }
 
-            // Check: no email and no parent email
-            if (!email && !parentEmail) {
-                warnings.push("No email or parent email — will attempt to match by name" + (parsedDob ? " and DOB" : " only (no DOB)"));
+            // Check: no email and no parent email and no household ref
+            if (!email && !parentEmail && !sameHouseholdAs) {
+                warnings.push("No email, parent email, or household ref — will attempt to match by name" + (parsedDob ? " and DOB" : " only (no DOB)"));
             }
 
             // Check: duplicate email within spreadsheet
@@ -139,18 +142,58 @@ export async function POST(req: NextRequest) {
                 }
             }
 
+            // Check "Same Household As" validity
+            if (sameHouseholdAs) {
+                // Try to resolve the reference
+                let found = false;
+                if (sameHouseholdAs.includes('@')) {
+                    const byEmail = await prisma.participant.findUnique({
+                        where: { email: sameHouseholdAs },
+                        select: { id: true, name: true, householdId: true }
+                    });
+                    if (byEmail) {
+                        found = true;
+                        if (byEmail.householdId) {
+                            action += `Will join household of "${byEmail.name || sameHouseholdAs}". `;
+                        } else {
+                            action += `Will create household with "${byEmail.name || sameHouseholdAs}". `;
+                        }
+                    }
+                }
+                if (!found) {
+                    const byName = await prisma.participant.findFirst({
+                        where: { name: { equals: sameHouseholdAs, mode: 'insensitive' } },
+                        select: { id: true, name: true, householdId: true }
+                    });
+                    if (byName) {
+                        found = true;
+                        if (byName.householdId) {
+                            action += `Will join household of "${byName.name}". `;
+                        } else {
+                            action += `Will create household with "${byName.name}". `;
+                        }
+                    }
+                }
+                if (!found) {
+                    warnings.push(`Could not find participant "${sameHouseholdAs}" for household association`);
+                }
+            }
+
             // Check against existing DB records
             if (email) {
                 const existing = await prisma.participant.findUnique({
                     where: { email },
-                    select: { id: true, name: true },
+                    select: { id: true, name: true, householdId: true },
                 });
                 if (existing) {
                     status = "update";
-                    action = `Update existing participant: "${existing.name || 'Unnamed'}" (ID ${existing.id})`;
+                    action += `Update existing participant: "${existing.name || 'Unnamed'}" (ID ${existing.id})`;
+                    if (!existing.householdId) {
+                        action += ". Will create household + membership";
+                    }
                     existingParticipant = existing;
                 } else {
-                    action = "Create new participant with email";
+                    action += "Create new participant with email + household + membership";
                 }
             } else if (parentEmail) {
                 const parent = await prisma.participant.findUnique({
@@ -159,7 +202,6 @@ export async function POST(req: NextRequest) {
                 });
 
                 if (parent) {
-                    // Check if child already exists in household
                     if (parent.householdId) {
                         const existingChild = await prisma.participant.findFirst({
                             where: { householdId: parent.householdId, name: fullName },
@@ -167,20 +209,20 @@ export async function POST(req: NextRequest) {
                         });
                         if (existingChild) {
                             status = "update";
-                            action = `Update existing household member: "${existingChild.name}" under "${parent.name || parentEmail}"`;
+                            action += `Update existing household member: "${existingChild.name}" under "${parent.name || parentEmail}"`;
                             existingParticipant = existingChild;
                         } else {
-                            action = `Create new participant under "${parent.name || parentEmail}"'s household`;
+                            action += `Create new participant under "${parent.name || parentEmail}"'s household`;
                         }
                     } else {
-                        action = `Create new participant; will create household for parent "${parent.name || parentEmail}"`;
+                        action += `Create new participant; will create household for parent "${parent.name || parentEmail}"`;
                     }
                 } else {
-                    action = `Create new participant + placeholder parent for ${parentEmail}`;
+                    action += `Create new participant + placeholder parent for ${parentEmail}`;
                     warnings.push(`Parent email "${parentEmail}" not found — a placeholder parent will be created`);
                 }
-            } else {
-                // No email, no parent email — match by name
+            } else if (!sameHouseholdAs) {
+                // No email, no parent email, no household ref — match by name
                 let matchQuery: any = { name: fullName };
                 if (parsedDob) matchQuery.dob = parsedDob;
 
@@ -190,24 +232,26 @@ export async function POST(req: NextRequest) {
                 });
                 if (existing) {
                     status = "update";
-                    action = `Update existing participant matched by name${parsedDob ? " and DOB" : ""}: "${existing.name}" (ID ${existing.id})`;
+                    action += `Update existing participant matched by name${parsedDob ? " and DOB" : ""}: "${existing.name}" (ID ${existing.id})`;
                     existingParticipant = existing;
                 } else {
-                    action = `Create new participant (matched by name${parsedDob ? " + DOB" : ""}, no email)`;
+                    action += `Create new participant (matched by name${parsedDob ? " + DOB" : ""}, no email)`;
                 }
+            } else {
+                // Has sameHouseholdAs but no email/parentEmail
+                action += `Create new participant (no email)`;
             }
 
             // If there are warnings but status is still "ready" or "update", elevate to "warning"
             if (warnings.length > 0 && (status === "ready" || status === "update")) {
-                // keep the action, but mark status as warning
                 status = "warning";
             }
 
             previews.push({
                 rowNumber,
-                data: { firstName, lastName, email, parentEmail, dob: dobString, address },
+                data: { firstName, lastName, email, parentEmail, dob: dobString, address, sameHouseholdAs },
                 status,
-                action,
+                action: action.trim(),
                 warnings,
                 existingParticipant,
             });
@@ -221,7 +265,7 @@ export async function POST(req: NextRequest) {
         };
 
         return NextResponse.json({
-            columns: ["First Name", "Last Name", "Email", "Parent Email", "DOB", "Address"],
+            columns: ["First Name", "Last Name", "Email", "Parent Email", "DOB", "Address", "Same Household As"],
             rows: previews,
             summary,
         });

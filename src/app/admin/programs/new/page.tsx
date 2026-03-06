@@ -5,6 +5,12 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from '../../../page.module.css';
 
+type ParticipantOption = {
+    id: number;
+    name: string | null;
+    email: string;
+};
+
 export default function CreateProgramPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -19,6 +25,12 @@ export default function CreateProgramPage() {
     const [message, setMessage] = useState("");
     const [messageType, setMessageType] = useState<"success" | "error">("success");
 
+    // Lead Mentor search state
+    const [leadMentorId, setLeadMentorId] = useState("");
+    const [mentorSearch, setMentorSearch] = useState("");
+    const [mentorResults, setMentorResults] = useState<ParticipantOption[]>([]);
+    const [mentorSearching, setMentorSearching] = useState(false);
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push('/');
@@ -29,6 +41,30 @@ export default function CreateProgramPage() {
             }
         }
     }, [status, router, session]);
+
+    // Debounced mentor search
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (mentorSearch && !leadMentorId) {
+                const searchMentors = async () => {
+                    setMentorSearching(true);
+                    try {
+                        const res = await fetch(`/api/admin/participants/search?q=${encodeURIComponent(mentorSearch)}&filter=adults`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            setMentorResults(data.participants || []);
+                        }
+                    } finally {
+                        setMentorSearching(false);
+                    }
+                };
+                searchMentors();
+            } else if (!mentorSearch) {
+                setMentorResults([]);
+            }
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [mentorSearch, leadMentorId]);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,7 +83,8 @@ export default function CreateProgramPage() {
                     end: end || null,
                     memberOnly,
                     minAge: minAge ? parseInt(minAge) : null,
-                    maxAge: maxAge ? parseInt(maxAge) : null
+                    maxAge: maxAge ? parseInt(maxAge) : null,
+                    leadMentorId: leadMentorId ? parseInt(leadMentorId) : null
                 })
             });
 
@@ -90,7 +127,7 @@ export default function CreateProgramPage() {
                 </div>
 
                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
-                    Create a new program. You can assign the lead mentor and configure the roster later.
+                    Create a new program. You can configure the roster and schedule events later.
                 </p>
 
                 {message && (
@@ -121,6 +158,51 @@ export default function CreateProgramPage() {
                                     style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                                 />
                             </div>
+
+                            {/* Lead Mentor Selector */}
+                            <div style={{ position: 'relative' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Lead Mentor / Program Coordinator (Optional)</label>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <input
+                                        type="text"
+                                        className="glass-input"
+                                        value={mentorSearch}
+                                        onChange={e => { setMentorSearch(e.target.value); setLeadMentorId(""); }}
+                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                        placeholder="Search by name or email..."
+                                    />
+                                    {leadMentorId && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { setLeadMentorId(""); setMentorSearch(""); }}
+                                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '0.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+                                {mentorSearching && <div style={{ position: 'absolute', right: '10px', top: '42px', color: 'gray', fontSize: '0.8rem' }}>Loading...</div>}
+                                {mentorResults.length > 0 && !leadMentorId && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginTop: '4px' }}>
+                                        {mentorResults.map(p => (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => { setLeadMentorId(p.id.toString()); setMentorSearch(`${p.name || 'Unnamed'} (${p.email})`); setMentorResults([]); }}
+                                                style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                            >
+                                                <div style={{ fontWeight: 500 }}>{p.name || 'Unnamed'}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{p.email}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                                    The lead mentor will be able to manage this program&apos;s roster and events.
+                                </p>
+                            </div>
+
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Min Age (Optional)</label>

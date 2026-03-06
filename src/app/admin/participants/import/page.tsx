@@ -15,6 +15,7 @@ interface RowPreview {
         parentEmail: string;
         dob: string;
         address: string;
+        sameHouseholdAs: string;
     };
     status: RowStatus;
     action: string;
@@ -161,8 +162,9 @@ export default function BulkImportParticipants() {
                             <ol style={{ paddingLeft: '1.5rem', margin: 0, color: 'var(--color-text)' }}>
                                 <li style={{ marginBottom: '0.5rem' }}>Download the import template provided below.</li>
                                 <li style={{ marginBottom: '0.5rem' }}>Fill in the participant data. <strong>First Name</strong> and <strong>Last Name</strong> are required.</li>
-                                <li style={{ marginBottom: '0.5rem' }}>For adult members, provide their <strong>Email</strong>. If they are an existing participant, their record will be updated.</li>
-                                <li style={{ marginBottom: '0.5rem' }}>For minors (or spouses/dependents sharing a household), leave their <strong>Email</strong> blank and provide the primary member&apos;s email in the <strong>Parent Email</strong> column.</li>
+                                <li style={{ marginBottom: '0.5rem' }}>For adult members, provide their <strong>Email</strong>. A household and membership will be created automatically.</li>
+                                <li style={{ marginBottom: '0.5rem' }}>For minors or dependents, leave <strong>Email</strong> blank and provide the primary member&apos;s email in <strong>Parent Email</strong>.</li>
+                                <li style={{ marginBottom: '0.5rem' }}>Use <strong>Same Household As</strong> to link someone to another participant&apos;s household by name or email (e.g. a spouse).</li>
                                 <li>Save the file and upload it here.</li>
                             </ol>
                             <div style={{ marginTop: '1.5rem' }}>
@@ -367,6 +369,7 @@ export default function BulkImportParticipants() {
                                                         }}>
                                                             {row.data.dob && <span>DOB: {row.data.dob}</span>}
                                                             {row.data.address && <span>Address: {row.data.address}</span>}
+                                                            {row.data.sameHouseholdAs && <span>Same Household As: {row.data.sameHouseholdAs}</span>}
                                                         </div>
                                                     )}
                                                 </td>

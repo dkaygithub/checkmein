@@ -359,10 +359,10 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ fontSize: '2.5rem', margin: 0 }}>
                         {program.name}
-                        {program.phase === 'PLANNING' && <span style={{ fontSize: '1rem', background: '#e2e8f0', color: '#0f172a', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Planning</span>}
-                        {program.phase === 'UPCOMING' && <span style={{ fontSize: '1rem', background: '#fbbf24', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Upcoming</span>}
-                        {program.phase === 'RUNNING' && <span style={{ fontSize: '1rem', background: '#38bdf8', color: '#000', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Running</span>}
-                        {program.phase === 'FINISHED' && <span style={{ fontSize: '1rem', background: '#10b981', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem' }}>Finished</span>}
+                        {program.phase === 'PLANNING' && <span style={{ fontSize: '1rem', background: 'rgba(148, 163, 184, 0.25)', color: '#cbd5e1', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem', border: '1px solid rgba(148, 163, 184, 0.4)' }}>Planning</span>}
+                        {program.phase === 'UPCOMING' && <span style={{ fontSize: '1rem', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem', border: '1px solid rgba(251, 191, 36, 0.4)' }}>Upcoming</span>}
+                        {program.phase === 'RUNNING' && <span style={{ fontSize: '1rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem', border: '1px solid rgba(56, 189, 248, 0.4)' }}>Running</span>}
+                        {program.phase === 'FINISHED' && <span style={{ fontSize: '1rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '0.2rem 0.5rem', borderRadius: '4px', verticalAlign: 'middle', marginLeft: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.4)' }}>Finished</span>}
                     </h1>
                     <button className="glass-button" onClick={() => router.push('/programs')} style={{ padding: '0.5rem 1rem' }}>
                         &larr; Back to Programs
@@ -515,18 +515,18 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <label style={{ fontWeight: 500 }}>Program Phase</label>
-                                <select className="glass-input" value={phase} onChange={e => setPhase(e.target.value)} style={{ padding: '0.75rem', width: '100%', background: 'rgba(0,0,0,0.5)' }}>
-                                    <option value="PLANNING">Planning (Draft)</option>
-                                    <option value="UPCOMING">Upcoming (Published)</option>
-                                    <option value="RUNNING">Currently Running</option>
-                                    <option value="FINISHED">Finished</option>
+                                <select className="glass-input" value={phase} onChange={e => setPhase(e.target.value)} style={{ padding: '0.75rem', width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                                    <option value="PLANNING" style={{ color: 'white', background: '#1e293b' }}>Planning (Draft)</option>
+                                    <option value="UPCOMING" style={{ color: 'white', background: '#1e293b' }}>Upcoming (Published)</option>
+                                    <option value="RUNNING" style={{ color: 'white', background: '#1e293b' }}>Currently Running</option>
+                                    <option value="FINISHED" style={{ color: 'white', background: '#1e293b' }}>Finished</option>
                                 </select>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <label style={{ fontWeight: 500 }}>Enrollment Status</label>
-                                <select className="glass-input" value={enrollmentStatus} onChange={e => setEnrollmentStatus(e.target.value)} style={{ padding: '0.75rem', width: '100%', background: 'rgba(0,0,0,0.5)' }}>
-                                    <option value="OPEN">Open for Enrollment</option>
-                                    <option value="CLOSED">Closed for Enrollment (Full / Stopped)</option>
+                                <select className="glass-input" value={enrollmentStatus} onChange={e => setEnrollmentStatus(e.target.value)} style={{ padding: '0.75rem', width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                                    <option value="OPEN" style={{ color: 'white', background: '#1e293b' }}>Open for Enrollment</option>
+                                    <option value="CLOSED" style={{ color: 'white', background: '#1e293b' }}>Closed for Enrollment (Full / Stopped)</option>
                                 </select>
                             </div>
                         </div >
