@@ -7,13 +7,24 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
+    const url = new URL(req.url);
+    const q = url.searchParams.get('q') || '';
 
     if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
         return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
     try {
+        const whereClause = q ? {
+            OR: [
+                { name: { contains: q, mode: 'insensitive' as const } },
+                { participants: { some: { name: { contains: q, mode: 'insensitive' as const } } } },
+                { participants: { some: { email: { contains: q, mode: 'insensitive' as const } } } },
+            ]
+        } : {};
+
         const households = await prisma.household.findMany({
+            where: whereClause,
             include: {
                 participants: {
                     select: { id: true, name: true, email: true }
@@ -22,7 +33,8 @@ export async function GET(req: Request) {
             },
             orderBy: {
                 id: 'desc'
-            }
+            },
+            ...(q && { take: 20 })
         });
 
         return NextResponse.json({ households });

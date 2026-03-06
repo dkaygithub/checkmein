@@ -12,11 +12,11 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { name, email, parentEmail, dob } = body;
+        const { name, email, parentEmail, dob, householdId } = body;
 
-        // Either email or parentEmail must be provided
-        if (!email && !parentEmail) {
-            return NextResponse.json({ error: "Email or Parent Email is required" }, { status: 400 });
+        // Either email, parentEmail, or householdId must be provided
+        if (!email && !parentEmail && !householdId) {
+            return NextResponse.json({ error: "Email, Parent Email, or Household assignment is required" }, { status: 400 });
         }
 
         // Check if user already exists
@@ -53,6 +53,9 @@ export async function POST(req: Request) {
                 const household = await prisma.household.create({
                     data: {
                         name: parentLastName ? `${parentLastName} Household` : "Household",
+                        leads: {
+                            create: { participantId: parent.id }
+                        }
                     }
                 });
                 await prisma.participant.update({
@@ -60,6 +63,15 @@ export async function POST(req: Request) {
                     data: { householdId: household.id }
                 });
                 householdIdToAssign = household.id;
+
+                // Create a HOUSEHOLD membership
+                await prisma.membership.create({
+                    data: {
+                        householdId: household.id,
+                        type: 'HOUSEHOLD',
+                        active: true,
+                    }
+                });
             } else {
                 householdIdToAssign = parent.householdId;
             }
@@ -74,12 +86,22 @@ export async function POST(req: Request) {
             }
         });
 
-        // If this is a lone adult (no parent email provided), create them their own household and make them lead
-        if (!parentEmail) {
+        // If an explicit household was provided, use it and skip auto-creation
+        if (householdId && !householdIdToAssign) {
+            await prisma.participant.update({
+                where: { id: newParticipant.id },
+                data: { householdId: householdId }
+            });
+        }
+        // If this is a lone adult (no parent email, no explicit household), create their own household
+        else if (!parentEmail && !householdId) {
             const lastName = name?.trim().split(/\s+/).pop() || "";
             const newHousehold = await prisma.household.create({
                 data: {
                     name: lastName ? `${lastName} Household` : "Household",
+                    leads: {
+                        create: { participantId: newParticipant.id }
+                    }
                 }
             });
 
@@ -88,10 +110,12 @@ export async function POST(req: Request) {
                 data: { householdId: newHousehold.id }
             });
 
-            await prisma.householdLead.create({
+            // Create a HOUSEHOLD membership
+            await prisma.membership.create({
                 data: {
                     householdId: newHousehold.id,
-                    participantId: newParticipant.id
+                    type: 'HOUSEHOLD',
+                    active: true,
                 }
             });
         }

@@ -59,6 +59,15 @@ export async function POST(req: NextRequest) {
             include: { participants: true, leads: true }
         });
 
+        // Create a HOUSEHOLD membership
+        await prisma.membership.create({
+            data: {
+                householdId: household.id,
+                type: 'HOUSEHOLD',
+                active: true,
+            }
+        });
+
         await prisma.auditLog.create({
             data: {
                 actorId: userId,
@@ -120,12 +129,10 @@ export async function PATCH(req: NextRequest) {
 
         // If no existing user was found (or no email provided), create a new one
         if (!targetMember) {
-            const finalEmail = memberEmail ? memberEmail.toLowerCase() : `${memberName.replace(/\s+/g, '').toLowerCase()}${Date.now()}@dependent.local`;
-
             targetMember = await prisma.participant.create({
                 data: {
                     name: memberName,
-                    email: finalEmail,
+                    ...(memberEmail && { email: memberEmail.toLowerCase() }),
                     dob: memberDob ? new Date(memberDob) : null,
                     householdId: user.householdId,
                 }

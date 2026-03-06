@@ -6,6 +6,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from '../../../page.module.css';
 
+type HouseholdOption = {
+    id: number;
+    name: string;
+    participants: { id: number; name: string | null; email: string | null }[];
+};
+
 export default function NewParticipantPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -14,6 +20,12 @@ export default function NewParticipantPage() {
     const [email, setEmail] = useState("");
     const [parentEmail, setParentEmail] = useState("");
     const [dob, setDob] = useState("");
+
+    // Household search state
+    const [householdId, setHouseholdId] = useState("");
+    const [householdSearch, setHouseholdSearch] = useState("");
+    const [householdResults, setHouseholdResults] = useState<HouseholdOption[]>([]);
+    const [householdSearching, setHouseholdSearching] = useState(false);
 
     const isMinor = () => {
         if (!dob) return false;
@@ -44,6 +56,30 @@ export default function NewParticipantPage() {
         }
     }, [status, session, router]);
 
+    // Debounced household search
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (householdSearch && !householdId) {
+                const search = async () => {
+                    setHouseholdSearching(true);
+                    try {
+                        const res = await fetch(`/api/admin/households?q=${encodeURIComponent(householdSearch)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            setHouseholdResults(data.households || []);
+                        }
+                    } finally {
+                        setHouseholdSearching(false);
+                    }
+                };
+                search();
+            } else if (!householdSearch) {
+                setHouseholdResults([]);
+            }
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [householdSearch, householdId]);
+
     if (status === "loading") {
         return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
     }
@@ -66,7 +102,8 @@ export default function NewParticipantPage() {
                     name,
                     email: email || null,
                     parentEmail: minorSelected ? parentEmail : null,
-                    dob: dob || null
+                    dob: dob || null,
+                    householdId: householdId ? parseInt(householdId) : null
                 })
             });
 
@@ -78,6 +115,8 @@ export default function NewParticipantPage() {
                 setEmail("");
                 setParentEmail("");
                 setDob("");
+                setHouseholdId("");
+                setHouseholdSearch("");
             } else {
                 setIsError(true);
                 setMessage(data.error || "Failed to create participant");
@@ -93,7 +132,7 @@ export default function NewParticipantPage() {
     return (
         <main className={styles.main}>
             <div className={`glass-container ${styles.heroContainer}`} style={{ maxWidth: '800px', width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ margin: 0 }}>Register New User</h1>
                     <Link href="/admin" style={{ color: 'white', textDecoration: 'none' }} className="glass-button">
                         &larr; Admin Hub
@@ -125,18 +164,70 @@ export default function NewParticipantPage() {
 
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Participant Google Email {minorSelected ? "(Optional for Minors)" : "*"}</label>
-                            <input type="email" className="glass-input" value={email} onChange={e => setEmail(e.target.value)} required={!minorSelected} style={{ width: '100%', padding: '0.75rem' }} placeholder="jane.doe@example.com" />
+                            <input type="email" className="glass-input" value={email} onChange={e => setEmail(e.target.value)} required={!minorSelected && !householdId} style={{ width: '100%', padding: '0.75rem' }} placeholder="jane.doe@example.com" />
                         </div>
 
                         {minorSelected && (
                             <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Parent / Guardian Google Email *</label>
-                                <p style={{ fontSize: '0.85rem', color: 'gray', marginTop: 0, marginBottom: '1rem' }}>Because the participant is under 18, a parent or guardian's email is required to associate their accounts.</p>
-                                <input type="email" className="glass-input" value={parentEmail} onChange={e => setParentEmail(e.target.value)} required style={{ width: '100%', padding: '0.75rem' }} placeholder="parent@example.com" />
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Parent / Guardian Google Email {!householdId ? '*' : '(Optional)'}</label>
+                                <p style={{ fontSize: '0.85rem', color: 'gray', marginTop: 0, marginBottom: '1rem' }}>Because the participant is under 18, a parent or guardian&apos;s email is required to associate their accounts — unless you assign them to an existing household below.</p>
+                                <input type="email" className="glass-input" value={parentEmail} onChange={e => setParentEmail(e.target.value)} required={minorSelected && !householdId} style={{ width: '100%', padding: '0.75rem' }} placeholder="parent@example.com" />
                             </div>
                         )}
 
-                        <button type="submit" className="glass-button" disabled={saving || (!minorSelected && !email) || (minorSelected && !parentEmail)} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>
+                        {/* Household Selector */}
+                        <div style={{ position: 'relative', background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                Add to Existing Household (Optional)
+                            </label>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: 0, marginBottom: '1rem' }}>
+                                Search by household name or member name/email. If left blank, a new household will be created automatically for adults.
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <input
+                                    type="text"
+                                    className="glass-input"
+                                    value={householdSearch}
+                                    onChange={e => { setHouseholdSearch(e.target.value); setHouseholdId(""); }}
+                                    style={{ width: '100%', padding: '0.75rem' }}
+                                    placeholder="Search households..."
+                                />
+                                {householdId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => { setHouseholdId(""); setHouseholdSearch(""); }}
+                                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '0.5rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            {householdSearching && <div style={{ marginTop: '0.5rem', color: 'gray', fontSize: '0.8rem' }}>Searching...</div>}
+                            {householdResults.length > 0 && !householdId && (
+                                <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', zIndex: 10, maxHeight: '250px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginTop: '4px' }}>
+                                    {householdResults.map(h => (
+                                        <div
+                                            key={h.id}
+                                            onClick={() => {
+                                                setHouseholdId(h.id.toString());
+                                                setHouseholdSearch(h.name || `Household #${h.id}`);
+                                                setHouseholdResults([]);
+                                            }}
+                                            style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                        >
+                                            <div style={{ fontWeight: 500 }}>{h.name || `Household #${h.id}`}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                                                {h.participants.map(p => p.name || p.email || 'Unnamed').join(', ') || 'Empty'}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <button type="submit" className="glass-button" disabled={saving || (!minorSelected && !email && !householdId) || (minorSelected && !parentEmail && !householdId)} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>
                             {saving ? "Registering..." : "Create Participant"}
                         </button>
                     </div>
