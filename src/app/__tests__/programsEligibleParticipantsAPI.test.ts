@@ -30,6 +30,7 @@ describe('Eligible Participants API Integration Tests', () => {
 
     let publicProgramId: number;
     let memberOnlyProgramId: number;
+    let testHouseholdId: number;
 
     beforeAll(async () => {
         // Clean up any leaked state
@@ -96,6 +97,7 @@ describe('Eligible Participants API Integration Tests', () => {
         // Create Household Member (indirect membership)
         const household = await prisma.household.create({
             data: {
+                name: 'Elig API Test Household',
                 memberships: {
                     create: {
                         type: 'HOUSEHOLD',
@@ -105,6 +107,8 @@ describe('Eligible Participants API Integration Tests', () => {
                 }
             }
         });
+        testHouseholdId = household.id;
+
         const householdMember = await prisma.participant.create({
             data: { 
                 email: 'household-member-elig-api-test@example.com', 
@@ -169,8 +173,14 @@ describe('Eligible Participants API Integration Tests', () => {
             });
         }
 
-        await prisma.household.deleteMany({
-        });
+        if (testHouseholdId) {
+            await prisma.householdLead.deleteMany({
+                where: { householdId: testHouseholdId }
+            });
+            await prisma.household.deleteMany({
+                where: { id: testHouseholdId }
+            });
+        }
 
         if (validProgramIds.length > 0) {
             await prisma.program.deleteMany({
