@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
         }
 
         const parsedRows: ParsedRow[] = [];
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
@@ -121,6 +122,16 @@ export async function POST(req: NextRequest) {
             const sameHouseholdAs = sameHouseholdIndex !== -1 ? row[sameHouseholdIndex]?.toString().trim() : "";
 
             if (!firstName && !lastName) continue;
+
+            if (email && !emailRegex.test(email)) {
+                errors.push(`Row ${i + 2} (${firstName} ${lastName}): Invalid email format`);
+                continue;
+            }
+
+            if (parentEmail && !emailRegex.test(parentEmail)) {
+                errors.push(`Row ${i + 2} (${firstName} ${lastName}): Invalid parent email format`);
+                continue;
+            }
 
             let parsedDob: Date | undefined;
             if (dobString) {

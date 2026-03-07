@@ -109,6 +109,11 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ error: "Only household leads can add members" }, { status: 403 });
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (memberEmail && !emailRegex.test(memberEmail)) {
+            return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+        }
+
         let targetMember;
 
         if (memberEmail) {

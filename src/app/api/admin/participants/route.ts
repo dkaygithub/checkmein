@@ -14,9 +14,19 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { name, email, parentEmail, dob, householdId } = body;
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
         // Either email, parentEmail, or householdId must be provided
         if (!email && !parentEmail && !householdId) {
             return NextResponse.json({ error: "Email, Parent Email, or Household assignment is required" }, { status: 400 });
+        }
+
+        if (email && !emailRegex.test(email)) {
+             return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+        }
+        
+        if (parentEmail && !emailRegex.test(parentEmail)) {
+             return NextResponse.json({ error: "Invalid parent email format" }, { status: 400 });
         }
 
         // Check if user already exists
