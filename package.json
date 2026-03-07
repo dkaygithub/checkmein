@@ -6,7 +6,9 @@
     "dev": "next dev -p 4000 -H 0.0.0.0",
     "build": "next build",
     "start": "next start -p 4000",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest",
+    "test:ci": "jest --ci"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
