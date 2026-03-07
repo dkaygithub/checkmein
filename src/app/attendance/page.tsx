@@ -8,6 +8,7 @@ import { formatTime } from "@/lib/time";
 type Participant = {
     id: number;
     email: string;
+    name?: string | null;
     keyholder: boolean;
     sysadmin: boolean;
     dob?: string | null;
@@ -198,7 +199,7 @@ export default function AttendanceDashboard() {
 
     return (
         <main className={styles.main}>
-            <div className="glass-container" style={{ width: "100%", maxWidth: "800px" }}>
+            <div className="glass-container" style={{ width: "100%", maxWidth: "1200px" }}>
                 <div style={{ marginBottom: '2rem' }}>
                     {!attendance.some(v => v.participant.id === (session?.user as any)?.id) ? (
                         <button
@@ -330,54 +331,41 @@ export default function AttendanceDashboard() {
                         <p>The facility is currently empty.</p>
                     </div>
                 ) : (
-                    <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "0.5rem" }}>
                         {attendance.map((visit) => (
                             <li
                                 key={visit.id}
                                 style={{
                                     display: "flex",
                                     justifyContent: "space-between",
-                                    padding: "1rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem 0.75rem",
                                     background: "rgba(255, 255, 255, 0.05)",
-                                    borderRadius: "8px",
+                                    borderRadius: "6px",
                                     border: "1px solid rgba(255, 255, 255, 0.05)",
                                 }}
                             >
-                                <div>
-                                    <span style={{ fontWeight: 500 }}>{visit.participant.email}</span>
-                                    {visit.participant.keyholder && (
-                                        <span
-                                            style={{
-                                                marginLeft: "8px",
-                                                fontSize: "0.75rem",
-                                                background: "rgba(59, 130, 246, 0.2)",
-                                                color: "#93c5fd",
-                                                padding: "2px 8px",
-                                                borderRadius: "12px",
-                                            }}
-                                        >
-                                            Keyholder
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", overflow: "hidden" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                        <span style={{ fontWeight: 500, fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={visit.participant.name || visit.participant.email}>
+                                            {visit.participant.name || visit.participant.email.split('@')[0]}
                                         </span>
-                                    )}
-                                    {isMinor(visit.participant.dob) && (
-                                        <span
-                                            style={{
-                                                marginLeft: "8px",
-                                                fontSize: "0.75rem",
-                                                background: "rgba(168, 85, 247, 0.2)",
-                                                color: "#c084fc",
-                                                padding: "2px 8px",
-                                                borderRadius: "12px",
-                                            }}
-                                        >
-                                            Minor
-                                        </span>
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
-                                        Arrived: {formatTime(visit.arrived)}
+                                        {visit.participant.keyholder && (
+                                            <span style={{ fontSize: "0.65rem", background: "rgba(59, 130, 246, 0.2)", color: "#93c5fd", padding: "2px 4px", borderRadius: "4px", flexShrink: 0 }}>
+                                                Key
+                                            </span>
+                                        )}
+                                        {isMinor(visit.participant.dob) && (
+                                            <span style={{ fontSize: "0.65rem", background: "rgba(168, 85, 247, 0.2)", color: "#c084fc", padding: "2px 4px", borderRadius: "4px", flexShrink: 0 }}>
+                                                Minor
+                                            </span>
+                                        )}
                                     </div>
+                                    <div style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+                                        {formatTime(visit.arrived)}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', marginLeft: '0.5rem' }}>
                                     {(currentUserIsSysadmin || currentUserIsKeyholder || currentUserIsBoardMember || visit.participant.id === (session?.user as any)?.id || (household?.leads?.some((l:any) => l.participantId === (session?.user as any)?.id) && visit.participant.householdId === currentUserHouseholdId)) && (
                                         <button
                                             onClick={() => handleForceCheckout(visit.id)}
@@ -389,10 +377,11 @@ export default function AttendanceDashboard() {
                                                 padding: '0.2rem 0.5rem',
                                                 borderRadius: '4px',
                                                 cursor: 'pointer',
-                                                fontSize: '0.75rem'
+                                                fontSize: '0.75rem',
+                                                whiteSpace: 'nowrap'
                                             }}
                                         >
-                                            {checkingOut === visit.id ? "..." : "Check Out"}
+                                            {checkingOut === visit.id ? "..." : "Out"}
                                         </button>
                                     )}
                                 </div>

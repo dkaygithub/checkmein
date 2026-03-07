@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
                         id: true,
                         googleId: true,
                         email: true,
+                        name: true,
                         keyholder: true,
                         sysadmin: true,
                         dob: true,
