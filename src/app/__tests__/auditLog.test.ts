@@ -13,9 +13,10 @@ import { getServerSession } from 'next-auth';
 
 // Mock NextAuth
 jest.mock('next-auth', () => ({
+    __esModule: true,
+    default: jest.fn(() => ({})),
     getServerSession: jest.fn(),
 }));
-
 // Mock Notifications to avoid external calls
 jest.mock('@/lib/notifications', () => ({
     sendNotification: jest.fn()
@@ -165,14 +166,15 @@ describe('AuditLog Integration Tests', () => {
                 actorId: testAdminId,
                 action: 'EDIT',
                 tableName: 'Visit',
-                affectedEntityId: testVisitId,
-                secondaryAffectedEntity: testEventId
+                affectedEntityId: testEventId
             },
             orderBy: { time: 'desc' }
         });
 
         expect(log).toBeDefined();
-        const oldData = log?.oldData as any;
-        expect(oldData.associatedEventId).toBeNull();
+        // Prisma Json fields can be returned as string depending on setup, the API explicitly stringified it
+        const newDataString = log?.newData as string;
+        const newData = JSON.parse(newDataString);
+        expect(newData.validatedParticipants).toContain(testParticipantId);
     });
 });
