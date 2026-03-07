@@ -30,6 +30,18 @@ describe('AuditLog Integration Tests', () => {
     let testVisitId: number;
 
     beforeAll(async () => {
+        // Clean up any leaked state from previous runs
+        await prisma.auditLog.deleteMany({});
+        await prisma.visit.deleteMany({});
+        await prisma.rSVP.deleteMany({});
+        await prisma.programParticipant.deleteMany({});
+        await prisma.programVolunteer.deleteMany({});
+        await prisma.event.deleteMany({});
+        await prisma.program.deleteMany({});
+        await prisma.participant.deleteMany({
+            where: { email: { contains: 'audit-test' } }
+        });
+
         // Setup mock database records
         const admin = await prisma.participant.create({
             data: { email: 'admin-audit-test@example.com', name: 'Admin Test', sysadmin: true }
@@ -44,17 +56,26 @@ describe('AuditLog Integration Tests', () => {
 
     afterAll(async () => {
         // Clean up
-        await prisma.auditLog.deleteMany({
-            where: { actorId: { in: [testAdminId, testParticipantId] } }
-        });
-        await prisma.visit.deleteMany({ where: { participantId: testParticipantId } });
-        await prisma.rSVP.deleteMany({ where: { participantId: testParticipantId } });
-        await prisma.event.deleteMany({ where: { programId: testProgramId } });
-        await prisma.programParticipant.deleteMany({ where: { programId: testProgramId } });
-        await prisma.program.deleteMany({ where: { id: testProgramId } });
-        await prisma.participant.deleteMany({
-            where: { id: { in: [testAdminId, testParticipantId] } }
-        });
+        if (testParticipantId !== undefined) {
+            await prisma.visit.deleteMany({ where: { participantId: testParticipantId } });
+            await prisma.rSVP.deleteMany({ where: { participantId: testParticipantId } });
+        }
+
+        if (testProgramId !== undefined) {
+            await prisma.event.deleteMany({ where: { programId: testProgramId } });
+            await prisma.programParticipant.deleteMany({ where: { programId: testProgramId } });
+            await prisma.program.deleteMany({ where: { id: testProgramId } });
+        }
+
+        const actorIds = [testAdminId, testParticipantId].filter(id => id !== undefined);
+        if (actorIds.length > 0) {
+            await prisma.auditLog.deleteMany({
+                where: { actorId: { in: actorIds } }
+            });
+            await prisma.participant.deleteMany({
+                where: { id: { in: actorIds } }
+            });
+        }
     });
 
     beforeEach(() => {
