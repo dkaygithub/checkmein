@@ -3,7 +3,7 @@
  */
 /**
  * Integration Tests for Admin Orphans API
- * Tests GET /api/admin/orphans for identifying minors without signed-up adults
+ * Tests GET /api/admin/orphans for identifying students without signed-up adults
  */
 
 import { GET } from '@/app/api/admin/orphans/route';
@@ -22,10 +22,10 @@ jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
 describe('Admin Orphans API Integration Tests', () => {
     let testAdminId: number;
     let testUserId: number;
-    let testMinorNoHouseholdId: number;
-    let testMinorHouseholdNoAdultsId: number;
-    let testMinorHouseholdAdultNoGoogleIdId: number;
-    let testMinorHouseholdAdultHasGoogleIdId: number;
+    let testStudentNoHouseholdId: number;
+    let testStudentHouseholdNoAdultsId: number;
+    let testStudentHouseholdAdultNoGoogleIdId: number;
+    let testStudentHouseholdAdultHasGoogleIdId: number;
     let testHousehold1Id: number;
     let testHousehold2Id: number;
     let testHousehold3Id: number;
@@ -55,42 +55,42 @@ describe('Admin Orphans API Integration Tests', () => {
         const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
         const twentyYearsAgo = new Date(now.getFullYear() - 20, now.getMonth(), now.getDate());
 
-        // 1. Minor with no household
-        const minor1 = await prisma.participant.create({
-            data: { email: 'minor1-orphans-api-test@example.com', name: 'Minor No Household Test', dob: tenYearsAgo }
+        // 1. Student with no household
+        const student1 = await prisma.participant.create({
+            data: { email: 'student1-orphans-api-test@example.com', name: 'Student No Household Test', dob: tenYearsAgo }
         });
-        testMinorNoHouseholdId = minor1.id;
+        testStudentNoHouseholdId = student1.id;
 
-        // 2. Minor in a household with no adults
+        // 2. Student in a household with no adults
         const household1 = await prisma.household.create({ data: { name: 'Orphans API Test HH 1' } });
         testHousehold1Id = household1.id;
-        const minor2 = await prisma.participant.create({
-            data: { email: 'minor2-orphans-api-test@example.com', name: 'Minor HH No Adults Test', dob: tenYearsAgo, householdId: testHousehold1Id }
+        const student2 = await prisma.participant.create({
+            data: { email: 'student2-orphans-api-test@example.com', name: 'Student HH No Adults Test', dob: tenYearsAgo, householdId: testHousehold1Id }
         });
-        testMinorHouseholdNoAdultsId = minor2.id;
-        // Another minor in the same household
+        testStudentHouseholdNoAdultsId = student2.id;
+        // Another student in the same household
         await prisma.participant.create({
-            data: { email: 'minorsibling-orphans-api-test@example.com', name: 'Minor Sibling Test', dob: tenYearsAgo, householdId: testHousehold1Id }
+            data: { email: 'studentsibling-orphans-api-test@example.com', name: 'Student Sibling Test', dob: tenYearsAgo, householdId: testHousehold1Id }
         });
 
-        // 3. Minor in a household with an adult who has NO googleId
+        // 3. Student in a household with an adult who has NO googleId
         const household2 = await prisma.household.create({ data: { name: 'Orphans API Test HH 2' } });
         testHousehold2Id = household2.id;
-        const minor3 = await prisma.participant.create({
-            data: { email: 'minor3-orphans-api-test@example.com', name: 'Minor Adult No GoogleID Test', dob: tenYearsAgo, householdId: testHousehold2Id }
+        const student3 = await prisma.participant.create({
+            data: { email: 'student3-orphans-api-test@example.com', name: 'Student Adult No GoogleID Test', dob: tenYearsAgo, householdId: testHousehold2Id }
         });
-        testMinorHouseholdAdultNoGoogleIdId = minor3.id;
+        testStudentHouseholdAdultNoGoogleIdId = student3.id;
         await prisma.participant.create({
             data: { email: 'adult1-orphans-api-test@example.com', name: 'Adult No GoogleID Test', dob: twentyYearsAgo, householdId: testHousehold2Id, googleId: null }
         });
 
-        // 4. Minor in a household with an adult who HAS a googleId (NOT an orphan)
+        // 4. Student in a household with an adult who HAS a googleId (NOT an orphan)
         const household3 = await prisma.household.create({ data: { name: 'Orphans API Test HH 3' } });
         testHousehold3Id = household3.id;
-        const minor4 = await prisma.participant.create({
-            data: { email: 'minor4-orphans-api-test@example.com', name: 'Minor Adult Has GoogleID Test', dob: tenYearsAgo, householdId: testHousehold3Id }
+        const student4 = await prisma.participant.create({
+            data: { email: 'student4-orphans-api-test@example.com', name: 'Student Adult Has GoogleID Test', dob: tenYearsAgo, householdId: testHousehold3Id }
         });
-        testMinorHouseholdAdultHasGoogleIdId = minor4.id;
+        testStudentHouseholdAdultHasGoogleIdId = student4.id;
         await prisma.participant.create({
             data: { email: 'adult2-orphans-api-test@example.com', name: 'Adult Has GoogleID Test', dob: twentyYearsAgo, householdId: testHousehold3Id, googleId: '123456789' }
         });
@@ -119,7 +119,7 @@ describe('Admin Orphans API Integration Tests', () => {
              expect(res.status).toBe(403);
         });
 
-        it('should return the correct list of orphaned minors for admins', async () => {
+        it('should return the correct list of orphaned students for admins', async () => {
             (getServerSession as jest.Mock).mockResolvedValue({
                 user: { id: testAdminId, sysadmin: true }
             });
@@ -136,12 +136,12 @@ describe('Admin Orphans API Integration Tests', () => {
             const orphanIds = data.orphans.map((o: any) => o.id);
 
             // Should be orphans
-            expect(orphanIds).toContain(testMinorNoHouseholdId);
-            expect(orphanIds).toContain(testMinorHouseholdNoAdultsId);
-            expect(orphanIds).toContain(testMinorHouseholdAdultNoGoogleIdId);
+            expect(orphanIds).toContain(testStudentNoHouseholdId);
+            expect(orphanIds).toContain(testStudentHouseholdNoAdultsId);
+            expect(orphanIds).toContain(testStudentHouseholdAdultNoGoogleIdId);
 
             // Should NOT be an orphan
-            expect(orphanIds).not.toContain(testMinorHouseholdAdultHasGoogleIdId);
+            expect(orphanIds).not.toContain(testStudentHouseholdAdultHasGoogleIdId);
         });
     });
 });

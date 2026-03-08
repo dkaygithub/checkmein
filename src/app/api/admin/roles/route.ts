@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Forbidden: Requires Sysadmin or Board Member privileges" }, { status: 403 });
         }
 
-        // Filter out minors (under 18)
+        // Filter out students (under 18)
         const eighteenYearsAgo = new Date();
         eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
 
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
             where: {
                 OR: [
                     { dob: { lte: eighteenYearsAgo } },
-                    { dob: null, email: { not: null } } // fallback: adults likely have emails, minors shouldn't
+                    { dob: null, email: { not: null } } // fallback: adults likely have emails, students shouldn't
                 ]
             },
             select: {

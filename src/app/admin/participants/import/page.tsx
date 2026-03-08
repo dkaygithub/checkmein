@@ -163,7 +163,7 @@ export default function BulkImportParticipants() {
                                 <li style={{ marginBottom: '0.5rem' }}>Download the import template provided below.</li>
                                 <li style={{ marginBottom: '0.5rem' }}>Fill in the participant data. <strong>First Name</strong> and <strong>Last Name</strong> are required.</li>
                                 <li style={{ marginBottom: '0.5rem' }}>For adult members, provide their <strong>Email</strong>. A household and membership will be created automatically.</li>
-                                <li style={{ marginBottom: '0.5rem' }}>For minors or dependents, leave <strong>Email</strong> blank and provide the primary member&apos;s email in <strong>Parent Email</strong>.</li>
+                                <li style={{ marginBottom: '0.5rem' }}>For students or dependents, leave <strong>Email</strong> blank and provide the primary member&apos;s email in <strong>Parent Email</strong>.</li>
                                 <li style={{ marginBottom: '0.5rem' }}>Use <strong>Same Household As</strong> to link someone to another participant&apos;s household by name or email (e.g. a spouse).</li>
                                 <li>Save the file and upload it here.</li>
                             </ol>

@@ -329,7 +329,7 @@ export default function HouseholdPage() {
                             <form onSubmit={handleAddMember} style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', textAlign: 'left' }}>
                                 <h3 style={{ marginTop: 0 }}>Household Member Registration</h3>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                                    If you enter an email address, their account will be correctly linked to this household the first time they log in via Google. Leave the email blank if they are a minor dependent who will not sign in themselves.
+                                    If you enter an email address, their account will be correctly linked to this household the first time they log in via Google. Leave the email blank if they are a student dependent who will not sign in themselves.
                                 </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <div>

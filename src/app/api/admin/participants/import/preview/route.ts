@@ -148,11 +148,11 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            // Check: minor without parent email
+            // Check: student without parent email
             if (parsedDob) {
                 const age = (Date.now() - parsedDob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
                 if (age < 18 && !parentEmail && !sameHouseholdAs) {
-                    warnings.push("Minor (under 18) without a parent email or household reference");
+                    warnings.push("Student (under 18) without a parent email or household reference");
                 }
             }
 

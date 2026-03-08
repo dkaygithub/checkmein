@@ -34,7 +34,7 @@ export default function Home() {
         const keyholdersPresent = attendanceList.filter((v: any) => v.participant.keyholder).length;
         setIsLastKeyholder(userActiveVisit.participant.keyholder && keyholdersPresent === 1);
 
-        const isMinor = (dob: string | undefined | null) => {
+        const isStudent = (dob: string | undefined | null) => {
           if (!dob) return false;
           const birthDate = new Date(dob);
           const today = new Date();
@@ -44,17 +44,17 @@ export default function Home() {
           return age < 18;
         };
 
-        const activeAdultVisits = attendanceList.filter((v: any) => !isMinor(v.participant.dob));
-        const activeMinorVisits = attendanceList.filter((v: any) => isMinor(v.participant.dob));
+        const activeAdultVisits = attendanceList.filter((v: any) => !isStudent(v.participant.dob));
+        const activeStudentVisits = attendanceList.filter((v: any) => isStudent(v.participant.dob));
 
-        const unaccompaniedMinors = activeMinorVisits.filter((minorVisit: any) => {
-          if (!minorVisit.participant.householdId) return true;
+        const unaccompaniedStudents = activeStudentVisits.filter((studentVisit: any) => {
+          if (!studentVisit.participant.householdId) return true;
           return !activeAdultVisits.some(
-            (adultVisit: any) => adultVisit.participant.householdId === minorVisit.participant.householdId
+            (adultVisit: any) => adultVisit.participant.householdId === studentVisit.participant.householdId
           );
         });
 
-        setIsTwoDeepViolation(unaccompaniedMinors.length > 0 && activeAdultVisits.length < 2);
+        setIsTwoDeepViolation(unaccompaniedStudents.length > 0 && activeAdultVisits.length < 2);
       } else {
         setIsLastKeyholder(false);
         setIsTwoDeepViolation(false);
@@ -122,7 +122,7 @@ export default function Home() {
               {isTwoDeepViolation && (
                 <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.5)', color: '#fca5a5', padding: '1rem', borderRadius: '8px', width: '100%', gridColumn: '1 / -1', display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <span>🚨</span>
-                  <div><strong>Critical Warning:</strong> Two-Deep Compliance is failing. An unaccompanied minor is present without sufficient adult supervision.</div>
+                  <div><strong>Critical Warning:</strong> Two-Deep Compliance is failing. An unaccompanied student is present without sufficient adult supervision.</div>
                 </div>
               )}
               {isLastKeyholder && (

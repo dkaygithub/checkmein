@@ -15,7 +15,7 @@ type Participant = {
     householdId?: number | null;
 };
 
-const isMinor = (dob: string | undefined | null) => {
+const isStudent = (dob: string | undefined | null) => {
     if (!dob) return false;
     const birthDate = new Date(dob);
     const today = new Date();
@@ -178,22 +178,22 @@ export default function KioskDisplay() {
 
     const keyholdersPresent = attendance.filter((v) => v.participant.keyholder).length;
 
-    const activeAdultVisits = attendance.filter((v) => !isMinor(v.participant.dob));
-    const activeMinorVisits = attendance.filter((v) => isMinor(v.participant.dob));
+    const activeAdultVisits = attendance.filter((v) => !isStudent(v.participant.dob));
+    const activeStudentVisits = attendance.filter((v) => isStudent(v.participant.dob));
 
-    // A minor is 'unaccompanied' if they have no adult from their own household checked in.
-    const unaccompaniedMinors = activeMinorVisits.filter(minorVisit => {
+    // A student is 'unaccompanied' if they have no adult from their own household checked in.
+    const unaccompaniedStudents = activeStudentVisits.filter(studentVisit => {
         // If they don't belong to a household, they are considered unaccompanied immediately.
-        if (!minorVisit.participant.householdId) return true;
+        if (!studentVisit.participant.householdId) return true;
 
         // Otherwise, see if any active adult shares their household ID.
         const hasAdultInHousehold = activeAdultVisits.some(
-            adultVisit => adultVisit.participant.householdId === minorVisit.participant.householdId
+            adultVisit => adultVisit.participant.householdId === studentVisit.participant.householdId
         );
         return !hasAdultInHousehold;
     });
 
-    const isTwoDeepViolation = unaccompaniedMinors.length > 0 && activeAdultVisits.length < 2;
+    const isTwoDeepViolation = unaccompaniedStudents.length > 0 && activeAdultVisits.length < 2;
 
     const displayResults = searchResults.filter(p => !attendance.some(v => v.participant.id === p.id));
 
@@ -221,7 +221,7 @@ export default function KioskDisplay() {
                     <h1 className="text-gradient" style={{ margin: 0 }}>Current Attendance</h1>
                     <div style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                        <span title={`${activeMinorVisits.length} Minors Present`}>{attendance.length} People Present</span>
+                        <span title={`${activeStudentVisits.length} Students Present`}>{attendance.length} People Present</span>
                     </div>
                 </div>
 
@@ -301,7 +301,7 @@ export default function KioskDisplay() {
                         gap: '12px'
                     }}>
                         <span>🚨</span>
-                        <strong>Critical Warning:</strong> Two-Deep Compliance is failing! An unaccompanied minor is present, but there are only {activeAdultVisits.length} adult(s) in the building.
+                        <strong>Critical Warning:</strong> Two-Deep Compliance is failing! An unaccompanied student is present, but there are only {activeAdultVisits.length} adult(s) in the building.
                     </div>
                 ) : keyholdersPresent === 1 && (
                     <div style={{
@@ -355,9 +355,9 @@ export default function KioskDisplay() {
                                                 Key
                                             </span>
                                         )}
-                                        {isMinor(visit.participant.dob) && (
+                                        {isStudent(visit.participant.dob) && (
                                             <span style={{ fontSize: "0.65rem", background: "rgba(168, 85, 247, 0.2)", color: "#c084fc", padding: "2px 4px", borderRadius: "4px", flexShrink: 0 }}>
-                                                Minor
+                                                Student
                                             </span>
                                         )}
                                     </div>

@@ -52,7 +52,7 @@ export default function DevLoginPicker() {
             const age = Math.floor(
                 (Date.now() - new Date(p.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
             );
-            if (age < 18) badges.push({ label: `Minor (${age})`, color: "#ec4899" });
+            if (age < 18) badges.push({ label: `Student (${age})`, color: "#ec4899" });
         }
         return badges;
     };

@@ -24,7 +24,7 @@ describe('Admin Roles API Integration Tests', () => {
     let testBoardMemberId: number;
     let testUserId: number;
     let testTargetUserId: number;
-    let testMinorId: number;
+    let testStudentId: number;
 
     beforeAll(async () => {
         // Clean up any leaked state
@@ -63,10 +63,10 @@ describe('Admin Roles API Integration Tests', () => {
         const now = new Date();
         const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
         
-        const minor = await prisma.participant.create({
-            data: { email: 'minor-roles-api-test@example.com', name: 'Minor Roles Test', dob: tenYearsAgo }
+        const student = await prisma.participant.create({
+            data: { email: 'student-roles-api-test@example.com', name: 'Student Roles Test', dob: tenYearsAgo }
         });
-        testMinorId = minor.id;
+        testStudentId = student.id;
     });
 
     afterAll(async () => {
@@ -77,7 +77,7 @@ describe('Admin Roles API Integration Tests', () => {
             });
         }
         await prisma.participant.deleteMany({
-            where: { id: { in: [testSysAdminId, testBoardMemberId, testUserId, testTargetUserId, testMinorId] } }
+            where: { id: { in: [testSysAdminId, testBoardMemberId, testUserId, testTargetUserId, testStudentId] } }
         });
     });
 
@@ -121,7 +121,7 @@ describe('Admin Roles API Integration Tests', () => {
 
             const ids = data.participants.map((p: any) => p.id);
             expect(ids).toContain(testTargetUserId);
-            expect(ids).not.toContain(testMinorId); // Minors are filtered out
+            expect(ids).not.toContain(testStudentId); // Students are filtered out
         });
     });
 

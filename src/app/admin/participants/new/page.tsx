@@ -27,7 +27,7 @@ export default function NewParticipantPage() {
     const [householdResults, setHouseholdResults] = useState<HouseholdOption[]>([]);
     const [householdSearching, setHouseholdSearching] = useState(false);
 
-    const isMinor = () => {
+    const isStudent = () => {
         if (!dob) return false;
         const birthDate = new Date(dob);
         const today = new Date();
@@ -39,7 +39,7 @@ export default function NewParticipantPage() {
         return age < 18;
     };
 
-    const minorSelected = isMinor();
+    const studentSelected = isStudent();
 
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
@@ -101,7 +101,7 @@ export default function NewParticipantPage() {
                 body: JSON.stringify({
                     name,
                     email: email || null,
-                    parentEmail: minorSelected ? parentEmail : null,
+                    parentEmail: studentSelected ? parentEmail : null,
                     dob: dob || null,
                     householdId: householdId ? parseInt(householdId) : null
                 })
@@ -158,20 +158,20 @@ export default function NewParticipantPage() {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Date of Birth {minorSelected && <span style={{ color: '#c084fc', marginLeft: '8px', fontSize: '0.8rem' }}>(Minor Detected)</span>}</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Date of Birth {studentSelected && <span style={{ color: '#c084fc', marginLeft: '8px', fontSize: '0.8rem' }}>(Student Detected)</span>}</label>
                             <input type="date" className="glass-input" value={dob} onChange={e => setDob(e.target.value)} style={{ width: '100%', padding: '0.75rem', maxWidth: '300px' }} />
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Participant Google Email {minorSelected ? "(Optional for Minors)" : "*"}</label>
-                            <input type="email" className="glass-input" value={email} onChange={e => setEmail(e.target.value)} required={!minorSelected && !householdId} style={{ width: '100%', padding: '0.75rem' }} placeholder="jane.doe@example.com" />
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Participant Google Email {studentSelected ? "(Optional for Students)" : "*"}</label>
+                            <input type="email" className="glass-input" value={email} onChange={e => setEmail(e.target.value)} required={!studentSelected && !householdId} style={{ width: '100%', padding: '0.75rem' }} placeholder="jane.doe@example.com" />
                         </div>
 
-                        {minorSelected && (
+                        {studentSelected && (
                             <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Parent / Guardian Google Email {!householdId ? '*' : '(Optional)'}</label>
                                 <p style={{ fontSize: '0.85rem', color: 'gray', marginTop: 0, marginBottom: '1rem' }}>Because the participant is under 18, a parent or guardian&apos;s email is required to associate their accounts — unless you assign them to an existing household below.</p>
-                                <input type="email" className="glass-input" value={parentEmail} onChange={e => setParentEmail(e.target.value)} required={minorSelected && !householdId} style={{ width: '100%', padding: '0.75rem' }} placeholder="parent@example.com" />
+                                <input type="email" className="glass-input" value={parentEmail} onChange={e => setParentEmail(e.target.value)} required={studentSelected && !householdId} style={{ width: '100%', padding: '0.75rem' }} placeholder="parent@example.com" />
                             </div>
                         )}
 
@@ -227,7 +227,7 @@ export default function NewParticipantPage() {
                             )}
                         </div>
 
-                        <button type="submit" className="glass-button" disabled={saving || (!minorSelected && !email && !householdId) || (minorSelected && !parentEmail && !householdId)} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>
+                        <button type="submit" className="glass-button" disabled={saving || (!studentSelected && !email && !householdId) || (studentSelected && !parentEmail && !householdId)} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>
                             {saving ? "Registering..." : "Create Participant"}
                         </button>
                     </div>
