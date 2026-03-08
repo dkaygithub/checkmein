@@ -38,6 +38,7 @@ body {
     radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
   background-attachment: fixed;
   overflow-x: hidden;
+  width: 100%;
 }
 
 /* Base Glass Container */
@@ -51,6 +52,15 @@ body {
   box-shadow: var(--glass-shadow);
   padding: 2rem;
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .glass-container {
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
 }
 
 .glass-container:hover {
