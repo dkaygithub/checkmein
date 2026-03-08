@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
 import { sendCheckinNotifications } from "@/lib/notifications";
+import { getFullAttendance } from "@/lib/getFullAttendance";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
@@ -184,12 +185,14 @@ export async function POST(req: NextRequest) {
 
             // Fire-and-forget: send check-out notifications
 
+            const checkoutAttendance = await getFullAttendance();
             return NextResponse.json({
                 message: facilityClosed ? "Checked out and Facility closed" : "Checked out successfully",
                 type: "checkout",
                 participant,
                 visit: updatedVisit,
-                facilityClosed
+                facilityClosed,
+                ...checkoutAttendance,
             });
         } else {
             // User is not checked in, so we Check them In
@@ -223,11 +226,13 @@ export async function POST(req: NextRequest) {
                 console.error('Checkin notification error:', err)
             );
 
+            const checkinAttendance = await getFullAttendance();
             return NextResponse.json({
                 message: "Checked in successfully",
                 type: "checkin",
                 participant,
                 visit: newVisit,
+                ...checkinAttendance,
             });
         }
     } catch (error) {

@@ -170,7 +170,12 @@ function KioskDisplayInner() {
 
         // Listen for instant refresh from parent wrapper (triggered by badge SSE events)
         const handleMessage = (event: MessageEvent) => {
-            if (event.data === "refresh-attendance") {
+            if (typeof event.data === "object" && event.data?.type === "refresh-attendance" && event.data.attendance) {
+                // Inline attendance data from signed scan response — update directly, no re-fetch needed
+                setData({ access: "full", attendance: event.data.attendance, counts: event.data.counts, safety: event.data.safety });
+                setLoading(false);
+            } else if (event.data === "refresh-attendance") {
+                // Fallback: no inline data, re-fetch from server
                 fetchAttendance();
             }
         };

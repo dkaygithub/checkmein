@@ -3,16 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
-
-function isStudentByDob(dob: Date | string | null | undefined): boolean {
-    if (!dob) return false;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age < 18;
-}
+import { getFullAttendance } from "@/lib/getFullAttendance";
 
 export async function GET(req: NextRequest) {
     try {
@@ -46,53 +37,7 @@ export async function GET(req: NextRequest) {
             isKiosk = true;
         }
 
-        // Fetch all active visits (server always needs the full picture)
-        const activeVisits = await prisma.visit.findMany({
-            where: {
-                departed: null,
-            },
-            include: {
-                participant: {
-                    select: {
-                        id: true,
-                        googleId: true,
-                        email: true,
-                        name: true,
-                        keyholder: true,
-                        sysadmin: true,
-                        dob: true,
-                        householdId: true
-                    },
-                },
-            },
-            orderBy: {
-                arrived: "desc",
-            },
-        });
-
-        // Compute category counts
-        const keyholderVisits = activeVisits.filter(v => v.participant.keyholder);
-        const studentVisits = activeVisits.filter(v => isStudentByDob(v.participant.dob));
-        const volunteerVisits = activeVisits.filter(v => !v.participant.keyholder && !isStudentByDob(v.participant.dob));
-
-        const counts = {
-            keyholders: keyholderVisits.length,
-            volunteers: volunteerVisits.length,
-            students: studentVisits.length,
-            total: activeVisits.length,
-        };
-
-        // Compute safety flags (needed for all access levels)
-        const unaccompaniedStudents = studentVisits.filter(sv => {
-            if (!sv.participant.householdId) return true;
-            const adultVisits = activeVisits.filter(v => !isStudentByDob(v.participant.dob));
-            return !adultVisits.some(av => av.participant.householdId === sv.participant.householdId);
-        });
-        const adultsPresent = activeVisits.filter(v => !isStudentByDob(v.participant.dob));
-        const safety = {
-            isLastKeyholder: keyholderVisits.length === 1,
-            isTwoDeepViolation: unaccompaniedStudents.length > 0 && adultsPresent.length < 2,
-        };
+        const { attendance, counts, safety } = await getFullAttendance();
 
         // Determine access level
         const isAdmin = isKiosk || user?.sysadmin || user?.boardMember || user?.keyholder;
@@ -101,16 +46,16 @@ export async function GET(req: NextRequest) {
             // Full access: return all visits + counts
             return NextResponse.json({
                 access: "full",
-                attendance: activeVisits,
+                attendance,
                 counts,
                 safety,
             });
         }
 
         // Limited access: counts + household members + self only
-        const selfVisit = user ? activeVisits.find(v => v.participant.id === Number(user.id)) || null : null;
+        const selfVisit = user ? attendance.find(v => v.participant.id === Number(user.id)) || null : null;
         const householdVisits = (user?.householdId)
-            ? activeVisits.filter(v => v.participant.householdId === user.householdId)
+            ? attendance.filter(v => v.participant.householdId === user.householdId)
             : [];
 
         return NextResponse.json({
