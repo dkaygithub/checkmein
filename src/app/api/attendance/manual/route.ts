@@ -3,6 +3,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { findAssociatedEventAt, processVisitCheckout } from "@/lib/attendanceTransitions";
+import { logBackendError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
     try {
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "Manual visit recorded successfully.", visit }, { status: 201 });
     } catch (error: any) {
         console.error("Manual Attendance POST Error:", error);
+        await logBackendError(error, "POST /api/attendance/manual");
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

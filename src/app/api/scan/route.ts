@@ -6,6 +6,7 @@ import { getFullAttendance } from "@/lib/getFullAttendance";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { findAssociatedEventAt, processVisitCheckout } from "@/lib/attendanceTransitions";
+import { logBackendError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
     console.log("--> API /api/scan HIT");
@@ -240,6 +241,7 @@ export async function POST(req: NextRequest) {
         }
     } catch (error) {
         console.error("Scan processing error:", error);
+        await logBackendError(error, "POST /api/scan");
         return NextResponse.json(
             { error: "Internal Server Error while processing scan." },
             { status: 500 }

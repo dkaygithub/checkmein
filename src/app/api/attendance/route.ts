@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { getKioskPublicKey, verifyKioskSignature } from "@/lib/verify-kiosk";
-import { getFullAttendance } from "@/lib/getFullAttendance";
+import { getFullAttendance, isStudentByDob } from "@/lib/getFullAttendance";
 import { findAssociatedEventAt, processVisitCheckout } from "@/lib/attendanceTransitions";
+import { logBackendError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
     try {
@@ -70,6 +71,7 @@ export async function GET(req: NextRequest) {
         });
     } catch (error) {
         console.error("Attendance fetch error:", error);
+        require('fs').writeFileSync('/home/dkay/Projects/treehouse/checkmein/attendance-error-session.log', String(error) + '\n' + (error as any).stack);
         return NextResponse.json(
             { error: "Internal Server Error while fetching attendance." },
             { status: 500 }
@@ -120,6 +122,7 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ success: true, visit: updatedVisit });
     } catch (error) {
         console.error("Force checkout error:", error);
+        await logBackendError(error, "DELETE /api/attendance");
         return NextResponse.json({ error: "Failed to force checkout" }, { status: 500 });
     }
 }
@@ -213,8 +216,8 @@ export async function POST(req: Request) {
                     action: 'CREATE',
                     tableName: 'SYSTEM_NOTIFY',
                     affectedEntityId: 0,
-                    newData: { message: `Sent Two-Deep warning to ${boardMembers.length} board member(s).` }
-                } as any
+                    newData: { message: `Sent Two-Deep warning to ${boardMembers.length} board member(s).` } as any
+                }
             });
 
             // In a real app, integrate Resend/SendGrid here using boardMembers.map(m => m.email)
@@ -227,6 +230,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unknown notification type" }, { status: 400 });
     } catch (error) {
         console.error("Notification error:", error);
+        await logBackendError(error, "POST /api/attendance");
         return NextResponse.json({ error: "Failed to process notification" }, { status: 500 });
     }
 }

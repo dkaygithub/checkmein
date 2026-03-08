@@ -326,3 +326,12 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model ErrorLog {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  route     String?
+  message   String
+  stack     String?
+  context   Json?
+}
