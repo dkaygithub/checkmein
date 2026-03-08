@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import styles from "../page.module.css";
 import { formatTime } from "@/lib/time";
@@ -60,7 +61,9 @@ const isStudent = (dob: string | undefined | null) => {
     return age < 18;
 };
 
-export default function KioskDisplay() {
+function KioskDisplayInner() {
+    const searchParams = useSearchParams();
+    const isKioskMode = searchParams.get("mode") === "kiosk";
     const { data: session } = useSession();
     const [data, setData] = useState<AttendanceResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -322,34 +325,36 @@ export default function KioskDisplay() {
     };
 
     return (
-        <main className={styles.main} style={{ cursor: "none" }}>
+        <main className={styles.main} style={isKioskMode ? { cursor: "none" } : undefined}>
             <div className="glass-container" style={{ width: "100%", maxWidth: "1200px" }}>
-                {/* Check-in button */}
-                <div style={{ marginBottom: "2rem" }}>
-                    {!isCheckedIn ? (
-                        <button
-                            onClick={() => handleManualCheckIn((session?.user as any)?.id)}
-                            disabled={checkingInId === (session?.user as any)?.id}
-                            className="glass-button primary"
-                            style={{ padding: "1rem 2rem", fontSize: "1.1rem", fontWeight: 600, width: "100%" }}
-                        >
-                            {checkingInId === (session?.user as any)?.id ? "Checking In..." : "Check Me In"}
-                        </button>
-                    ) : (
-                        <div
-                            style={{
-                                padding: "1rem",
-                                background: "rgba(16, 185, 129, 0.1)",
-                                border: "1px solid rgba(16, 185, 129, 0.3)",
-                                borderRadius: "8px",
-                                color: "#6ee7b7",
-                                textAlign: "center",
-                            }}
-                        >
-                            You are currently checked in!
-                        </div>
-                    )}
-                </div>
+                {/* Check-in button — hidden in kiosk mode */}
+                {!isKioskMode && (
+                    <div style={{ marginBottom: "2rem" }}>
+                        {!isCheckedIn ? (
+                            <button
+                                onClick={() => handleManualCheckIn((session?.user as any)?.id)}
+                                disabled={checkingInId === (session?.user as any)?.id}
+                                className="glass-button primary"
+                                style={{ padding: "1rem 2rem", fontSize: "1.1rem", fontWeight: 600, width: "100%" }}
+                            >
+                                {checkingInId === (session?.user as any)?.id ? "Checking In..." : "Check Me In"}
+                            </button>
+                        ) : (
+                            <div
+                                style={{
+                                    padding: "1rem",
+                                    background: "rgba(16, 185, 129, 0.1)",
+                                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                                    borderRadius: "8px",
+                                    color: "#6ee7b7",
+                                    textAlign: "center",
+                                }}
+                            >
+                                You are currently checked in!
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Header */}
                 <div
@@ -388,8 +393,9 @@ export default function KioskDisplay() {
                     </div>
                 </div>
 
-                {/* Household check-in buttons */}
-                {canCheckInHousehold &&
+                {/* Household check-in buttons — hidden in kiosk mode */}
+                {!isKioskMode &&
+                    canCheckInHousehold &&
                     household &&
                     household.leads?.some((l: any) => l.participantId === (session?.user as any)?.id) && (
                         <div style={{ marginBottom: "2rem" }}>
@@ -431,8 +437,8 @@ export default function KioskDisplay() {
                         </div>
                     )}
 
-                {/* Admin manual check-in search */}
-                {canManuallyCheckInGlobal && (
+                {/* Admin manual check-in search — hidden in kiosk mode */}
+                {!isKioskMode && canManuallyCheckInGlobal && (
                     <div style={{ marginBottom: "2rem", position: "relative" }}>
                         <input
                             type="text"
@@ -565,11 +571,11 @@ export default function KioskDisplay() {
                         <p>The facility is currently empty.</p>
                     </div>
                 ) : (
-                    /* 3-column layout */
+                    /* 3-column layout — responsive for mobile */
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(3, 1fr)",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
                             gap: "1.5rem",
                         }}
                     >
@@ -648,5 +654,13 @@ export default function KioskDisplay() {
                 )}
             </div>
         </main>
+    );
+}
+
+export default function KioskDisplay() {
+    return (
+        <Suspense fallback={<main className={styles.main}><p style={{ color: "var(--color-text-muted)" }}>Loading...</p></main>}>
+            <KioskDisplayInner />
+        </Suspense>
     );
 }

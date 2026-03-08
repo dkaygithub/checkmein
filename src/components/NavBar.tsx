@@ -1,19 +1,23 @@
 "use client";
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from 'next/link';
 import styles from './NavBar.module.css';
 
-export default function NavBar() {
+function NavBarInner() {
     const { data: session } = useSession();
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+    // Hide navbar entirely in kiosk mode
+    if (pathname === '/kioskdisplay' && searchParams.get('mode') === 'kiosk') return null;
 
     // Don't show navigation on the homepage if they aren't signed in
     if (!session && pathname === '/') return null;
@@ -119,5 +123,13 @@ export default function NavBar() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function NavBar() {
+    return (
+        <Suspense fallback={null}>
+            <NavBarInner />
+        </Suspense>
     );
 }
