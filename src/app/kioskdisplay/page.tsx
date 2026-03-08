@@ -163,8 +163,20 @@ export default function KioskDisplay() {
 
     useEffect(() => {
         fetchAttendance();
-        const interval = setInterval(fetchAttendance, 10000);
-        return () => clearInterval(interval);
+        const interval = setInterval(fetchAttendance, 60000);
+
+        // Listen for instant refresh from parent wrapper (triggered by badge SSE events)
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data === "refresh-attendance") {
+                fetchAttendance();
+            }
+        };
+        window.addEventListener("message", handleMessage);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("message", handleMessage);
+        };
     }, []);
 
     useEffect(() => {
