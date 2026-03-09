@@ -423,7 +423,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
 
 
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
                             <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Lead Mentor / Program Coordinator</label>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -498,23 +498,38 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                             </div >
 
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Start Date</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                    Start Date
+                                    {program.begin && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: {program.begin.split('T')[0]})</span>}
+                                </label>
                                 <input type="date" className="glass-input" value={begin} onChange={e => setBegin(e.target.value)} style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>End Date</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                    End Date
+                                    {program.end && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: {program.end.split('T')[0]})</span>}
+                                </label>
                                 <input type="date" className="glass-input" value={end} onChange={e => setEnd(e.target.value)} style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Minimum Age (Optional)</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                    Minimum Age (Optional)
+                                    {program.minAge !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: {program.minAge})</span>}
+                                </label>
                                 <input type="number" className="glass-input" value={minAge} onChange={e => setMinAge(e.target.value)} placeholder="e.g. 14" style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Maximum Age (Optional)</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                    Maximum Age (Optional)
+                                    {program.maxAge !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: {program.maxAge})</span>}
+                                </label>
                                 <input type="number" className="glass-input" value={maxAge} onChange={e => setMaxAge(e.target.value)} placeholder="e.g. 18" style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Max Participants (Optional)</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                    Max Participants (Optional)
+                                    {program.maxParticipants !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: {program.maxParticipants})</span>}
+                                </label>
                                 <input type="number" className="glass-input" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} placeholder="e.g. 20" style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
 
