@@ -46,9 +46,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         // Apply memberOnly visibility checks
         if (program.memberOnly) {
             let canSeeMemberOnly = false;
+            
+            // Check if user is lead mentor
+            const isLeadMentor = session?.user && (session.user as unknown as { id: number }).id === program.leadMentorId;
+
+            // Check if user is core volunteer
+            const isCoreVolunteer = session?.user && program.volunteers.some(v => v.participantId === (session.user as unknown as { id: number }).id && v.isCore);
+
             if (session && session.user) {
                 const user = session.user as unknown as { id: number; sysadmin?: boolean; boardMember?: boolean };
-                if (user.sysadmin || user.boardMember) {
+                if (user.sysadmin || user.boardMember || isLeadMentor || isCoreVolunteer) {
                     canSeeMemberOnly = true;
                 } else {
                     const participant = await prisma.participant.findUnique({
