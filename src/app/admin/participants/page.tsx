@@ -151,15 +151,13 @@ export default function AdminParticipantsIndex() {
                                     </div>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         {p.household?.name || 'No household'}
-                                        {!p.household && (
-                                            <button 
-                                                className="glass-button" 
-                                                onClick={() => { setSelectedParticipant(p); setAssignModalOpen(true); }}
-                                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: 'rgba(59, 130, 246, 0.2)' }}
-                                            >
-                                                Assign Household
-                                            </button>
-                                        )}
+                                        <button 
+                                            className="glass-button" 
+                                            onClick={() => { setSelectedParticipant(p); setAssignModalOpen(true); }}
+                                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: p.household ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.2)' }}
+                                        >
+                                            {p.household ? 'Edit Household' : 'Assign Household'}
+                                        </button>
                                     </div>
                                 </div>
                             ))}

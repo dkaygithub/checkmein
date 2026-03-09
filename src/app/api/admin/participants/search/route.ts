@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
             include: {
                 memberships: {
                     where: { active: true }
-                }
+                },
+                household: true
             }
         });
 
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
             boardMember: p.boardMember,
             shopSteward: p.shopSteward,
             keyholder: p.keyholder,
+            household: p.household,
         }));
 
         return NextResponse.json({ participants: formatted });
