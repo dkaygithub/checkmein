@@ -27,6 +27,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 visits: true,
                 rsvps: {
                     include: { participant: true }
+                },
+                attendanceConfirmedBy: {
+                    select: { name: true }
                 }
             }
         });
@@ -70,7 +73,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
             const updatedEvent = await prisma.event.update({
                 where: { id: eventId },
-                data: { attendanceConfirmedAt: new Date() }
+                data: { 
+                    attendanceConfirmedAt: new Date(),
+                    attendanceConfirmedById: userId 
+                }
             });
 
             return NextResponse.json({ success: true, event: updatedEvent });

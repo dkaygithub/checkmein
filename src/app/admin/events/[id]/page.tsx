@@ -22,6 +22,9 @@ type EventData = {
     start: string;
     end: string;
     attendanceConfirmedAt: string | null;
+    attendanceConfirmedBy?: {
+        name: string | null;
+    } | null;
     recurringGroupId: string | null;
     program?: {
         id: number;
@@ -261,7 +264,14 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                                             {member.role}
                                         </span>
                                     </td>
-                                    <td style={{ padding: '0.75rem' }}>{statusEl}</td>
+                                    <td style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        {statusEl}
+                                        {canManageAttendance && (
+                                            <button className="glass-button" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+                                                Manual Edit
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -305,20 +315,44 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                                 <h3 style={{ margin: '0 0 0.5rem 0' }}>Attendance Tracking</h3>
                                 <p style={{ margin: 0, color: 'var(--color-text-muted)' }}>Review program badge scans below and confirm final attendance.</p>
                             </div>
-                            <button
-                                className="glass-button"
-                                onClick={handleConfirmAttendance}
-                                disabled={actionLoading}
-                                style={{
-                                    padding: '0.75rem 1.5rem',
-                                    fontWeight: 'bold',
-                                    background: eventData.attendanceConfirmedAt ? 'rgba(148, 163, 184, 0.2)' : 'rgba(56, 189, 248, 0.2)',
-                                    borderColor: eventData.attendanceConfirmedAt ? 'rgba(148, 163, 184, 0.5)' : 'rgba(56, 189, 248, 0.5)',
-                                    color: eventData.attendanceConfirmedAt ? '#cbd5e1' : '#38bdf8'
-                                }}
-                            >
-                                {eventData.attendanceConfirmedAt ? `Confirmed on ${new Date(eventData.attendanceConfirmedAt).toLocaleDateString()}` : "Confirm Attendance"}
-                            </button>
+                            {eventData.attendanceConfirmedAt ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{ color: '#cbd5e1', fontSize: '0.9rem', textAlign: 'right' }}>
+                                        Confirmed on {new Date(eventData.attendanceConfirmedAt).toLocaleDateString()}
+                                        <br/>
+                                        by {eventData.attendanceConfirmedBy?.name || 'Unknown'}
+                                    </div>
+                                    <button
+                                        className="glass-button"
+                                        onClick={handleConfirmAttendance}
+                                        disabled={actionLoading}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            fontSize: '0.9em',
+                                            background: 'rgba(148, 163, 184, 0.2)',
+                                            borderColor: 'rgba(148, 163, 184, 0.5)',
+                                            color: '#cbd5e1'
+                                        }}
+                                    >
+                                        Re-confirm
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    className="glass-button"
+                                    onClick={handleConfirmAttendance}
+                                    disabled={actionLoading}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        fontWeight: 'bold',
+                                        background: 'rgba(56, 189, 248, 0.2)',
+                                        borderColor: 'rgba(56, 189, 248, 0.5)',
+                                        color: '#38bdf8'
+                                    }}
+                                >
+                                    Confirm Attendance
+                                </button>
+                            )}
                         </div>
                         {renderRosterGrid()}
                     </div>

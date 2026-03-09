@@ -83,6 +83,7 @@ model Participant {
   rsvps               RSVP[]
   rawBadgeEvents      RawBadgeEvent[]
   visits              Visit[]
+  eventsConfirmedBy   Event[]              @relation("EventAttendanceConfirmer")
 }
 
 model Tool {
@@ -248,6 +249,8 @@ model Event {
   description String?
   
   attendanceConfirmedAt DateTime?
+  attendanceConfirmedById Int?
+  attendanceConfirmedBy Participant? @relation("EventAttendanceConfirmer", fields: [attendanceConfirmedById], references: [id])
   recurringGroupId      String?
 
   program Program? @relation(fields: [programId], references: [id])
