@@ -33,6 +33,7 @@ const BOOTSTRAP_SYSADMINS = (process.env.BOOTSTRAP_SYSADMINS || "")
     .filter(Boolean);
 
 export const authOptions: NextAuthOptions = {
+    debug: true,
     // Explicitly pass mapped Prisma adapter (patched for credentials compat)
     adapter: patchedAdapter,
     providers: [
@@ -57,7 +58,7 @@ export const authOptions: NextAuthOptions = {
                     email: { label: "Enter any email to mock login", type: "email", placeholder: "test@example.com" }
                 },
                 async authorize(credentials) {
-                    if (!credentials?.email) return null;
+                    if (!credentials?.email) return null; console.log("Dev Login Email:", credentials.email);
 
                     let dbParticipant = await prisma.participant.findUnique({
                         where: { email: credentials.email }

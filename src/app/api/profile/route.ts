@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
             select: {
                 name: true,
                 email: true,
+                phone: true,
                 dob: true,
                 homeAddress: true,
                 notificationSettings: true,
@@ -52,13 +53,14 @@ export async function PATCH(req: NextRequest) {
 
         const userId = (session.user as any).id;
         const body = await req.json();
-        const { name, dob, homeAddress, notificationSettings } = body;
+        const { name, phone, dob, homeAddress, notificationSettings } = body;
 
         // Perform basic validation if necessary
         const updatedProfile = await prisma.participant.update({
             where: { id: userId },
             data: {
                 name: name !== undefined ? name : undefined,
+                phone: phone !== undefined ? phone : undefined,
                 dob: dob ? new Date(dob) : undefined,
                 homeAddress: homeAddress !== undefined ? homeAddress : undefined,
                 notificationSettings: notificationSettings !== undefined ? notificationSettings : undefined,
@@ -66,6 +68,7 @@ export async function PATCH(req: NextRequest) {
             select: {
                 name: true,
                 email: true,
+                phone: true,
                 dob: true,
                 homeAddress: true,
                 notificationSettings: true,

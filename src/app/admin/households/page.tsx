@@ -73,7 +73,7 @@ export default function AdminHouseholdsPage() {
     return (
         <main className={styles.main}>
             <div className={`glass-container ${styles.heroContainer}`} style={{ maxWidth: '1000px', width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h1 className="text-gradient" style={{ margin: 0 }}>Manage Memberships</h1>
                     <Link href="/admin" style={{ color: 'white', textDecoration: 'none' }} className="glass-button">
                         &larr; Admin Hub

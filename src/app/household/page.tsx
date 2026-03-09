@@ -35,6 +35,8 @@ export default function HouseholdPage() {
     const [settings, setSettings] = useState({
         emailDependentCheckins: false
     });
+    const [emergencyContactName, setEmergencyContactName] = useState("");
+    const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
     const [savingSettings, setSavingSettings] = useState(false);
 
     useEffect(() => {
@@ -55,6 +57,8 @@ export default function HouseholdPage() {
             if (res.ok) {
                 const data = await res.json();
                 setHousehold(data.household);
+                setEmergencyContactName(data.household?.emergencyContactName || "");
+                setEmergencyContactPhone(data.household?.emergencyContactPhone || "");
             }
             if (visitRes.ok) {
                 const data = await visitRes.json();
@@ -91,10 +95,22 @@ export default function HouseholdPage() {
                     }
                 })
             });
-            if (res.ok) {
+            // Save emergency contact to household settings
+            const householdRes = await fetch('/api/household/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    emergencyContactName,
+                    emergencyContactPhone
+                })
+            });
+
+            if (res.ok && householdRes.ok) {
                 setMessage("Settings updated successfully!");
+                // refresh to get new data
+                fetchHousehold();
             } else {
-                setMessage("Failed to update settings.");
+                setMessage("Failed to update some settings.");
             }
         } catch (error) {
             setMessage("Network error saving settings.");
@@ -389,6 +405,36 @@ export default function HouseholdPage() {
                             />
                             <span style={{ color: 'var(--color-text)' }}>Email me realtime receipts when my dependents check in/out</span>
                         </label>
+                        
+                        <div style={{ marginTop: '1rem', padding: '1.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#fcd34d' }}>Emergency Contact</h3>
+                            <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Required for all households. This contact applies to all members of this household.</p>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Contact Name</label>
+                                    <input
+                                        type="text"
+                                        className="glass-input"
+                                        value={emergencyContactName}
+                                        onChange={(e) => setEmergencyContactName(e.target.value)}
+                                        placeholder="Full Name"
+                                        style={{ width: '100%', padding: '0.75rem' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Contact Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        className="glass-input"
+                                        value={emergencyContactPhone}
+                                        onChange={(e) => setEmergencyContactPhone(e.target.value)}
+                                        placeholder="(555) 555-5555"
+                                        style={{ width: '100%', padding: '0.75rem' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button
                         onClick={handleSaveSettings}

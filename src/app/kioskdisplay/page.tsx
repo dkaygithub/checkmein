@@ -14,6 +14,11 @@ type Participant = {
     sysadmin: boolean;
     dob?: string | null;
     householdId?: number | null;
+    phone?: string | null;
+    household?: {
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+    } | null;
 };
 
 type Visit = {
@@ -320,6 +325,16 @@ function KioskDisplayInner() {
                         </span>
                     )}
                 </div>
+                {!isKioskMode && (currentUserIsKeyholder || currentUserIsSysadmin) && (
+                    <div style={{ marginTop: "4px", fontSize: "0.7rem", color: "var(--color-primary-light)" }}>
+                        {visit.participant.phone && <div>📞 {visit.participant.phone}</div>}
+                        {visit.participant.household?.emergencyContactPhone && (
+                            <div style={{ color: "#fcd34d", marginTop: "2px" }}>
+                                🚨 {visit.participant.household.emergencyContactName?.split(' ')[0]}: {visit.participant.household.emergencyContactPhone}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
             {showCheckout && (
                 <button

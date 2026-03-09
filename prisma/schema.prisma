@@ -50,6 +50,7 @@ model Participant {
   id            Int       @id @default(autoincrement())
   googleId      String?   @unique
   email         String?   @unique
+  phone         String?
   name          String?
   emailVerified DateTime?
   image         String?
@@ -106,6 +107,8 @@ model Household {
   id      Int     @id @default(autoincrement())
   name    String?
   address String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
 
   participants Participant[]
   leads        HouseholdLead[]

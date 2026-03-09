@@ -26,6 +26,13 @@ export async function getFullAttendance() {
                     sysadmin: true,
                     dob: true,
                     householdId: true,
+                    phone: true,
+                    household: {
+                        select: {
+                            emergencyContactName: true,
+                            emergencyContactPhone: true,
+                        }
+                    }
                 },
             },
             event: {

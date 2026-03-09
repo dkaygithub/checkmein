@@ -24,7 +24,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                     include: { participant: true }
                 },
                 participants: {
-                    include: { participant: true }
+                    include: { 
+                        participant: {
+                            include: { household: true }
+                        } 
+                    }
                 },
                 events: {
                     orderBy: {

@@ -21,7 +21,15 @@ type ProgramDetail = {
     memberOnly: boolean;
     participants: {
         participantId: number;
-        participant: { name: string | null; email: string };
+        participant: { 
+            name: string | null; 
+            email: string;
+            phone?: string | null;
+            household?: {
+                emergencyContactName: string | null;
+                emergencyContactPhone: string | null;
+            } | null;
+        };
     }[];
     volunteers: {
         participantId: number;
@@ -629,9 +637,20 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                 {program.participants.length === 0 ? <p style={{ color: 'gray', margin: 0 }}>No participants yet.</p> :
                                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                         {program.participants.map(p => (
-                                            <li key={p.participantId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
-                                                <span>{p.participant.name || 'Unnamed'} ({p.participant.email})</span>
-                                                <button onClick={() => handleRemoveParticipant(p.participantId)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>Remove</button>
+                                            <li key={p.participantId} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.05)', padding: '0.75rem 1rem', borderRadius: '4px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>{p.participant.name || 'Unnamed'}</span>
+                                                    <button onClick={() => handleRemoveParticipant(p.participantId)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.25rem 0.5rem' }}>Remove</button>
+                                                </div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+                                                    <div><strong>Email:</strong> {p.participant.email}</div>
+                                                    <div><strong>Phone:</strong> {p.participant.phone || 'N/A'}</div>
+                                                    {p.participant.household && (
+                                                        <div style={{ gridColumn: '1 / -1', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '4px', marginTop: '0.25rem' }}>
+                                                            <strong>Emergency Contact:</strong> {p.participant.household.emergencyContactName || 'N/A'} - {p.participant.household.emergencyContactPhone || 'N/A'}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>

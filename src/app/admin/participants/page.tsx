@@ -39,6 +39,12 @@ export default function AdminParticipantsIndex() {
     const [showingNewHouseholdConfirm, setShowingNewHouseholdConfirm] = useState(false);
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
+    // Edit Participant State
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editingParticipant, setEditingParticipant] = useState<any>(null);
+    const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
+    const [savingDetails, setSavingDetails] = useState(false);
+
     // Auto-clear notification
     useEffect(() => {
         if (notification) {
@@ -113,6 +119,35 @@ export default function AdminParticipantsIndex() {
             showNotification("Network error", "error");
         } finally {
             setAssigning(false);
+        }
+    };
+
+    const handleEditParticipant = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingParticipant) return;
+        setSavingDetails(true);
+        try {
+            const res = await fetch(`/api/admin/participants/${editingParticipant.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // Merge updated fields back into results array
+                setResults(results.map(p => p.id === editingParticipant.id ? { ...p, ...data.participant } : p));
+                setEditModalOpen(false);
+                setEditingParticipant(null);
+                showNotification("Participant updated successfully!");
+            } else {
+                const data = await res.json().catch(() => ({}));
+                showNotification(data.error || "Failed to update participant", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification("Network error", "error");
+        } finally {
+            setSavingDetails(false);
         }
     };
 
@@ -197,16 +232,31 @@ export default function AdminParticipantsIndex() {
                                 <div key={p.id} className="glass-container" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
                                     <div>
                                         <div style={{ fontWeight: 600 }}>{p.name}</div>
-                                        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{p.email || 'No email'}</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                            {p.email || 'No email'}{p.phone ? ` • ${p.phone}` : ''}
+                                        </div>
                                     </div>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         {p.household?.name || 'No household'}
+                                        {!p.household && (
+                                            <button 
+                                                className="glass-button" 
+                                                onClick={() => { setSelectedParticipant(p); setAssignModalOpen(true); }}
+                                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: 'rgba(59, 130, 246, 0.2)' }}
+                                            >
+                                                Assign Household
+                                            </button>
+                                        )}
                                         <button 
                                             className="glass-button" 
-                                            onClick={() => { setSelectedParticipant(p); setAssignModalOpen(true); }}
-                                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: p.household ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.2)' }}
+                                            onClick={() => { 
+                                                setEditingParticipant(p); 
+                                                setEditForm({ name: p.name || "", email: p.email || "", phone: p.phone || "" });
+                                                setEditModalOpen(true); 
+                                            }}
+                                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: 'rgba(255, 255, 255, 0.1)' }}
                                         >
-                                            {p.household ? 'Edit Household' : 'Assign Household'}
+                                            Edit Details
                                         </button>
                                     </div>
                                 </div>
@@ -363,6 +413,89 @@ export default function AdminParticipantsIndex() {
                                         {assigning ? "Saving..." : "Change Household"}
                                     </button>
                                 )}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {editModalOpen && (
+                <div 
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setEditModalOpen(false);
+                            setEditingParticipant(null);
+                        }
+                    }}
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, backdropFilter: 'blur(8px)' }}
+                >
+                    <div className="glass-container" style={{ padding: '2rem', width: '100%', maxWidth: '500px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                        <h2 style={{ marginTop: 0 }}>Edit Participant</h2>
+                        
+                        <form onSubmit={handleEditParticipant}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="glass-input" 
+                                        value={editForm.name}
+                                        onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                                        style={{ width: '100%', padding: '0.75rem' }}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Email Address</label>
+                                    <input 
+                                        type="email" 
+                                        className="glass-input" 
+                                        value={editForm.email}
+                                        onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                                        style={{ width: '100%', padding: '0.75rem' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Phone Number</label>
+                                    <input 
+                                        type="tel" 
+                                        className="glass-input" 
+                                        value={editForm.phone}
+                                        onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                                        placeholder="(555) 123-4567"
+                                        style={{ width: '100%', padding: '0.75rem' }}
+                                    />
+                                </div>
+                                {editingParticipant.household && (
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Household</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                            <span style={{ fontSize: '0.9rem' }}>{editingParticipant.household.name}</span>
+                                            <button 
+                                                type="button"
+                                                className="glass-button" 
+                                                onClick={() => { 
+                                                    setEditModalOpen(false);
+                                                    setEditingParticipant(null);
+                                                    setSelectedParticipant(editingParticipant); 
+                                                    setAssignModalOpen(true); 
+                                                }}
+                                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: 'rgba(255, 255, 255, 0.1)', marginLeft: 'auto' }}
+                                            >
+                                                Edit Household
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                                <button type="button" className="glass-button" onClick={() => { setEditModalOpen(false); setEditingParticipant(null); }} disabled={savingDetails}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="glass-button" disabled={savingDetails} style={{ background: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 0.4)' }}>
+                                    {savingDetails ? "Saving..." : "Save Details"}
+                                </button>
                             </div>
                         </form>
                     </div>

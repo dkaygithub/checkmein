@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
             id: p.id,
             name: p.name,
             email: p.email,
+            phone: p.phone,
             isMember: p.memberships.length > 0,
             boardMember: p.boardMember,
             shopSteward: p.shopSteward,

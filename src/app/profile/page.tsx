@@ -17,6 +17,7 @@ export default function ProfilePage() {
     const [form, setForm] = useState({
         name: "",
         email: "",
+        phone: "",
         dob: "",
         homeAddress: "",
         emailCheckinReceipts: false,
@@ -45,6 +46,7 @@ export default function ProfilePage() {
                 setForm({
                     name: data.profile.name || "",
                     email: data.profile.email || "",
+                    phone: data.profile.phone || "",
                     dob: data.profile.dob ? new Date(data.profile.dob).toISOString().split('T')[0] : "",
                     homeAddress: data.profile.homeAddress || "",
                     emailCheckinReceipts: settings.emailCheckinReceipts || false,
@@ -85,6 +87,7 @@ export default function ProfilePage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: form.name,
+                    phone: form.phone,
                     dob: form.dob || null,
                     homeAddress: form.homeAddress,
                     notificationSettings: {
@@ -155,6 +158,18 @@ export default function ProfilePage() {
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             placeholder="e.g. Jane Doe"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Phone Number</label>
+                        <input
+                            type="tel"
+                            className="glass-input"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            placeholder="(555) 123-4567"
                             required
                         />
                     </div>

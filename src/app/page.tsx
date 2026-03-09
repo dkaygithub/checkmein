@@ -16,6 +16,10 @@ export default function Home() {
   const [isLastKeyholder, setIsLastKeyholder] = useState(false);
   const [isTwoDeepViolation, setIsTwoDeepViolation] = useState(false);
 
+  const [showBoardDirectory, setShowBoardDirectory] = useState(false);
+  const [boardMembers, setBoardMembers] = useState<any[]>([]);
+  const [loadingBoard, setLoadingBoard] = useState(false);
+
   const checkAttendanceStatus = useCallback(async () => {
     if (!session?.user) return;
     try {
@@ -77,6 +81,24 @@ export default function Home() {
     setLoading(false);
   };
 
+  const fetchBoardDirectory = async () => {
+    setShowBoardDirectory(true);
+    setLoadingBoard(true);
+    try {
+      const res = await fetch('/api/directory/board');
+      if (res.ok) {
+        const data = await res.json();
+        setBoardMembers(data.boardMembers);
+      } else {
+        setMessage("Failed to load board directory.");
+      }
+    } catch (err) {
+      setMessage("Network error loading directory.");
+    } finally {
+      setLoadingBoard(false);
+    }
+  };
+
   return (
     <main className={styles.main}>
       <div className={`glass-container animate-float ${styles.heroContainer}`}>
@@ -136,6 +158,27 @@ export default function Home() {
                   {loading ? 'Processing...' : isCheckedIn ? 'Check Out' : 'Check In'}
                 </button>
               )}
+
+              {/* Board Directory Button for Keyholders/Admins */}
+              {((session.user as any)?.sysadmin || (session.user as any)?.keyholder) && (
+                <button
+                  className="glass-button"
+                  onClick={fetchBoardDirectory}
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    fontSize: '1.1rem',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    gridColumn: '1 / -1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <span style={{ fontSize: '1.2rem' }}>📱</span> View Board Directory
+                </button>
+              )}
             </>
           ) : (
             <div style={{ textAlign: 'center', width: '100%', gridColumn: '1 / -1' }}>
@@ -167,6 +210,43 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {showBoardDirectory && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+        }}>
+          <div className="glass-container animate-float" style={{ maxWidth: '500px', width: '100%', padding: '2rem', position: 'relative' }}>
+            <button 
+              onClick={() => setShowBoardDirectory(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
+            >
+              &times;
+            </button>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>📱</span> Board Directory
+            </h2>
+            
+            {loadingBoard ? (
+              <p style={{ color: 'var(--color-text-muted)' }}>Loading contacts...</p>
+            ) : boardMembers.length === 0 ? (
+              <p style={{ color: 'var(--color-text-muted)' }}>No board members found.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '60vh', overflowY: 'auto' }}>
+                {boardMembers.map(member => (
+                  <div key={member.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{member.name || 'Unnamed'}</div>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>✉️ <a href={`mailto:${member.email}`} style={{ color: 'var(--color-primary-light)', textDecoration: 'none' }}>{member.email}</a></div>
+                    {member.phone && (
+                      <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>📞 <a href={`tel:${member.phone.replace(/\D/g,'')}`} style={{ color: '#34d399', textDecoration: 'none' }}>{member.phone}</a></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

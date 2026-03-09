@@ -7,6 +7,7 @@
  */
 
 import { POST } from '@/app/api/admin/participants/route';
+import { PUT } from '@/app/api/admin/participants/[id]/route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 
@@ -70,6 +71,9 @@ describe('Admin Participants API Integration Tests', () => {
         });
         await prisma.participant.deleteMany({
             where: { email: { contains: 'new-parent-participants-test' } }
+        });
+        await prisma.participant.deleteMany({
+            where: { email: { contains: 'edit-test-user' } }
         });
         await prisma.household.deleteMany({
             where: { name: { contains: 'Household' } }
@@ -201,6 +205,53 @@ describe('Admin Participants API Integration Tests', () => {
             });
             expect(parent).toBeDefined();
             expect(parent?.householdId).toBe(data.participant.householdId);
+        });
+    });
+
+    describe('PUT /api/admin/participants/[id]', () => {
+        it('should return 403 Forbidden for non-admin users', async () => {
+             (getServerSession as jest.Mock).mockResolvedValue({
+                 user: { id: testUserId, sysadmin: false, boardMember: false }
+             });
+
+             const req = new Request(`http://localhost:4000/api/admin/participants/${testUserId}`, {
+                 method: 'PUT',
+                 body: JSON.stringify({ name: 'Hacked Name' })
+             });
+
+             const res = await PUT(req as any, { params: { id: testUserId.toString() } });
+             expect(res.status).toBe(403);
+        });
+
+        it('should successfully update a participant name, email, and phone', async () => {
+            (getServerSession as jest.Mock).mockResolvedValue({
+                user: { id: testAdminId, sysadmin: true, boardMember: false }
+            });
+
+            // Create a disposable user just for this edit test
+            const editUser = await prisma.participant.create({
+                data: { email: 'edit-test-user@example.com', name: 'Original Name' }
+            });
+
+            const req = new Request(`http://localhost:4000/api/admin/participants/${editUser.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ name: 'Updated Name', email: 'updated-email@example.com', phone: '5551234567' })
+            });
+
+            const res = await PUT(req as any, { params: { id: editUser.id.toString() } });
+            expect(res.status).toBe(200);
+
+            const data = await res.json();
+            expect(data.participant.name).toBe('Updated Name');
+            expect(data.participant.email).toBe('updated-email@example.com');
+            expect(data.participant.phone).toBe('5551234567');
+
+            // Verify the DB actually saved it
+            const dbCheck = await prisma.participant.findUnique({ where: { id: editUser.id } });
+            expect(dbCheck?.name).toBe('Updated Name');
+            expect(dbCheck?.phone).toBe('5551234567');
+            
+            // Cleanup is handled by afterEach
         });
     });
 });
