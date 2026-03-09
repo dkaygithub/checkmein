@@ -395,12 +395,33 @@ export async function POST(req: NextRequest) {
                     }
                 }
                 // For adults with email who didn't use "Same Household As" or "Parent Email",
-                // ensure they have their own household
-                else if (pr.email && !pr.parentEmail) {
+                // ensure they have their own household, OR fallback for anyone who still has no household.
+                else {
                     const participant = await prisma.participant.findUnique({ where: { id: participantId } });
                     if (participant && !participant.householdId) {
-                        const hhId = await ensureHousehold(participantId, pr.fullName);
-                        await ensureHouseholdMembership(hhId);
+                        const isAdult = !participant.dob || (new Date().getFullYear() - participant.dob.getFullYear()) >= 18;
+                        const newHousehold = await prisma.household.create({
+                            data: {
+                                name: `${pr.fullName}'s Household`,
+                            }
+                        });
+
+                        // Only assign them as lead if they are an adult
+                        if (isAdult) {
+                            await prisma.householdLead.create({
+                                data: {
+                                    householdId: newHousehold.id,
+                                    participantId: participant.id
+                                }
+                            });
+                        }
+
+                        await prisma.participant.update({
+                            where: { id: participant.id },
+                            data: { householdId: newHousehold.id }
+                        });
+
+                        await ensureHouseholdMembership(newHousehold.id);
                     } else if (participant?.householdId) {
                         await ensureHouseholdMembership(participant.householdId);
                     }

@@ -195,5 +195,46 @@ describe('Admin Bulk Import API Integration Tests', () => {
             expect(charlie).toBeDefined();
             expect(charlie?.householdId).toBe(alice?.householdId);
         });
+
+        it('should automatically create households for participants with no household links, and correctly assign lead status based on age', async () => {
+            (getServerSession as jest.Mock).mockResolvedValue({
+                user: { id: testAdminId, sysadmin: true, boardMember: false }
+            });
+
+            const formData = createMockCsvFormData([
+                ['First Name', 'Last Name', 'DOB'],
+                ['Adult', 'Import Test', '1990-01-01'],
+                ['Minor', 'Import Test', '2015-01-01'],
+                ['Default', 'Import Test', ''], 
+            ]);
+
+            const req = new Request('http://localhost:4000/api/admin/participants/import', {
+                method: 'POST',
+                body: formData
+            }) as any;
+            const res = await POST(req as any);
+            expect(res.status).toBe(200);
+            
+            const data = await res.json();
+            
+            const adult = await prisma.participant.findFirst({ where: { name: 'Adult Import Test' } });
+            
+            require('fs').writeFileSync('debug.log', JSON.stringify({ data, adult }, null, 2));
+
+            expect(adult).not.toBeNull();
+            expect(adult!.householdId).not.toBeNull();
+            const adultLead = await prisma.householdLead.findFirst({ where: { participantId: adult!.id } });
+            expect(adultLead).not.toBeNull();
+
+            const minor = await prisma.participant.findFirst({ where: { name: 'Minor Import Test' } });
+            expect(minor?.householdId).not.toBeNull();
+            const minorLead = await prisma.householdLead.findFirst({ where: { participantId: minor?.id } });
+            expect(minorLead).toBeNull();
+
+            const defaultAdult = await prisma.participant.findFirst({ where: { name: 'Default Import Test' } });
+            expect(defaultAdult?.householdId).not.toBeNull();
+            const defaultLead = await prisma.householdLead.findFirst({ where: { participantId: defaultAdult?.id } });
+            expect(defaultLead).not.toBeNull();
+        });
     });
 });
