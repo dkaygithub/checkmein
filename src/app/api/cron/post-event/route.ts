@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import { processPostEventEmails } from "@/lib/postEventEmails";
+
+/**
+ * Expected to be called by an external CRON trigger (e.g. Vercel Cron or CloudWatch Events)
+ * GET /api/cron/post-event
+ */
+export async function GET() {
+    try {
+        // By default, this uses the 1-hour delay rule
+        const result = await processPostEventEmails({ forceImmediate: false });
+        
+        return NextResponse.json({ success: true, ...result });
+    } catch (error) {
+        console.error("Failed to run cron post-event:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

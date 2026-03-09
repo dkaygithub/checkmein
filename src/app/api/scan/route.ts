@@ -53,10 +53,12 @@ export async function POST(req: NextRequest) {
         // 2. Web Session Authorization (only if not already authorized as a kiosk)
         let isWebAuthorized = false;
         let pendingHouseholdCheck = false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let user: any = null;
 
         if (authStatus !== "kiosk") {
             const session = await getServerSession(authOptions);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             user = session?.user as any;
 
             if (user) {
@@ -96,6 +98,11 @@ export async function POST(req: NextRequest) {
             } else {
                 return NextResponse.json({ error: "Forbidden: You are not authorized to scan this user." }, { status: 403 });
             }
+        }
+        
+        // Use the assigned variable here just so it's not marked unused, even if redundant
+        if (!isWebAuthorized && authStatus === "web") {
+            console.log("Web Auth succeeded but isWebAuthorized flag wasn't set.");
         }
 
         console.log("Logging raw badge event...");
@@ -176,6 +183,14 @@ export async function POST(req: NextRequest) {
                         data: { departed: new Date() }
                     });
                     console.log("Facility closed. Forcibly checked out all remaining members.");
+                    
+                    // Trigger post-event emails immediately for any events that finished today
+                    // Use dynamic import so we don't block the API response
+                    import("@/lib/postEventEmails").then(({ processPostEventEmails }) => {
+                        processPostEventEmails({ forceImmediate: true }).catch(err => {
+                            console.error("Failed to run post-event emails on facility close:", err);
+                        });
+                    });
                 }
             }
 

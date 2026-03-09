@@ -251,6 +251,7 @@ model Event {
   attendanceConfirmedAt DateTime?
   attendanceConfirmedById Int?
   attendanceConfirmedBy Participant? @relation("EventAttendanceConfirmer", fields: [attendanceConfirmedById], references: [id])
+  postEventEmailSent    Boolean      @default(false)
   recurringGroupId      String?
 
   program Program? @relation(fields: [programId], references: [id])
