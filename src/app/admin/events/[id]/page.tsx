@@ -477,8 +477,15 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {editingAttendance && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div className="glass-container" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
+                <div 
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+                    onClick={() => !actionLoading && setEditingAttendance(null)}
+                >
+                    <div 
+                        className="glass-container" 
+                        style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--bg-glass)', backdropFilter: 'blur(16px)' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h3 style={{ margin: '0 0 1rem 0' }}>Manual Edit: {editingAttendance.participant.name}</h3>
                         <div style={{ marginBottom: '1rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Status</label>
@@ -499,7 +506,7 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                                         type="datetime-local" 
                                         value={manualArrived}
                                         onChange={(e) => setManualArrived(e.target.value)}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', colorScheme: 'dark' }}
                                     />
                                 </div>
                                 <div style={{ marginBottom: '1.5rem' }}>
@@ -508,7 +515,7 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                                         type="datetime-local" 
                                         value={manualDeparted}
                                         onChange={(e) => setManualDeparted(e.target.value)}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', colorScheme: 'dark' }}
                                     />
                                 </div>
                             </>
