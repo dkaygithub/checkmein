@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from 'react';
+import { use, useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -41,6 +41,7 @@ type ProgramDetail = {
         name: string;
         start: string;
         end: string;
+        attendanceConfirmedAt: string | null;
     }[];
     leadMentor: { name: string | null; email: string } | null;
 };
@@ -100,7 +101,11 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
         }
     }, [status, router, id]);
 
-    const searchParticipants = async (query: string, setResults: any, setLocalLoading: any) => {
+    const searchParticipants = useCallback(async (
+        query: string, 
+        setResults: React.Dispatch<React.SetStateAction<ParticipantOption[]>>, 
+        setLocalLoading: React.Dispatch<React.SetStateAction<boolean>>
+    ) => {
         if (!query.trim()) {
             setResults([]);
             return;
@@ -115,7 +120,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
         } finally {
             setLocalLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -126,7 +131,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
             }
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [volSearch, newVolId, id]);
+    }, [volSearch, newVolId, id, searchParticipants]);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -160,7 +165,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
             }
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [partSearch, newPartId, id]);
+    }, [partSearch, newPartId, id, searchParticipants]);
 
     const fetchProgram = async () => {
         try {
@@ -189,7 +194,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
             } else {
                 setMessage("Failed to load program.");
             }
-        } catch (error) {
+        } catch {
             setMessage("Network error.");
         } finally {
             setLoading(false);
@@ -345,7 +350,8 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
         </main>
     );
 
-    const isAuthorized = program.leadMentorId === (session.user as any)?.id || (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+    const user = session.user as unknown as { id: number; sysadmin?: boolean; boardMember?: boolean };
+    const isAuthorized = program.leadMentorId === user?.id || user?.sysadmin || user?.boardMember;
 
     if (!isAuthorized) {
         return (
@@ -360,7 +366,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
 
     const sortedVolunteers = program.volunteers ? [...program.volunteers].sort((a, b) => (b.isCore ? 1 : 0) - (a.isCore ? 1 : 0)) : [];
 
-    const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+    const isSysAdminOrBoard = user?.sysadmin || user?.boardMember;
 
     return (
         <main className={styles.main}>
@@ -681,7 +687,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                 <h3 style={{ margin: 0 }}>Events ({program.events.length})</h3>
                                 <button className="glass-button" onClick={() => router.push(`/admin/events/new?programId=${program.id}`)} style={{ padding: '0.5rem 1rem', background: 'rgba(56, 189, 248, 0.2)', borderColor: 'rgba(56, 189, 248, 0.5)' }}>
-                                    + Schedule Session
+                                    + Schedule Session(s)
                                 </button>
                             </div>
                             <div style={{ overflowX: 'auto' }}>
@@ -694,17 +700,32 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {program.events.map(ev => (
-                                            <tr key={ev.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <td style={{ padding: '0.75rem', fontWeight: 500 }}>{ev.name}</td>
-                                                <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)' }}>{formatDateTime(ev.start)}</td>
-                                                <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                                                    <Link href={`/admin/events/${ev.id}`} style={{ color: '#60a5fa', textDecoration: 'none' }}>
-                                                        Attendance &rarr;
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {program.events.map(ev => {
+                                            const isPastEvent = new Date(ev.end) < new Date();
+                                            const needsConfirmation = isPastEvent && !ev.attendanceConfirmedAt;
+
+                                            return (
+                                                <tr key={ev.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <td style={{ padding: '0.75rem', fontWeight: 500 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                            {ev.name}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)' }}>{formatDateTime(ev.start)}</td>
+                                                    <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                                                        {needsConfirmation ? (
+                                                            <Link href={`/admin/events/${ev.id}`} className="glass-button" style={{ display: 'inline-block', color: '#eab308', background: 'rgba(234, 179, 8, 0.2)', padding: '0.4rem 0.8rem', border: '1px solid rgba(234, 179, 8, 0.5)', borderRadius: '4px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                                                Confirm Attendance
+                                                            </Link>
+                                                        ) : (
+                                                            <Link href={`/admin/events/${ev.id}`} style={{ color: '#60a5fa', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                                                Attendance &rarr;
+                                                            </Link>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                         {program.events.length === 0 && (
                                             <tr>
                                                 <td colSpan={3} style={{ padding: '1.5rem', textAlign: 'center', color: 'gray' }}>No events scheduled.</td>

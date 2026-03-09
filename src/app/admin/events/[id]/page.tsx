@@ -312,9 +312,9 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                                 style={{
                                     padding: '0.75rem 1.5rem',
                                     fontWeight: 'bold',
-                                    background: eventData.attendanceConfirmedAt ? 'rgba(148, 163, 184, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-                                    borderColor: eventData.attendanceConfirmedAt ? 'rgba(148, 163, 184, 0.5)' : 'rgba(234, 179, 8, 0.5)',
-                                    color: eventData.attendanceConfirmedAt ? '#cbd5e1' : '#eab308'
+                                    background: eventData.attendanceConfirmedAt ? 'rgba(148, 163, 184, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                                    borderColor: eventData.attendanceConfirmedAt ? 'rgba(148, 163, 184, 0.5)' : 'rgba(56, 189, 248, 0.5)',
+                                    color: eventData.attendanceConfirmedAt ? '#cbd5e1' : '#38bdf8'
                                 }}
                             >
                                 {eventData.attendanceConfirmedAt ? `Confirmed on ${new Date(eventData.attendanceConfirmedAt).toLocaleDateString()}` : "Confirm Attendance"}

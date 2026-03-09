@@ -47,7 +47,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         if (program.memberOnly) {
             let canSeeMemberOnly = false;
             if (session && session.user) {
-                const user = session.user as any;
+                const user = session.user as unknown as { id: number; sysadmin?: boolean; boardMember?: boolean };
                 if (user.sysadmin || user.boardMember) {
                     canSeeMemberOnly = true;
                 } else {
@@ -77,9 +77,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 select: { id: true, name: true, email: true }
             });
         }
-        (program as any).leadMentor = leadMentor;
+        const programWithMentor = { ...program, leadMentor };
 
-        return NextResponse.json(program);
+        return NextResponse.json(programWithMentor);
     } catch (error) {
         console.error("Failed to fetch program:", error);
         return NextResponse.json({ error: "Failed to fetch program" }, { status: 500 });
@@ -105,8 +105,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const isLeadMentor = currentProgram.leadMentorId === (session.user as any).id;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const user = session.user as unknown as { id: number; sysadmin?: boolean; boardMember?: boolean };
+        const isLeadMentor = currentProgram.leadMentorId === user.id;
+        const isSysAdminOrBoard = user.sysadmin || user.boardMember;
 
         if (!isLeadMentor && !isSysAdminOrBoard) {
             return NextResponse.json({ error: "Forbidden: Only Admin, Board Members, or Lead Mentors can edit" }, { status: 403 });
@@ -134,7 +135,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         await prisma.auditLog.create({
             data: {
-                actorId: (session.user as any).id,
+                actorId: (session.user as unknown as { id: number }).id,
                 action: 'EDIT',
                 tableName: 'Program',
                 affectedEntityId: updatedProgram.id,
