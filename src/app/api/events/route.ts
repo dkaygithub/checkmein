@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { addDays, parseISO, isBefore, isEqual, getDay, setHours, setMinutes } from 'date-fns';
+import { fromZonedTime } from 'date-fns-tz';
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -35,7 +36,10 @@ export async function POST(req: Request) {
         }
 
         // Parse baseline dates
+        // Parse baseline dates considering CST for local saving behavior
         const baseDateString = startDate.includes("T") ? startDate.split("T")[0] : startDate; // YYYY-MM-DD
+        
+        // Use fromZonedTime so that "15:00" mapping matches CST precisely rather than rolling to UTC
         let currentIterDate = parseISO(baseDateString);
 
         const [startHr, startMin] = startTime.split(':').map(Number);
@@ -45,8 +49,12 @@ export async function POST(req: Request) {
 
         if (!recurrence || !recurrence.daysOfWeek || recurrence.daysOfWeek.length === 0 || !recurrence.until) {
             // Single event
-            const startD = setMinutes(setHours(currentIterDate, startHr), startMin);
-            const endD = setMinutes(setHours(currentIterDate, endHr), endMin);
+            // Create naive local date then cast it as America/Chicago so node uses that offset before converting to UTC.
+            const startLocal = setMinutes(setHours(currentIterDate, startHr), startMin);
+            const endLocal = setMinutes(setHours(currentIterDate, endHr), endMin);
+            
+            const startD = fromZonedTime(startLocal, 'America/Chicago');
+            const endD = fromZonedTime(endLocal, 'America/Chicago');
 
             eventsToCreate.push({
                 name,
@@ -66,8 +74,11 @@ export async function POST(req: Request) {
                 const dayOfWeek = getDay(currentIterDate); // 0 = Sun, 1 = Mon ...
 
                 if (recurrence.daysOfWeek.includes(dayOfWeek)) {
-                    const startD = setMinutes(setHours(currentIterDate, startHr), startMin);
-                    const endD = setMinutes(setHours(currentIterDate, endHr), endMin);
+                    const startLocal = setMinutes(setHours(currentIterDate, startHr), startMin);
+                    const endLocal = setMinutes(setHours(currentIterDate, endHr), endMin);
+                    
+                    const startD = fromZonedTime(startLocal, 'America/Chicago');
+                    const endD = fromZonedTime(endLocal, 'America/Chicago');
 
                     eventsToCreate.push({
                         name,

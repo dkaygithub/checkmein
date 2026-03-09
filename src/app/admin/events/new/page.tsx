@@ -7,14 +7,14 @@ import Link from 'next/link';
 import styles from '../../../page.module.css';
 
 function NewEventForm() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const [programs, setPrograms] = useState<{ id: number, name: string }[]>([]);
 
     const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
+    const [description] = useState("");
     const [programId, setProgramId] = useState(searchParams.get('programId') || "");
     const [startDate, setStartDate] = useState("");
     const [startTime, setStartTime] = useState("");
@@ -45,7 +45,7 @@ function NewEventForm() {
         } else if (status === "authenticated") {
             fetchPrograms();
         }
-    }, [status]);
+    }, [status, router]);
 
     const fetchPrograms = async () => {
         try {
@@ -76,7 +76,20 @@ function NewEventForm() {
         }
 
         try {
-            const payload: any = {
+            interface EventPayload {
+                name: string;
+                description: string;
+                programId: number | null;
+                startDate: string;
+                startTime: string;
+                endTime: string;
+                recurrence?: {
+                    daysOfWeek: number[];
+                    until: string;
+                };
+            }
+
+            const payload: EventPayload = {
                 name,
                 description,
                 programId: programId ? parseInt(programId) : null,
@@ -99,13 +112,12 @@ function NewEventForm() {
             });
 
             if (res.ok) {
-                const data = await res.json();
                 router.push(programId ? `/admin/programs/${programId}` : '/programs');
             } else {
                 const err = await res.json();
                 setMessage(err.error || "Failed to create event");
             }
-        } catch (error) {
+        } catch {
             setMessage("Network error");
         } finally {
             setSaving(false);
@@ -118,9 +130,9 @@ function NewEventForm() {
 
     return (
         <div className={`glass-container ${styles.heroContainer}`} style={{ maxWidth: '800px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
                 <h1 className="text-gradient" style={{ margin: 0 }}>Schedule Event</h1>
-                <Link href={programId ? `/admin/programs/${programId}` : '/programs'} style={{ color: 'white', textDecoration: 'none' }} className="glass-button">
+                <Link href={programId ? `/admin/programs/${programId}` : '/programs'} style={{ color: 'white', textDecoration: 'none', whiteSpace: 'nowrap' }} className="glass-button">
                     Cancel
                 </Link>
             </div>
@@ -204,7 +216,7 @@ function NewEventForm() {
                         )}
                     </div>
 
-                    <button type="submit" className="glass-button" disabled={saving || !startDate || !startTime || !endTime || !name} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>
+                    <button type="submit" className="glass-button" disabled={saving} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)', marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>
                         {saving ? "Scheduling..." : "Create Event(s)"}
                     </button>
 
