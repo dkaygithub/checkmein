@@ -57,6 +57,12 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
     const [newEnd, setNewEnd] = useState("");
     const [applyToFuture, setApplyToFuture] = useState(false);
 
+    // Manual Edit States
+    const [editingAttendance, setEditingAttendance] = useState<(ParticipantDetail & { role: string }) | null>(null);
+    const [manualStatus, setManualStatus] = useState<"Present" | "Absent">("Present");
+    const [manualArrived, setManualArrived] = useState("");
+    const [manualDeparted, setManualDeparted] = useState("");
+
     const fetchEvent = useCallback(async () => {
         setLoading(true);
         try {
@@ -136,6 +142,37 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
             } else {
                 const data = await res.json();
                 setMessage(data.error || "Failed to edit event.");
+            }
+        } catch {
+            setMessage("Network error.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleSaveManualAttendance = async () => {
+        if (!editingAttendance) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch(`/api/events/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'manualEditAttendance',
+                    participantId: editingAttendance.participantId,
+                    status: manualStatus,
+                    arrived: manualStatus === 'Present' ? (new Date(manualArrived).toISOString()) : null,
+                    departed: manualStatus === 'Present' && manualDeparted ? (new Date(manualDeparted).toISOString()) : null
+                })
+            });
+
+            if (res.ok) {
+                setMessage("Attendance updated successfully!");
+                setEditingAttendance(null);
+                fetchEvent();
+            } else {
+                const data = await res.json();
+                setMessage(data.error || "Failed to update attendance.");
             }
         } catch {
             setMessage("Network error.");
@@ -267,7 +304,22 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                                     <td style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         {statusEl}
                                         {canManageAttendance && (
-                                            <button className="glass-button" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+                                            <button 
+                                                className="glass-button" 
+                                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}
+                                                onClick={() => {
+                                                    setEditingAttendance(member);
+                                                    if (visit) {
+                                                        setManualStatus("Present");
+                                                        setManualArrived(new Date(new Date(visit.arrived).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                                                        setManualDeparted(visit.departed ? new Date(new Date(visit.departed).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
+                                                    } else {
+                                                        setManualStatus("Absent");
+                                                        setManualArrived(new Date(new Date(eventData.start).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                                                        setManualDeparted(new Date(new Date(eventData.end).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                                                    }
+                                                }}
+                                            >
                                                 Manual Edit
                                             </button>
                                         )}
@@ -423,6 +475,51 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
                     </div>
                 )}
             </div>
+
+            {editingAttendance && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div className="glass-container" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
+                        <h3 style={{ margin: '0 0 1rem 0' }}>Manual Edit: {editingAttendance.participant.name}</h3>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Status</label>
+                            <select 
+                                value={manualStatus} 
+                                onChange={(e) => setManualStatus(e.target.value as "Present" | "Absent")}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                            >
+                                <option value="Present" style={{ color: 'black' }}>Present</option>
+                                <option value="Absent" style={{ color: 'black' }}>Absent</option>
+                            </select>
+                        </div>
+                        {manualStatus === "Present" && (
+                            <>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Arrived Time</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        value={manualArrived}
+                                        onChange={(e) => setManualArrived(e.target.value)}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Departed Time (Optional)</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        value={manualDeparted}
+                                        onChange={(e) => setManualDeparted(e.target.value)}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                                    />
+                                </div>
+                            </>
+                        )}
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                            <button className="glass-button" onClick={() => setEditingAttendance(null)} style={{ background: 'transparent' }} disabled={actionLoading}>Cancel</button>
+                            <button className="glass-button" onClick={handleSaveManualAttendance} disabled={actionLoading}>Save</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

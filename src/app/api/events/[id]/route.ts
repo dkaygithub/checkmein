@@ -143,6 +143,62 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             }
         }
 
+        // Action: Manual Edit Attendance
+        if (body.action === 'manualEditAttendance') {
+            if (!isSysAdminOrBoard && !isLeadMentor && !isCoreVolunteer) {
+                return NextResponse.json({ error: "Forbidden: Not authorized to edit attendance" }, { status: 403 });
+            }
+
+            const { participantId, status, arrived, departed } = body;
+
+            if (!participantId || !status) {
+                return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+            }
+
+            if (status === 'Absent') {
+                // Remove the visit associated with this event for this participant
+                await prisma.visit.deleteMany({
+                    where: {
+                        participantId: Number(participantId),
+                        associatedEventId: eventId
+                    }
+                });
+            } else if (status === 'Present') {
+                if (!arrived) {
+                    return NextResponse.json({ error: "Arrival time is required for Present status" }, { status: 400 });
+                }
+
+                // Check if there is an existing visit
+                const existingVisit = await prisma.visit.findFirst({
+                    where: {
+                        participantId: Number(participantId),
+                        associatedEventId: eventId
+                    }
+                });
+
+                if (existingVisit) {
+                    await prisma.visit.update({
+                        where: { id: existingVisit.id },
+                        data: {
+                            arrived: new Date(arrived),
+                            departed: departed ? new Date(departed) : null
+                        }
+                    });
+                } else {
+                    await prisma.visit.create({
+                        data: {
+                            participantId: Number(participantId),
+                            associatedEventId: eventId,
+                            arrived: new Date(arrived),
+                            departed: departed ? new Date(departed) : null
+                        }
+                    });
+                }
+            }
+
+            return NextResponse.json({ success: true });
+        }
+
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
     } catch (error: unknown) {
