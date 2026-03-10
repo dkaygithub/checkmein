@@ -38,8 +38,8 @@ export default function ParticipationTrendsPage() {
         if (status === "unauthenticated") {
             router.push("/");
         } else if (status === "authenticated") {
-            const isAuthorized =
-                (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+            const user = session?.user as { sysadmin?: boolean; boardMember?: boolean } | undefined;
+            const isAuthorized = user?.sysadmin || user?.boardMember;
             if (!isAuthorized) {
                 router.push("/");
             }
@@ -52,7 +52,7 @@ export default function ParticipationTrendsPage() {
             .then((res) => res.json())
             .then((data) => {
                 if (Array.isArray(data)) {
-                    setPrograms(data.map((p: any) => ({ id: p.id, name: p.name })));
+                    setPrograms(data.map((p: { id: number; name: string }) => ({ id: p.id, name: p.name })));
                 }
             })
             .catch(console.error);
@@ -62,6 +62,7 @@ export default function ParticipationTrendsPage() {
     useEffect(() => {
         if (status !== "authenticated") return;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
         const params = new URLSearchParams({ period });
         if (programId) params.set("programId", programId);
@@ -153,7 +154,7 @@ export default function ParticipationTrendsPage() {
                     </div>
                     <div className={styles.statCard}>
                         <div className={styles.statValue}>{fmtHours(totals.structuredHours)}</div>
-                        <div className={styles.statLabel}>Structured Hours</div>
+                        <div className={styles.statLabel}>Program Hours</div>
                     </div>
                     <div className={styles.statCard}>
                         <div className={styles.statValue}>{fmtHours(totals.unstructuredHours)}</div>
@@ -173,7 +174,7 @@ export default function ParticipationTrendsPage() {
                                 <th>Students</th>
                                 <th>Vol. Hours</th>
                                 <th>Stu. Hours</th>
-                                <th>Structured</th>
+                                <th>Program</th>
                                 <th>Unstructured</th>
                             </tr>
                         </thead>
