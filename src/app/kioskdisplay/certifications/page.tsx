@@ -187,7 +187,7 @@ export default function KioskCertificationsDisplay() {
                                             left: 0,
                                             zIndex: 5
                                         }}>
-                                            Students (Under 18)
+                                            Students
                                         </td>
                                     </tr>
                                 )}
