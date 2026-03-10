@@ -3,7 +3,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user || !(session.user as {id: number}).id) {
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user || !(session.user as {id: number}).id) {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Derive household name from the lead's last name
-        const lastName = user?.name?.trim().split(/\s+/).pop() || "";
+        const lastName = (user?.name || "").trim().split(/\s+/).pop() || "";
         const householdName = lastName ? `${lastName} Household` : "Household";
 
         // Create a new household and set the user as the lead and a member

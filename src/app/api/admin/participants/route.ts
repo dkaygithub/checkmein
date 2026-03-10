@@ -6,7 +6,12 @@ import prisma from "@/lib/prisma";
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
-    if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
+    interface SessionUser {
+        sysadmin?: boolean;
+        boardMember?: boolean;
+    }
+
+    if (!session || (!(session.user as SessionUser)?.sysadmin && !(session.user as SessionUser)?.boardMember)) {
         return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
@@ -59,7 +64,7 @@ export async function POST(req: Request) {
 
             // Ensure parent has a household
             if (!parent.householdId) {
-                const parentLastName = parent.name?.trim().split(/\s+/).pop() || "";
+                const parentLastName = (parent.name || "").trim().split(/\s+/).pop() || "";
                 const household = await prisma.household.create({
                     data: {
                         name: parentLastName ? `${parentLastName} Household` : "Household",
@@ -105,7 +110,7 @@ export async function POST(req: Request) {
         }
         // If this is a lone adult (no parent email, no explicit household), create their own household
         else if (!parentEmail && !householdId) {
-            const lastName = name?.trim().split(/\s+/).pop() || "";
+            const lastName = (name || "").trim().split(/\s+/).pop() || "";
             const newHousehold = await prisma.household.create({
                 data: {
                     name: lastName ? `${lastName} Household` : "Household",
@@ -131,8 +136,9 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ success: true, participant: newParticipant });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create participant:", error);
-        return NextResponse.json({ error: `Failed to create participant: ${error.message || error}` }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return NextResponse.json({ error: `Failed to create participant: ${errorMessage}` }, { status: 500 });
     }
 }

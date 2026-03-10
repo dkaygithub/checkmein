@@ -233,7 +233,7 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
     const userId = user?.id;
     const isSysAdminOrBoard = user?.sysadmin || user?.boardMember;
     const isLeadMentor = eventData.program?.leadMentorId === userId;
-    const isCoreVolunteer = eventData.program?.volunteers.some(v => v.participantId === userId && v.isCore) || false;
+    const isCoreVolunteer = eventData.program?.volunteers?.some(v => v.participantId === userId && v.isCore) || false;
     
     // Core volunteers can see attendance tracking but cannot edit/cancel events.
     const canManageAttendance = isSysAdminOrBoard || isLeadMentor || isCoreVolunteer;

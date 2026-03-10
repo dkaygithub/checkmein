@@ -63,7 +63,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const userId = user.id;
         const isSysAdminOrBoard = user?.sysadmin || user?.boardMember;
         const isLeadMentor = event.program?.leadMentorId === userId;
-        const isCoreVolunteer = event.program?.volunteers.some(v => v.participantId === userId && v.isCore) || false;
+        const isCoreVolunteer = event.program?.volunteers?.some(v => v.participantId === userId && v.isCore) || false;
 
         // Action: Confirm Attendance
         if (body.action === 'confirmAttendance') {
