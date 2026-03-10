@@ -250,8 +250,16 @@ export default function EventAdminPage({ params }: { params: Promise<{ id: strin
         ];
 
         // Sort by role then name
+        const ROLE_RANK: Record<string, number> = {
+            'Core Volunteer': 1,
+            'Volunteer': 2,
+            'Participant': 3
+        };
+
         allRoster.sort((a, b) => {
-            if (a.role !== b.role) return a.role.localeCompare(b.role);
+            if (ROLE_RANK[a.role] !== ROLE_RANK[b.role]) {
+                return ROLE_RANK[a.role] - ROLE_RANK[b.role];
+            }
             const nameA = a.participant.name || "";
             const nameB = b.participant.name || "";
             return nameA.localeCompare(nameB);
