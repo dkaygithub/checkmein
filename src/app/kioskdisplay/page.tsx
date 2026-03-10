@@ -91,6 +91,7 @@ function KioskDisplayInner() {
     const [household, setHousehold] = useState<{ leads: { participantId: number }[], participants: Participant[] } | null>(null);
     const [showSignOutModal, setShowSignOutModal] = useState(false);
     const [searchSignOutQuery, setSearchSignOutQuery] = useState("");
+    const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Participant[]>([]);
@@ -353,6 +354,12 @@ function KioskDisplayInner() {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
+                        cursor: (!isKioskMode && (currentUserIsKeyholder || currentUserIsSysadmin || currentUserIsBoardMember)) ? 'pointer' : 'default'
+                    }}
+                    onClick={() => {
+                        if (!isKioskMode && (currentUserIsKeyholder || currentUserIsSysadmin || currentUserIsBoardMember)) {
+                            setSelectedParticipant(visit.participant);
+                        }
                     }}
                     title={visit.participant.name || visit.participant.email}
                 >
@@ -384,11 +391,6 @@ function KioskDisplayInner() {
                 {!isKioskMode && (currentUserIsKeyholder || currentUserIsSysadmin) && (
                     <div style={{ marginTop: "4px", fontSize: "0.7rem", color: "var(--color-primary-light)" }}>
                         {visit.participant.phone && <div>📞 {visit.participant.phone}</div>}
-                        {visit.participant.household?.emergencyContactPhone && (
-                            <div style={{ color: "#fcd34d", marginTop: "2px" }}>
-                                🚨 {visit.participant.household.emergencyContactName?.split(' ')[0]}: {visit.participant.household.emergencyContactPhone}
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
@@ -855,6 +857,79 @@ function KioskDisplayInner() {
                                         </div>
                                     ))
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Emergency Contact Modal */}
+            {selectedParticipant && (
+                <div style={{
+                    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                    background: "rgba(0,0,0,0.95)", zIndex: 1000, display: "flex",
+                    alignItems: "center", justifyContent: "center", padding: "1rem"
+                }} onClick={() => setSelectedParticipant(null)}>
+                    <div style={{
+                        background: "var(--color-bg)", border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "12px", width: "100%", maxWidth: "500px",
+                        position: "relative",
+                        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+                    }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#fcd34d", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span>🆘</span> Emergency Contact Info
+                            </h2>
+                            <button onClick={() => setSelectedParticipant(null)} style={{ background: "transparent", border: "none", color: "white", cursor: "pointer", fontSize: "1.5rem" }}>&times;</button>
+                        </div>
+                        <div style={{ padding: "2rem" }}>
+                            <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+                                <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{selectedParticipant.name || selectedParticipant.email.split('@')[0]}</div>
+                                {selectedParticipant.phone && (
+                                    <div style={{ fontSize: "1rem", color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
+                                        User Phone: <a href={`tel:${selectedParticipant.phone.replace(/\\D/g, '')}`} style={{ color: "#34d399", textDecoration: "none" }}>{selectedParticipant.phone}</a>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{
+                                background: "rgba(239, 68, 68, 0.1)",
+                                border: "1px solid rgba(239, 68, 68, 0.3)",
+                                padding: "1.5rem",
+                                borderRadius: "8px",
+                                textAlign: "center"
+                            }}>
+                                {selectedParticipant.household?.emergencyContactName && selectedParticipant.household?.emergencyContactPhone ? (
+                                    <>
+                                        <div style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "0.5rem" }}>Emergency Contact</div>
+                                        <div style={{ fontSize: "1.25rem", fontWeight: "bold", marginBottom: "0.5rem" }}>{selectedParticipant.household.emergencyContactName}</div>
+                                        <div style={{ fontSize: "1.5rem" }}>
+                                            <a href={`tel:${selectedParticipant.household.emergencyContactPhone.replace(/\\D/g, '')}`} style={{ color: "#f87171", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                                                <span>📞</span> {selectedParticipant.household.emergencyContactPhone}
+                                            </a>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div style={{ color: "#fca5a5" }}>
+                                        <p style={{ margin: "0 0 0.5rem 0", fontWeight: "bold" }}>No Emergency Contact on File</p>
+                                        <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--color-text-muted)" }}>This user&apos;s household has not registered an emergency contact.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "flex-end" }}>
+                            <button
+                                onClick={() => setSelectedParticipant(null)}
+                                style={{
+                                    background: "rgba(255, 255, 255, 0.1)",
+                                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                                    color: "white",
+                                    padding: "0.5rem 1.5rem",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>

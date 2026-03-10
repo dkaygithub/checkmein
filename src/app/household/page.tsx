@@ -15,7 +15,7 @@ export default function HouseholdPage() {
         id?: number;
         name?: string;
         leads?: Array<{ participantId: number }>;
-        participants?: Array<{ id: number; name?: string; email?: string; dob?: string; homeAddress?: string; programVolunteers?: Array<{ id: number; program: { name: string; end?: string }; events?: Array<{ start: string }> }>; programParticipants?: Array<{ id: number; program: { name: string; end?: string }; events?: Array<{ start: string }> }> }>;
+        participants?: Array<{ id: number; name?: string; email?: string; dob?: string; phone?: string; homeAddress?: string; programVolunteers?: Array<{ id: number; program: { name: string; end?: string }; events?: Array<{ start: string }> }>; programParticipants?: Array<{ id: number; program: { name: string; end?: string }; events?: Array<{ start: string }> }> }>;
         memberships?: Array<unknown>;
         emergencyContactName?: string;
         emergencyContactPhone?: string;
@@ -36,7 +36,8 @@ export default function HouseholdPage() {
     const [editForm, setEditForm] = useState({
         name: "",
         email: "",
-        dob: ""
+        dob: "",
+        phone: ""
     });
 
     const [visits, setVisits] = useState<Array<{
@@ -210,7 +211,8 @@ export default function HouseholdPage() {
                     participantId,
                     name: editForm.name,
                     email: editForm.email,
-                    dob: editForm.dob
+                    dob: editForm.dob,
+                    phone: editForm.phone
                 })
             });
 
@@ -224,6 +226,27 @@ export default function HouseholdPage() {
             }
         } catch {
             setMessage("Network error updating member.");
+        }
+    };
+
+    const handleMakeLead = async (participantId: number) => {
+        setMessage("");
+        try {
+            const res = await fetch('/api/household/lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ participantId })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setMessage("Member promoted to lead successfully!");
+                fetchHousehold();
+            } else {
+                setMessage(data.error || "Failed to promote member.");
+            }
+        } catch {
+            setMessage("Network error promoting member.");
         }
     };
 
@@ -279,7 +302,28 @@ export default function HouseholdPage() {
                         <div style={{ marginBottom: '2rem' }}>
                             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Household Members</h2>
                             <div className={styles.actionGrid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                                {household.participants?.map((p: {id: number; name?: string; email?: string; dob?: string; homeAddress?: string}) => (
+                                {(household.participants || [])
+                                    .slice()
+                                    .sort((a, b) => {
+                                        const isLeadA = household.leads?.some(l => l.participantId === a.id) ? 1 : 0;
+                                        const isLeadB = household.leads?.some(l => l.participantId === b.id) ? 1 : 0;
+                                        
+                                        // Sort leads to the top
+                                        if (isLeadA !== isLeadB) {
+                                            return isLeadB - isLeadA;
+                                        }
+                                        
+                                        // If both are leads or both are not leads, sort by DOB (oldest first if DOB exists)
+                                        if (a.dob && b.dob) {
+                                            return new Date(a.dob).getTime() - new Date(b.dob).getTime();
+                                        }
+                                        if (a.dob) return -1;
+                                        if (b.dob) return 1;
+                                        
+                                        // Final fallback to name
+                                        return (a.name || "").localeCompare(b.name || "");
+                                    })
+                                    .map((p: {id: number; name?: string; email?: string; dob?: string; phone?: string; homeAddress?: string}) => (
                                     <div key={p.id} style={{
                                         padding: '1.5rem',
                                         background: 'rgba(255,255,255,0.05)',
@@ -313,6 +357,14 @@ export default function HouseholdPage() {
                                                     onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })}
                                                     style={{ padding: '0.5rem' }}
                                                 />
+                                                <input
+                                                    type="tel"
+                                                    className="glass-input"
+                                                    value={editForm.phone}
+                                                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                                    placeholder="Phone"
+                                                    style={{ padding: '0.5rem' }}
+                                                />
                                                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                                                     <button type="submit" style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.4)', cursor: 'pointer' }}>Save</button>
                                                     <button type="button" onClick={() => setEditingMemberId(null)} style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', cursor: 'pointer' }}>Cancel</button>
@@ -322,7 +374,8 @@ export default function HouseholdPage() {
                                             <>
                                                 <div style={{ paddingRight: '3rem' }}>
                                                     <h3 style={{ margin: '0 0 0.5rem 0', wordBreak: 'break-word' }}>{p.name || "Unnamed"}</h3>
-                                                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', wordBreak: 'break-word' }}>{p.email}</p>
+                                                    {p.email && <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', wordBreak: 'break-word' }}>{p.email}</p>}
+                                                    {p.phone && <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', wordBreak: 'break-word' }}>{p.phone}</p>}
                                                 </div>
                                                 {household.leads?.some((l: {participantId: number}) => l.participantId === p.id) && (
                                                     <span style={{
@@ -335,11 +388,31 @@ export default function HouseholdPage() {
                                                         fontSize: '0.75rem'
                                                     }}>Household Lead</span>
                                                 )}
+                                                {!household.leads?.some((l: {participantId: number}) => l.participantId === p.id) &&
+                                                    p.dob && (new Date().getFullYear() - new Date(p.dob).getFullYear() >= 18) &&
+                                                    household.leads?.some((l: {participantId: number}) => l.participantId === (session?.user as {id: number})?.id) && (
+                                                    <button
+                                                        onClick={() => handleMakeLead(p.id)}
+                                                        style={{
+                                                            display: 'inline-block',
+                                                            marginTop: '0.5rem',
+                                                            background: 'rgba(59, 130, 246, 0.2)',
+                                                            color: '#60a5fa',
+                                                            padding: '4px 8px',
+                                                            borderRadius: '8px',
+                                                            fontSize: '0.75rem',
+                                                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        Make Lead
+                                                    </button>
+                                                )}
                                                 {household.leads?.some((l: {participantId: number}) => l.participantId === (session?.user as {id: number})?.id) && (
                                                     <button
                                                         onClick={() => {
                                                             setEditingMemberId(p.id);
-                                                            setEditForm({ name: p.name || "", email: p.email || "", dob: p.dob ? new Date(p.dob).toISOString().split('T')[0] : "" });
+                                                            setEditForm({ name: p.name || "", email: p.email || "", dob: p.dob ? new Date(p.dob).toISOString().split('T')[0] : "", phone: p.phone || "" });
                                                         }}
                                                         style={{
                                                             position: 'absolute',

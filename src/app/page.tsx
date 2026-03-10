@@ -161,23 +161,44 @@ export default function Home() {
 
               {/* Board Directory Button for Keyholders/Admins */}
               {((session.user as any)?.sysadmin || (session.user as any)?.keyholder) && (
-                <button
-                  className="glass-button"
-                  onClick={fetchBoardDirectory}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '1.1rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    gridColumn: '1 / -1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <span style={{ fontSize: '1.2rem' }}>📱</span> View Board Directory
-                </button>
+                <>
+                  <button
+                    className="glass-button"
+                    onClick={fetchBoardDirectory}
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      fontSize: '1.1rem',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      gridColumn: '1 / -1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.2rem' }}>📱</span> View Board Directory
+                  </button>
+                  <button
+                    className="glass-button"
+                    onClick={() => router.push('/admin/emergency-contacts')}
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      fontSize: '1.1rem',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      borderColor: 'rgba(239, 68, 68, 0.3)',
+                      gridColumn: '1 / -1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      marginTop: '0.5rem' // Small gap between the two buttons
+                    }}
+                  >
+                    <span style={{ fontSize: '1.2rem' }}>🆘</span> Emergency Contacts
+                  </button>
+                </>
               )}
             </>
           ) : (

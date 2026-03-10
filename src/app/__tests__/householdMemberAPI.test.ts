@@ -191,7 +191,8 @@ describe('Household Member API Integration Tests', () => {
                     participantId: testMemberId, 
                     name: 'Updated Child', 
                     email: 'updated-child@example.com',
-                    dob: newDob
+                    dob: newDob,
+                    phone: '555-555-5555'
                 })
             });
 
@@ -206,6 +207,7 @@ describe('Household Member API Integration Tests', () => {
             const updatedProfile = await prisma.participant.findUnique({ where: { id: testMemberId } });
             expect(updatedProfile?.name).toBe('Updated Child');
             expect(updatedProfile?.email).toBe('updated-child@example.com');
+            expect(updatedProfile?.phone).toBe('555-555-5555');
             expect(updatedProfile?.dob?.toISOString().startsWith(newDob)).toBe(true);
 
             // Verify Audit Trail is populated
@@ -223,7 +225,8 @@ describe('Household Member API Integration Tests', () => {
                 body: JSON.stringify({ 
                     participantId: testMemberId, 
                     email: '',
-                    dob: ''
+                    dob: '',
+                    phone: ''
                 })
             });
 
@@ -233,6 +236,7 @@ describe('Household Member API Integration Tests', () => {
             const updatedProfile = await prisma.participant.findUnique({ where: { id: testMemberId } });
             expect(updatedProfile?.email).toBeNull();
             expect(updatedProfile?.dob).toBeNull();
+            expect(updatedProfile?.phone).toBeNull();
         });
     });
 });

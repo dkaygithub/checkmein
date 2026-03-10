@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest) {
 
         const userId = (session.user as {id: number}).id;
         const body = await req.json();
-        const { participantId, name, email, dob } = body;
+        const { participantId, name, email, dob, phone } = body;
 
         if (!participantId) {
             return NextResponse.json({ error: "Participant ID is required" }, { status: 400 });
@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest) {
                 name: name !== undefined ? name : undefined,
                 email: email !== undefined ? (email === "" ? null : email.toLowerCase()) : undefined,
                 dob: dob !== undefined ? (dob === "" ? null : new Date(dob + "T12:00:00Z")) : undefined,
+                phone: phone !== undefined ? (phone === "" ? null : phone) : undefined,
             }
         });
 
