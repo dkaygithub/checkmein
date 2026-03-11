@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
                             email: true,
                             name: true,
                             dob: true,
+                            shopSteward: true,
                             toolStatuses: {
                                 select: { toolId: true, level: true }
                             }
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
                     email: true,
                     name: true,
                     dob: true,
+                    shopSteward: true,
                     toolStatuses: {
                         select: { toolId: true, level: true }
                     }
@@ -83,6 +85,7 @@ export async function GET(req: NextRequest) {
                 id: participant.id,
                 email: participant.email,
                 name: participant.name,
+                shopSteward: participant.shopSteward,
                 toolStatuses: participant.toolStatuses,
                 ageCategory,
             };

@@ -11,6 +11,7 @@ type Participant = {
     email: string;
     name: string | null;
     ageCategory?: "ADULT" | "STUDENT";
+    shopSteward?: boolean;
     toolStatuses: {
         toolId: number;
         level: ToolStatusLevel;
@@ -88,15 +89,22 @@ function KioskCertificationsInner() {
     const renderVisitRow = (participant: Participant) => (
         <tr key={participant.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
             <td style={{ padding: '0.75rem 1rem', position: 'sticky', left: 0, background: 'rgba(15,23,42,0.95)', zIndex: 5, borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{participant.name || participant.email.split('@')[0]}</div>
+                <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{participant.name || participant.email.split('@')[0]}</div>
             </td>
             {tools.map((tool) => {
                 const status = participant.toolStatuses.find(ts => ts.toolId === tool.id);
-                const bgColor = getColorForLevel(status?.level);
+                let bgColor = getColorForLevel(status?.level);
+                let opacity = status ? 0.8 : 1;
+                
+                if (participant.shopSteward) {
+                    bgColor = getColorForLevel("MAY_CERTIFY_OTHERS");
+                    opacity = 0.8;
+                }
+                
                 return (
                     <td key={tool.id} style={{ padding: '0', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)', height: '100%' }}>
                         <div style={{
-                            width: '40px',
+                            width: '100%',
                             minWidth: '40px',
                             height: '100%',
                             minHeight: '48px',
@@ -104,7 +112,7 @@ function KioskCertificationsInner() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            opacity: status ? 0.8 : 1,
+                            opacity: opacity,
                             transition: 'opacity 0.2s',
                             margin: '0 auto'
                         }}>
@@ -155,7 +163,7 @@ function KioskCertificationsInner() {
                         <table style={{ borderCollapse: 'collapse', textAlign: 'left', minWidth: 'max-content' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', position: 'sticky', left: 0, zIndex: 10, backdropFilter: 'blur(10px)', borderRight: '1px solid rgba(255,255,255,0.1)', verticalAlign: 'bottom' }}>
+                                    <th style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', position: 'sticky', left: 0, zIndex: 10, backdropFilter: 'blur(10px)', borderRight: '1px solid rgba(255,255,255,0.1)', verticalAlign: 'bottom', width: '150px', maxWidth: '150px' }}>
                                         Participant
                                     </th>
                                     {tools.map((tool) => (
@@ -164,23 +172,17 @@ function KioskCertificationsInner() {
                                             borderRight: '1px solid rgba(255,255,255,0.05)',
                                             background: 'rgba(255,255,255,0.02)',
                                             fontSize: '0.875rem',
-                                            height: '180px',
-                                            width: '40px',
                                             position: 'relative',
                                             verticalAlign: 'bottom',
-                                            padding: 0
+                                            padding: '0.5rem',
+                                            textAlign: 'center',
+                                            maxWidth: '120px',
+                                            minWidth: '60px',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'keep-all',
+                                            hyphens: 'none'
                                         }}>
-                                            <div style={{
-                                                position: 'absolute',
-                                                bottom: '10px',
-                                                left: '50%',
-                                                transformOrigin: 'bottom left',
-                                                transform: 'translateX(-50%) rotate(-45deg)',
-                                                whiteSpace: 'nowrap',
-                                                width: '10px'
-                                            }}>
-                                                <span style={{ display: 'inline-block', transform: 'translateX(-100%)', paddingRight: '10px' }}>{tool.name}</span>
-                                            </div>
+                                            <span>{tool.name}</span>
                                         </th>
                                     ))}
                                 </tr>
