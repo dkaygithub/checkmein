@@ -21,9 +21,15 @@ export async function findAssociatedEventAt(participantId: number, targetTime: D
         select: { programId: true }
     });
 
+    const leadPrograms = await prisma.program.findMany({
+        where: { leadMentorId: participantId },
+        select: { id: true }
+    });
+
     const relevantProgramIds = [
         ...participantPrograms.map(p => p.programId),
-        ...volunteerPrograms.map(v => v.programId)
+        ...volunteerPrograms.map(v => v.programId),
+        ...leadPrograms.map(p => p.id)
     ];
 
     if (relevantProgramIds.length === 0) {
@@ -84,9 +90,15 @@ export async function processVisitCheckout(visitId: number, checkoutTime: Date) 
         select: { programId: true }
     });
 
+    const leadPrograms = await prisma.program.findMany({
+        where: { leadMentorId: participantId },
+        select: { id: true }
+    });
+
     const relevantProgramIds = [
         ...participantPrograms.map(p => p.programId),
-        ...volunteerPrograms.map(v => v.programId)
+        ...volunteerPrograms.map(v => v.programId),
+        ...leadPrograms.map(p => p.id)
     ];
 
     if (relevantProgramIds.length === 0) {

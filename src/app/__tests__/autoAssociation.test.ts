@@ -8,10 +8,12 @@ describe('Auto-Association and Checkout Chunking Logic', () => {
     let programAId: number;
     let programBId: number;
     let programCId: number;
+    let programDId: number;
     
     let eventAId: number; // 10am - 12pm
     let eventBId: number; // 12pm - 2pm
     let eventCId: number; // 12pm - 2pm (Different program)
+    let eventDId: number; // 2pm - 4pm
     
     let participantId: number;
     const baseDateString = '2026-03-09T';
@@ -39,6 +41,10 @@ describe('Auto-Association and Checkout Chunking Logic', () => {
         programBId = progB.id;
         const progC = await prisma.program.create({ data: { name: 'Program C' } });
         programCId = progC.id;
+        const progD = await prisma.program.create({
+            data: { name: 'Program D', leadMentorId: participantId }
+        });
+        programDId = progD.id;
 
         // Setup Events
         // Event A: 10:00 to 12:00
@@ -73,6 +79,17 @@ describe('Auto-Association and Checkout Chunking Logic', () => {
             }
         });
         eventCId = evtC.id;
+
+        // Event D: 14:00 to 16:00
+        const evtD = await prisma.event.create({
+            data: {
+                programId: programDId,
+                name: 'Event D',
+                start: new Date(`${baseDateString}14:00:00Z`),
+                end: new Date(`${baseDateString}16:00:00Z`)
+            }
+        });
+        eventDId = evtD.id;
 
         // Enroll User in A and B
         await prisma.programParticipant.create({
@@ -119,6 +136,12 @@ describe('Auto-Association and Checkout Chunking Logic', () => {
             // Even though Event C is 12-2, user is enrolled in B, so it should return B, not C.
             expect(eventId).toBe(eventBId);
             expect(eventId).not.toBe(eventCId);
+        });
+
+        it('should return Event D if user is the lead mentor of Program D', async () => {
+            const checkinTime = new Date(`${baseDateString}14:30:00Z`); // During 2pm-4pm
+            const eventId = await findAssociatedEventAt(participantId, checkinTime);
+            expect(eventId).toBe(eventDId);
         });
     });
 
@@ -204,6 +227,30 @@ describe('Auto-Association and Checkout Chunking Logic', () => {
 
             expect(finalVisits[1].associatedEventId).toBeNull();
             expect(finalVisits[1].arrived).toEqual(new Date(`${baseDateString}12:00:00Z`));
+            expect(finalVisits[1].departed).toEqual(checkoutTime);
+        });
+
+        it('should chunk into Event D if user is lead mentor', async () => {
+            // Arrives at 13:30, leaves at 15:00
+            const arrivalTime = new Date(`${baseDateString}13:30:00Z`);
+            const visit = await prisma.visit.create({
+                data: {
+                    participantId,
+                    arrived: arrivalTime
+                }
+            });
+
+            const checkoutTime = new Date(`${baseDateString}15:00:00Z`);
+            const finalVisits = await processVisitCheckout(visit.id, checkoutTime);
+
+            expect(finalVisits.length).toBe(2);
+
+            // 1. Unassociated gap (13:30 -> 14:00)
+            expect(finalVisits[0].associatedEventId).toBeNull();
+            expect(finalVisits[0].departed).toEqual(new Date(`${baseDateString}14:00:00Z`));
+
+            // 2. Event D (14:00 -> 15:00)
+            expect(finalVisits[1].associatedEventId).toBe(eventDId);
             expect(finalVisits[1].departed).toEqual(checkoutTime);
         });
     });
