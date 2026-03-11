@@ -136,7 +136,7 @@ export default function AdminVisitsPage() {
                             {visits.map(v => (
                                 <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                     <td style={{ padding: '0.75rem' }}>{v.id}</td>
-                                    <td style={{ padding: '0.75rem' }}>{v.participant?.email}</td>
+                                    <td style={{ padding: '0.75rem' }}>{v.participant?.name || v.participant?.email}</td>
                                     <td style={{ padding: '0.75rem' }}>{v.event?.name || 'Open Facility'}</td>
 
                                     {editingVisitId === v.id ? (

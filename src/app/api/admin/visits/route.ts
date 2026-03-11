@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
             orderBy: { arrived: "desc" },
             include: {
                 participant: {
-                    select: { email: true, sysadmin: true, keyholder: true },
+                    select: { email: true, name: true, sysadmin: true, keyholder: true },
                 },
             },
         });
