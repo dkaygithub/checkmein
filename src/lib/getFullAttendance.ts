@@ -1,16 +1,10 @@
 import prisma from "@/lib/prisma";
+import { isMinor } from "@/lib/time";
 
-function isStudentByDob(dob: Date | string | null | undefined): boolean {
-    if (!dob) return false;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age < 18;
-}
-
-export { isStudentByDob };
+/**
+ * @deprecated Use isMinor() from @/lib/time instead.
+ */
+export const isStudentByDob = isMinor;
 
 export async function getFullAttendance() {
     const activeVisits = await prisma.visit.findMany({

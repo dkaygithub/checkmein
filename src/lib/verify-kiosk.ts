@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { config } from "./config";
 
 /**
  * Verify an Ed25519 signature from the kiosk client.
@@ -17,7 +18,7 @@ import crypto from "crypto";
 const MAX_AGE_SECONDS = 60;
 
 export function getKioskPublicKey(): Buffer | null {
-    const hex = process.env.KIOSK_PUBLIC_KEY;
+    const hex = config.kioskPublicKey();
     if (!hex) return null;
     return Buffer.from(hex, "hex");
 }

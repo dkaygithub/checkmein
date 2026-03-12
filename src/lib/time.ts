@@ -23,3 +23,17 @@ export function formatDateTime(date: Date | string | number | null | undefined, 
     if (!date) return '';
     return new Date(date).toLocaleString(undefined, { timeZone: APP_TIMEZONE, ...options });
 }
+
+/**
+ * Returns true if the person with the given DOB is under 18 years old.
+ * Canonical implementation — use this everywhere instead of inline age checks.
+ */
+export function isMinor(dob: Date | string | null | undefined): boolean {
+    if (!dob) return false;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age < 18;
+}

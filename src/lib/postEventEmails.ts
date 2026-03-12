@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { config } from "@/lib/config";
 
 interface ProcessPostEventEmailsOptions {
     /**
@@ -76,9 +77,7 @@ export async function processPostEventEmails(options: ProcessPostEventEmailsOpti
         const attendingRsvps = event.rsvps.filter(r => r.status === 'ATTENDING').length;
         const actualVisits = event.visits.length;
 
-        const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-        // We need a base URL. Assuming Vercel provides VERCEL_URL, or fallback to localhost in dev.
-        const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `${protocol}://localhost:4000`;
+        const baseUrl = config.baseUrl();
         const eventLink = `${baseUrl}/admin/events/${event.id}`;
 
         const emailHtml = `
