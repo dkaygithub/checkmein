@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         });
     } catch (error) {
         console.error("Attendance fetch error:", error);
-        require('fs').writeFileSync('/home/dkay/Projects/treehouse/checkmein/attendance-error-session.log', String(error) + '\n' + (error as any).stack);
+        await logBackendError(error, "GET /api/attendance");
         return NextResponse.json(
             { error: "Internal Server Error while fetching attendance." },
             { status: 500 }

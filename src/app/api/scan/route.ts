@@ -10,7 +10,6 @@ import { logBackendError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
     const startTime = Date.now();
-    console.log("--> API /api/scan HIT");
     try {
         const rawBody = await req.text();
 
@@ -42,7 +41,6 @@ export async function POST(req: NextRequest) {
 
         const body = JSON.parse(rawBody);
         const participantId = body.participantId;
-        console.log(`Parsed body, participantId: ${participantId}`);
 
         if (!participantId) {
             return NextResponse.json(
@@ -76,15 +74,12 @@ export async function POST(req: NextRequest) {
         }
 
         if (authStatus === "unauthorized" && !pendingHouseholdCheck) {
-            console.log(`Scan rejected: Kiosk error (${kioskError || "missing"}) and no valid web session.`);
             return NextResponse.json({ error: "Unauthorized: Missing kiosk signature or invalid session" }, { status: 401 });
         }
 
-        console.log("Checking if participant exists...");
         const participant = await prisma.participant.findUnique({
             where: { id: participantId },
         });
-        console.log(`Participant lookup result: ${participant ? participant.email : 'null'}`);
 
         if (!participant) {
             return NextResponse.json(
@@ -103,19 +98,16 @@ export async function POST(req: NextRequest) {
         
         // Use the assigned variable here just so it's not marked unused, even if redundant
         if (!isWebAuthorized && authStatus === "web") {
-            console.log("Web Auth succeeded but isWebAuthorized flag wasn't set.");
+            // Web Auth succeeded but isWebAuthorized flag wasn't set.
         }
 
-        console.log("Logging raw badge event...");
         await prisma.rawBadgeEvent.create({
             data: {
                 participantId: participant.id,
                 location: "Main Entrance", // Or from request if multiple scanners exist
             },
         });
-        console.log("Raw event logged.");
 
-        console.log("Checking active visits...");
         // Step 3: Check for an active open visit (i.e. check-in without check-out)
         const activeVisit = await prisma.visit.findFirst({
             where: {
@@ -124,7 +116,6 @@ export async function POST(req: NextRequest) {
             },
             orderBy: { arrived: "desc" },
         });
-        console.log(`Active visit found: ${activeVisit ? 'Yes' : 'No'}`);
 
         if (activeVisit) {
             let facilityClosed = false;
@@ -183,7 +174,6 @@ export async function POST(req: NextRequest) {
                         where: { departed: null },
                         data: { departed: new Date() }
                     });
-                    console.log("Facility closed. Forcibly checked out all remaining members.");
                     
                     // Trigger post-event emails immediately for any events that finished today
                     // Use dynamic import so we don't block the API response
@@ -266,7 +256,6 @@ export async function POST(req: NextRequest) {
         );
     } finally {
         const durationMs = Date.now() - startTime;
-        console.log(`API /api/scan completed in ${durationMs}ms`);
         // Fire-and-forget: log system metric
         prisma.systemMetric.create({
             data: {
