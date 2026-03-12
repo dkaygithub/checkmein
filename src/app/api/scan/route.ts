@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth";
+import { apiError } from "@/lib/api-response";
 import { processCheckin, processCheckout } from "@/lib/scan-service";
 import { logBackendError } from "@/lib/logger";
 
@@ -16,18 +17,12 @@ export async function POST(req: NextRequest) {
         const participantId = body.participantId;
 
         if (!participantId) {
-            return NextResponse.json(
-                { error: "participantId is required." },
-                { status: 400 }
-            );
+            return apiError("participantId is required.", 400);
         }
 
         // 2. Authorization
         if (auth.type === 'unauthenticated') {
-            return NextResponse.json(
-                { error: "Unauthorized: Missing kiosk signature or invalid session" },
-                { status: 401 }
-            );
+            return apiError("Unauthorized: Missing kiosk signature or invalid session", 401);
         }
 
         // Web session: check if user can scan this participant
@@ -41,10 +36,7 @@ export async function POST(req: NextRequest) {
                 if (user.householdId && user.householdLead) {
                     pendingHouseholdCheck = true;
                 } else {
-                    return NextResponse.json(
-                        { error: "Forbidden: You are not authorized to scan this user." },
-                        { status: 403 }
-                    );
+                    return apiError("Forbidden: You are not authorized to scan this user.", 403);
                 }
             }
         }
@@ -55,19 +47,13 @@ export async function POST(req: NextRequest) {
         });
 
         if (!participant) {
-            return NextResponse.json(
-                { error: `Participant ${participantId} not found.` },
-                { status: 404 }
-            );
+            return apiError(`Participant ${participantId} not found.`, 404);
         }
 
         // Household lead check: verify participant is in the same household
         if (pendingHouseholdCheck && auth.type === 'session') {
             if (participant.householdId !== auth.user.householdId) {
-                return NextResponse.json(
-                    { error: "Forbidden: You are not authorized to scan this user." },
-                    { status: 403 }
-                );
+                return apiError("Forbidden: You are not authorized to scan this user.", 403);
             }
         }
 
@@ -98,10 +84,7 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error("Scan processing error:", error);
         await logBackendError(error, "POST /api/scan");
-        return NextResponse.json(
-            { error: "Internal Server Error while processing scan." },
-            { status: 500 }
-        );
+        return apiError("Internal Server Error while processing scan.", 500);
     } finally {
         const durationMs = Date.now() - startTime;
         prisma.systemMetric.create({

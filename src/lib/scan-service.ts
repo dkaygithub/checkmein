@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getFullAttendance } from "@/lib/getFullAttendance";
 import { findAssociatedEventAt, processVisitCheckout } from "@/lib/attendanceTransitions";
 import { sendCheckinNotifications } from "@/lib/notifications";
+import { apiError, apiJson } from "@/lib/api-response";
 import type { Participant } from "@prisma/client";
 
 /**
@@ -19,10 +19,7 @@ export async function processCheckin(participant: Participant, authType: string)
         });
 
         if (activeKeyholders === 0) {
-            return NextResponse.json(
-                { error: "Facility is closed. A Keyholder must check in first." },
-                { status: 403 }
-            );
+            return apiError("Facility is closed. A Keyholder must check in first.", 403);
         }
     }
 
@@ -43,9 +40,9 @@ export async function processCheckin(participant: Participant, authType: string)
     );
 
     const checkinAttendance = await getFullAttendance();
-    return NextResponse.json({
+    return apiJson({
         message: "Checked in successfully",
-        type: "checkin",
+        type: "checkin" as const,
         participant,
         visit: newVisit,
         signedRequest: authType === "kiosk",
@@ -100,10 +97,10 @@ export async function processCheckout(
 
                 if (!confirmForceClose) {
                     const names = remainingUsers.map(u => u.participant.name || u.participant.email).join(", ");
-                    return NextResponse.json({
+                    return apiJson({
                         error: `Warning! You are the last keyholder, but others are here:\n${names}\n\nBadge again within 10 seconds to confirm you've checked them and close the facility.`,
-                        type: "warning"
-                    }, { status: 400 });
+                        type: "warning" as const
+                    }, 400);
                 }
             }
 
@@ -126,9 +123,9 @@ export async function processCheckout(
     const updatedVisit = finalVisits.length > 0 ? finalVisits[finalVisits.length - 1] : null;
 
     const checkoutAttendance = await getFullAttendance();
-    return NextResponse.json({
+    return apiJson({
         message: facilityClosed ? "Checked out and Facility closed" : "Checked out successfully",
-        type: "checkout",
+        type: "checkout" as const,
         participant,
         visit: updatedVisit,
         facilityClosed,
