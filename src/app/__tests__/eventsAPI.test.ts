@@ -10,6 +10,7 @@
 import { POST } from '@/app/api/events/route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import { formatInTimeZone } from 'date-fns-tz';
 
 // Mock NextAuth
 jest.mock('next-auth', () => ({
@@ -150,9 +151,8 @@ describe('Events API Integration Tests', () => {
             const events = await prisma.event.findMany({ where: { name: 'Single Test Event' } });
             expect(events.length).toBe(1);
             expect(events[0].programId).toBe(testProgramId);
-            // Verify correct hours parsed
-            expect(events[0].start.toISOString()).toContain('T13:00:00');
-            expect(events[0].end.toISOString()).toContain('T15:00:00');
+            expect(formatInTimeZone(events[0].start, 'America/Chicago', 'HH:mm:ss')).toBe('13:00:00');
+            expect(formatInTimeZone(events[0].end, 'America/Chicago', 'HH:mm:ss')).toBe('15:00:00');
         });
 
         it('should successfully create recurring events as a lead mentor', async () => {

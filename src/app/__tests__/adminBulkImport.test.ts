@@ -25,21 +25,23 @@ describe('Admin Bulk Import API Integration Tests', () => {
     let testUserId: number;
 
     beforeAll(async () => {
-        // Clean up any leaked state
-        await prisma.membership.deleteMany({});
-        await prisma.householdLead.deleteMany({});
-        await prisma.participant.deleteMany({
-            where: { email: { contains: 'import-test' } }
-        });
-        await prisma.participant.deleteMany({
-            where: { name: { contains: 'Import Test' } }
-        });
-        await prisma.household.deleteMany({
-            where: { name: { contains: 'Import Test' } }
-        });
-        await prisma.household.deleteMany({
-            where: { name: { contains: 'Household' } }
-        });
+        try {
+            // Clean up any leaked state
+            await prisma.membership.deleteMany({});
+            await prisma.householdLead.deleteMany({});
+            await prisma.participant.deleteMany({
+                where: { email: { contains: 'import-test' } }
+            });
+            await prisma.participant.deleteMany({
+                where: { name: { contains: 'Import Test' } }
+            });
+            await prisma.household.deleteMany({
+                where: { name: { contains: 'Import Test' } }
+            });
+            await prisma.household.deleteMany({
+                where: { name: { contains: 'Household' } }
+            });
+        } catch (e) {}
 
         // Setup mock database records
         const admin = await prisma.participant.create({
@@ -54,36 +56,40 @@ describe('Admin Bulk Import API Integration Tests', () => {
     });
 
     afterAll(async () => {
-        // Clean up
-        await prisma.membership.deleteMany({});
-        await prisma.householdLead.deleteMany({});
-        await prisma.participant.deleteMany({
-            where: { email: { contains: 'import-test' } }
-        });
-        await prisma.participant.deleteMany({
-            where: { name: { contains: 'Import Test' } }
-        });
-        await prisma.household.deleteMany({
-            where: { name: { contains: 'Import Test' } }
-        });
-        await prisma.household.deleteMany({
-            where: { name: { contains: 'Household' } }
-        });
+        try {
+            // Clean up
+            await prisma.membership.deleteMany({});
+            await prisma.householdLead.deleteMany({});
+            await prisma.participant.deleteMany({
+                where: { email: { contains: 'import-test' } }
+            });
+            await prisma.participant.deleteMany({
+                where: { name: { contains: 'Import Test' } }
+            });
+            await prisma.household.deleteMany({
+                where: { name: { contains: 'Import Test' } }
+            });
+            await prisma.household.deleteMany({
+                where: { name: { contains: 'Household' } }
+            });
+        } catch (e) {}
     });
 
     afterEach(async () => {
-        // Clean up participants created during tests
-        await prisma.membership.deleteMany({});
-        await prisma.householdLead.deleteMany({});
-        await prisma.participant.deleteMany({
-            where: { email: { contains: 'batch-import-test' } }
-        });
-        await prisma.participant.deleteMany({
-            where: { name: { contains: 'Batch Import Test' } }
-        });
-        await prisma.household.deleteMany({
-            where: { name: { contains: 'Household' } }
-        });
+        try {
+            // Clean up participants created during tests
+            await prisma.membership.deleteMany({});
+            await prisma.householdLead.deleteMany({});
+            await prisma.participant.deleteMany({
+                where: { email: { contains: 'batch-import-test' } }
+            });
+            await prisma.participant.deleteMany({
+                where: { name: { contains: 'Batch Import Test' } }
+            });
+            await prisma.household.deleteMany({
+                where: { name: { contains: 'Household' } }
+            });
+        } catch (e) {}
     });
 
     const createMockCsvFormData = (data: (string | number | boolean | Date)[][]) => {
