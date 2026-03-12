@@ -9,7 +9,7 @@
 
 import { GET, POST, DELETE } from '@/app/api/attendance/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import * as verifyKiosk from '@/lib/verify-kiosk';
 
 // Mock Kiosk util
@@ -19,13 +19,9 @@ jest.mock('@/lib/verify-kiosk', () => ({
 }));
 
 // Mock NextAuth
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn()
+jest.mock('next-auth/next', () => ({
+    getServerSession: jest.fn(),
 }));
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
-}));
-
 describe('General Attendance API Integration Tests', () => {
     let adminId: number;
     let commonId: number;

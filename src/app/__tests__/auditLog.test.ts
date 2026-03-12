@@ -10,8 +10,7 @@ import { PATCH as updateProgramSettings } from '@/app/api/programs/[id]/settings
 import { POST as enrollParticipant } from '@/app/api/programs/[id]/participants/route';
 import { POST as markAttendance } from '@/app/api/events/[id]/attendance/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-
+import { getServerSession } from 'next-auth/next';
 // Mock NextAuth
 jest.mock('next-auth', () => ({
     __esModule: true,

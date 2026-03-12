@@ -12,16 +12,11 @@ import { GET as getMembers } from '@/app/api/shop/members/route';
 import { GET as getTools, POST as postTools } from '@/app/api/shop/tools/route';
 import { GET as getCerts, POST as postCerts } from '@/app/api/shop/certifications/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-
+import { getServerSession } from 'next-auth/next';
 // Mock NextAuth
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn()
+jest.mock('next-auth/next', () => ({
+    getServerSession: jest.fn(),
 }));
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
-}));
-
 describe('Shop API Integration Tests', () => {
     let adminId: number;
     let stewardId: number;

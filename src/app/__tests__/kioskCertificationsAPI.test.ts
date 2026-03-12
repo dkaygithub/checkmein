@@ -8,18 +8,14 @@
 
 import { GET } from '@/app/api/kiosk/certifications/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { getKioskPublicKey, verifyKioskSignature } from '@/lib/verify-kiosk';
 import { NextRequest } from 'next/server';
 
 // Mock NextAuth
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn()
+jest.mock('next-auth/next', () => ({
+    getServerSession: jest.fn(),
 }));
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
-}));
-
 // Mock Kiosk Verification
 jest.mock('@/lib/verify-kiosk', () => ({
     getKioskPublicKey: jest.fn(),

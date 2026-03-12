@@ -15,10 +15,6 @@ import { getServerSession } from 'next-auth/next';
 jest.mock('next-auth/next', () => ({
     getServerSession: jest.fn()
 }));
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
-}));
-
 describe('Manual Attendance API Integration Tests', () => {
     let testUserId: number;
 

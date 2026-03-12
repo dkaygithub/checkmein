@@ -9,20 +9,14 @@
 
 import { GET, POST, DELETE } from '@/app/api/attendance/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-
+import { getServerSession } from 'next-auth/next';
 // Mock NextAuth
-jest.mock('next-auth', () => ({
+jest.mock('next-auth/next', () => ({
     getServerSession: jest.fn(),
 }));
-
 jest.mock('@/lib/verify-kiosk', () => ({
     getKioskPublicKey: jest.fn().mockReturnValue(Buffer.from('mock-key')),
     verifyKioskSignature: jest.fn()
-}));
-
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
 }));
 
 describe('Attendance API Integration Tests', () => {

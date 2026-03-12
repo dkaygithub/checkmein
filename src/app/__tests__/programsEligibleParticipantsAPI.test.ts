@@ -9,16 +9,11 @@
 
 import { GET } from '@/app/api/programs/[id]/eligible-participants/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-
+import { getServerSession } from 'next-auth/next';
 // Mock NextAuth
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn()
+jest.mock('next-auth/next', () => ({
+    getServerSession: jest.fn(),
 }));
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
-}));
-
 describe('Eligible Participants API Integration Tests', () => {
     let adminId: number;
     let leadId: number;

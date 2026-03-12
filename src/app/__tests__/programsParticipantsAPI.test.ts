@@ -9,14 +9,10 @@
 
 import { POST, DELETE } from '@/app/api/programs/[id]/participants/route';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-
+import { getServerSession } from 'next-auth/next';
 // Mock NextAuth
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn()
-}));
-jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
-    authOptions: {}
+jest.mock('next-auth/next', () => ({
+    getServerSession: jest.fn(),
 }));
 // Mock Notifications
 jest.mock('@/lib/notifications', () => ({
