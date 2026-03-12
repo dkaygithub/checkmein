@@ -89,7 +89,7 @@ describe('AuditLog Integration Tests', () => {
     it('should generate an AuditLog when a Program is created', async () => {
         const req = new Request('http://localhost:4000/api/programs', {
             method: 'POST',
-            body: JSON.stringify({ name: 'Audit Test Program', begin: new Date() })
+            body: JSON.stringify({ name: 'Audit Test Program', enrollmentStatus: 'OPEN', begin: new Date() })
         });
 
         const res = await createProgram(req);
@@ -141,10 +141,12 @@ describe('AuditLog Integration Tests', () => {
     it('should generate an AuditLog when an Admin enrolls a participant', async () => {
         const req = new Request(`http://localhost:4000/api/programs/${testProgramId}/participants`, {
             method: 'POST',
-            body: JSON.stringify({ participantId: testParticipantId })
+            body: JSON.stringify({ participantId: testParticipantId, override: true })
         });
 
         const res = await enrollParticipant(req, { params: Promise.resolve({ id: testProgramId.toString() }) });
+        const data = await res.json();
+        if (res.status !== 200) console.error("Enrollment error:", data);
         expect(res.status).toBe(200);
 
         // Verify Audit Log

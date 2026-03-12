@@ -91,7 +91,7 @@ describe('Program Participants API Integration Tests', () => {
 
         // Create mock programs
         const standardProgram = await prisma.program.create({
-            data: { name: 'Standard Partic API Test', phase: 'RUNNING', leadMentorId: leadId }
+            data: { name: 'Standard Partic API Test', phase: 'RUNNING', enrollmentStatus: 'OPEN', leadMentorId: leadId }
         });
         standardProgramId = standardProgram.id;
 
@@ -100,6 +100,7 @@ describe('Program Participants API Integration Tests', () => {
             data: { 
                 name: 'Full Partic API Test', 
                 phase: 'RUNNING', 
+                enrollmentStatus: 'OPEN',
                 maxParticipants: 1,
                 participants: {
                     create: { participantId: otherId }
@@ -109,7 +110,7 @@ describe('Program Participants API Integration Tests', () => {
         fullProgramId = fullProgram.id;
 
         const exactAgeProgram = await prisma.program.create({
-            data: { name: 'Age Restricted Partic API Test', phase: 'RUNNING', minAge: 18, maxAge: 21 }
+            data: { name: 'Age Restricted Partic API Test', phase: 'RUNNING', enrollmentStatus: 'OPEN', minAge: 18, maxAge: 21 }
         });
         exactAgeProgramId = exactAgeProgram.id;
     });

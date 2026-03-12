@@ -115,7 +115,7 @@ describe('Household Visits API Integration Tests', () => {
     });
 
     afterAll(async () => {
-        const currentIds = [testUserId, testMemberId, testOtherHouseUserId, testNoHouseId];
+        const currentIds = [testUserId, testMemberId, testOtherHouseUserId, testNoHouseId].filter(id => id !== undefined);
         
         const existingUsers = await prisma.participant.findMany({
             where: { id: { in: currentIds } },

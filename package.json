@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start -p 4000",
     "lint": "eslint",
-    "test": "jest",
-    "test:ci": "jest --ci",
+    "test": "jest --runInBand --forceExit",
+    "test:ci": "jest --ci --runInBand --forceExit",
     "prepare": "husky"
   },
   "prisma": {
