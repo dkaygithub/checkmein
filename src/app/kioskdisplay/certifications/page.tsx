@@ -34,6 +34,7 @@ export default function KioskCertificationsDisplay() {
 function KioskCertificationsInner() {
     const searchParams = useSearchParams();
     const limitToPresent = searchParams.get('limit_to_present') !== 'false';
+    const [isKioskMode, setIsKioskMode] = useState(searchParams.get('mode') === 'kiosk' || !!searchParams.get('sig'));
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [tools, setTools] = useState<Tool[]>([]);
     const [loading, setLoading] = useState(true);
@@ -41,12 +42,28 @@ function KioskCertificationsInner() {
 
     const fetchData = async () => {
         try {
-            const res = await fetch(`/api/kiosk/certifications?limit_to_present=${limitToPresent}`);
+            // Pass kiosk signature headers if present in URL params
+            const headers: Record<string, string> = {};
+            const sigParam = searchParams.get("sig");
+            const tsParam = searchParams.get("ts");
+            const nonceParam = searchParams.get("nonce");
+
+            if (sigParam && tsParam && nonceParam) {
+                headers["x-kiosk-signature"] = sigParam;
+                headers["x-kiosk-timestamp"] = tsParam;
+                headers["x-kiosk-nonce"] = nonceParam;
+            }
+
+            const res = await fetch(`/api/kiosk/certifications?limit_to_present=${limitToPresent}`, { headers });
             const data = await res.json();
             if (res.ok && data.participants && data.tools) {
                 setParticipants(data.participants);
                 setTools(data.tools);
                 setError(null);
+                // If signature params were present and request succeeded, enable kiosk mode
+                if (sigParam) {
+                    setIsKioskMode(true);
+                }
             } else if (!res.ok) {
                 setError(data.error || "Failed to load certifications data");
             }
@@ -124,7 +141,7 @@ function KioskCertificationsInner() {
     );
 
     return (
-        <main className={styles.main} style={{ paddingTop: '1rem', paddingBottom: '2rem' }}>
+        <main className={styles.main} style={{ paddingTop: '1rem', paddingBottom: '2rem', ...(isKioskMode ? { cursor: 'none' } : {}) }}>
             <div className="glass-container" style={{ width: "100%", maxWidth: "1200px", padding: "1rem", overflowX: "hidden" }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
                     <h1 className="text-gradient" style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2.5rem)' }}>Live Certifications</h1>

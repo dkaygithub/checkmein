@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import AuthProvider from '@/components/AuthProvider';
 import NavBar from '@/components/NavBar';
 import OnboardingGate from '@/components/OnboardingGate';
+import ContentWrapper from '@/components/ContentWrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,12 +24,13 @@ export default function RootLayout({
         <AuthProvider>
           <OnboardingGate>
             <NavBar />
-            <div style={{ paddingTop: '70px', minHeight: '100vh' }}>
+            <ContentWrapper>
               {children}
-            </div>
+            </ContentWrapper>
           </OnboardingGate>
         </AuthProvider>
       </body>
     </html>
   );
 }
+

@@ -23,8 +23,8 @@ function NavBarInner() {
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
-    // Hide navbar entirely in kiosk mode
-    if (pathname.startsWith('/kioskdisplay') && searchParams.get('mode') === 'kiosk') return null;
+    // Hide navbar entirely in kiosk mode (mode=kiosk param or valid cert signature present)
+    if (pathname.startsWith('/kioskdisplay') && (searchParams.get('mode') === 'kiosk' || searchParams.get('sig'))) return null;
 
     // Don't show navigation on the homepage if they aren't signed in
     if (!session && pathname === '/') return null;
