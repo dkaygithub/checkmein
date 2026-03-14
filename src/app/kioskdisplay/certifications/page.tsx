@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "../../page.module.css";
+import { useAutoCycle } from "../../../hooks/useAutoCycle";
 
 type ToolStatusLevel = "BASIC" | "DOF" | "CERTIFIED" | "MAY_CERTIFY_OTHERS";
 
@@ -124,6 +125,19 @@ function KioskCertificationsInner() {
 
     const sortedParticipants = [...participants].sort(sortAlphabetically);
 
+    const {
+        containerRef,
+        visibleItems,
+        currentPage,
+        totalPages,
+        isTransitioning
+    } = useAutoCycle({
+        items: sortedParticipants,
+        intervalMs: 8000,
+        rowHeight: 65,
+        headerHeight: 65
+    });
+
     // Reusable row render
     const renderVisitRow = (participant: Participant, index: number) => (
         <tr key={participant.id} style={{ borderBottom: index % 2 === 1 ? '3px solid rgba(255,255,255,0.8)' : '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
@@ -171,9 +185,20 @@ function KioskCertificationsInner() {
     );
 
     return (
-        <main className={styles.main} style={{ paddingTop: '1rem', paddingBottom: '2rem', ...(isKioskMode ? { cursor: 'none' } : {}) }}>
-            <div className="glass-container" style={{ width: "100%", maxWidth: "1200px", padding: "1rem", overflowX: "hidden" }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <main className={styles.main} style={{ 
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: isKioskMode ? '1.5rem' : '2rem 1rem',
+            justifyContent: 'flex-start',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+            ...(isKioskMode ? { cursor: 'none' } : {}) 
+        }}>
+            <div className="glass-container" style={{ width: "100%", maxWidth: "1200px", margin: "0 auto", padding: "1rem", overflowX: "hidden", flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'hidden', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem', flexShrink: 0 }}>
                     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                             <h1 className="text-gradient" style={{ margin: 0, fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>Live Certifications</h1>
@@ -197,8 +222,15 @@ function KioskCertificationsInner() {
                         </div>
                     </div>
                     {currentTime && (
-                        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 'bold', lineHeight: 1, color: 'var(--color-text-main)', opacity: 0.9, fontVariantNumeric: 'tabular-nums' }}>
-                            {currentTime.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" })}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                            {totalPages > 1 && (
+                                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                                    {currentPage + 1} / {totalPages}
+                                </div>
+                            )}
+                            <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 'bold', lineHeight: 1, color: 'var(--color-text-main)', opacity: 0.9, fontVariantNumeric: 'tabular-nums' }}>
+                                {currentTime.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" })}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -214,9 +246,9 @@ function KioskCertificationsInner() {
                         <p>No {limitToPresent ? "active participants" : "participants"} found.</p>
                     </div>
                 ) : (
-                    <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', WebkitOverflowScrolling: 'touch' }}>
-                        <table style={{ borderCollapse: 'collapse', textAlign: 'left', minWidth: 'max-content' }}>
-                            <thead>
+                    <div ref={containerRef} style={{ flex: 1, overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        <table style={{ borderCollapse: 'collapse', textAlign: 'left', minWidth: 'max-content', width: '100%' }}>
+                            <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                                 <tr>
                                     <th style={{ 
                                         padding: isKioskMode ? '1.5rem' : '1rem', 
@@ -224,7 +256,7 @@ function KioskCertificationsInner() {
                                         background: 'rgba(255,255,255,0.05)', 
                                         position: 'sticky', 
                                         left: 0, 
-                                        zIndex: 10, 
+                                        zIndex: 11, 
                                         backdropFilter: 'blur(10px)', 
                                         borderRight: '1px solid rgba(255,255,255,0.1)', 
                                         verticalAlign: 'bottom', 
@@ -259,8 +291,11 @@ function KioskCertificationsInner() {
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody>
-                                {sortedParticipants.map((p, i) => renderVisitRow(p, i))}
+                            <tbody style={{ 
+                                opacity: isTransitioning ? 0 : 1, 
+                                transition: 'opacity 0.5s ease-in-out' 
+                            }}>
+                                {visibleItems.map((p, i) => renderVisitRow(p, i))}
                             </tbody>
                         </table>
                     </div>
