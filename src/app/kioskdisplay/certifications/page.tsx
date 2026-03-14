@@ -39,6 +39,13 @@ function KioskCertificationsInner() {
     const [tools, setTools] = useState<Tool[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+    useEffect(() => {
+        setCurrentTime(new Date());
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -85,28 +92,51 @@ function KioskCertificationsInner() {
     const getColorForLevel = (level: ToolStatusLevel | undefined) => {
         switch (level) {
             case "BASIC": return "#ef4444"; // Red
-            case "CERTIFIED": return "#eab308"; // Yellow
-            case "DOF": return "#22c55e"; // Green
+            case "CERTIFIED": return "#22c55e"; // Green
+            case "DOF": return "#eab308"; // Yellow
             case "MAY_CERTIFY_OTHERS": return "#3b82f6"; // Blue
             default: return "transparent"; // Blank
         }
     };
 
-    // Sort users alphabetically by name (fallback to email prefix)
+    // Sort users alphabetically by first name (fallback to email prefix)
     const sortAlphabetically = (a: Participant, b: Participant) => {
         const nameA = a.name || a.email.split('@')[0];
         const nameB = b.name || b.email.split('@')[0];
+        
+        // Extract first name (assuming 'First Last' or 'Last, First' format appropriately if needed, but standard is split by space)
+        // If name contains comma, it might be "Last, First", so let's handle that just in case:
+        const getFirstName = (name: string) => {
+            if (name.includes(',')) {
+                return name.split(',')[1].trim().toLowerCase();
+            }
+            return name.split(' ')[0].toLowerCase();
+        };
+
+        const firstA = getFirstName(nameA);
+        const firstB = getFirstName(nameB);
+        
+        if (firstA !== firstB) {
+            return firstA.localeCompare(firstB);
+        }
         return nameA.localeCompare(nameB);
     };
 
-    const adultVisits = participants.filter(p => p.ageCategory === "ADULT").sort(sortAlphabetically);
-    const studentVisits = participants.filter(p => p.ageCategory === "STUDENT").sort(sortAlphabetically);
+    const sortedParticipants = [...participants].sort(sortAlphabetically);
 
     // Reusable row render
-    const renderVisitRow = (participant: Participant) => (
-        <tr key={participant.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
-            <td style={{ padding: '0.75rem 1rem', position: 'sticky', left: 0, background: 'rgba(15,23,42,0.95)', zIndex: 5, borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{participant.name || participant.email.split('@')[0]}</div>
+    const renderVisitRow = (participant: Participant, index: number) => (
+        <tr key={participant.id} style={{ borderBottom: index % 2 === 1 ? '3px solid rgba(255,255,255,0.8)' : '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
+            <td style={{ padding: isKioskMode ? '1.25rem 1.5rem' : '0.75rem 1rem', position: 'sticky', left: 0, background: 'rgba(15,23,42,0.95)', zIndex: 5, borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ 
+                    fontWeight: isKioskMode ? 800 : 500, 
+                    fontSize: isKioskMode ? '1.8rem' : 'inherit',
+                    letterSpacing: isKioskMode ? '0.02em' : 'normal',
+                    whiteSpace: 'nowrap', 
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis', 
+                    maxWidth: isKioskMode ? '350px' : '150px' 
+                }}>{participant.name || participant.email.split('@')[0]}</div>
             </td>
             {tools.map((tool) => {
                 const status = participant.toolStatuses.find(ts => ts.toolId === tool.id);
@@ -143,26 +173,34 @@ function KioskCertificationsInner() {
     return (
         <main className={styles.main} style={{ paddingTop: '1rem', paddingBottom: '2rem', ...(isKioskMode ? { cursor: 'none' } : {}) }}>
             <div className="glass-container" style={{ width: "100%", maxWidth: "1200px", padding: "1rem", overflowX: "hidden" }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <h1 className="text-gradient" style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2.5rem)' }}>Live Certifications</h1>
-                    {limitToPresent ? (
-                        <div style={{ alignSelf: 'flex-start', padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.9rem' }}>
-                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                            <span>{participants.length} People Present</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                            <h1 className="text-gradient" style={{ margin: 0, fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>Live Certifications</h1>
+                            {limitToPresent ? (
+                                <div style={{ padding: '0.2rem 0.6rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '6px', alignItems: 'center', fontSize: '0.85rem' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+                                    <span>{participants.length} People Present</span>
+                                </div>
+                            ) : (
+                                <div style={{ padding: '0.2rem 0.6rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '6px', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                                    <span>{participants.length} Total Members</span>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div style={{ alignSelf: 'flex-start', padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                            <span>{participants.length} Total Members</span>
+                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', flexWrap: 'wrap', padding: '0.4rem 0.8rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', alignItems: 'center', width: 'fit-content' }}>
+                            <strong style={{ marginRight: '0.5rem' }}>Legend:</strong>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><span style={{ width: '12px', height: '12px', background: '#ef4444', display: 'inline-block', borderRadius: '3px' }}></span> Basic</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><span style={{ width: '12px', height: '12px', background: '#22c55e', display: 'inline-block', borderRadius: '3px' }}></span> Certified</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><span style={{ width: '12px', height: '12px', background: '#eab308', display: 'inline-block', borderRadius: '3px' }}></span> DOF</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><span style={{ width: '12px', height: '12px', background: '#3b82f6', display: 'inline-block', borderRadius: '3px' }}></span> Instructor</div>
+                        </div>
+                    </div>
+                    {currentTime && (
+                        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 'bold', lineHeight: 1, color: 'var(--color-text-main)', opacity: 0.9, fontVariantNumeric: 'tabular-nums' }}>
+                            {currentTime.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" })}
                         </div>
                     )}
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.875rem', flexWrap: 'wrap', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                    <strong style={{ marginRight: '1rem' }}>Legend:</strong>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ width: '16px', height: '16px', background: '#ef4444', display: 'inline-block', borderRadius: '4px' }}></span> Basic</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ width: '16px', height: '16px', background: '#eab308', display: 'inline-block', borderRadius: '4px' }}></span> Certified</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ width: '16px', height: '16px', background: '#22c55e', display: 'inline-block', borderRadius: '4px' }}></span> DOF</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ width: '16px', height: '16px', background: '#3b82f6', display: 'inline-block', borderRadius: '4px' }}></span> Instructor</div>
                 </div>
 
                 {loading ? (
@@ -180,7 +218,22 @@ function KioskCertificationsInner() {
                         <table style={{ borderCollapse: 'collapse', textAlign: 'left', minWidth: 'max-content' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', position: 'sticky', left: 0, zIndex: 10, backdropFilter: 'blur(10px)', borderRight: '1px solid rgba(255,255,255,0.1)', verticalAlign: 'bottom', width: '150px', maxWidth: '150px' }}>
+                                    <th style={{ 
+                                        padding: isKioskMode ? '1.5rem' : '1rem', 
+                                        borderBottom: '1px solid rgba(255,255,255,0.1)', 
+                                        background: 'rgba(255,255,255,0.05)', 
+                                        position: 'sticky', 
+                                        left: 0, 
+                                        zIndex: 10, 
+                                        backdropFilter: 'blur(10px)', 
+                                        borderRight: '1px solid rgba(255,255,255,0.1)', 
+                                        verticalAlign: 'bottom', 
+                                        width: isKioskMode ? '350px' : '150px', 
+                                        maxWidth: isKioskMode ? '350px' : '150px',
+                                        fontSize: isKioskMode ? '1.8rem' : 'inherit',
+                                        fontWeight: isKioskMode ? 800 : 'bold',
+                                        letterSpacing: isKioskMode ? '0.02em' : 'normal'
+                                    }}>
                                         Participant
                                     </th>
                                     {tools.map((tool) => (
@@ -188,13 +241,15 @@ function KioskCertificationsInner() {
                                             borderBottom: '1px solid rgba(255,255,255,0.1)',
                                             borderRight: '1px solid rgba(255,255,255,0.05)',
                                             background: 'rgba(255,255,255,0.02)',
-                                            fontSize: '0.875rem',
+                                            fontSize: isKioskMode ? '1.4rem' : '0.875rem',
+                                            fontWeight: isKioskMode ? 800 : 'bold',
+                                            letterSpacing: isKioskMode ? '0.02em' : 'normal',
                                             position: 'relative',
                                             verticalAlign: 'bottom',
-                                            padding: '0.5rem',
+                                            padding: isKioskMode ? '1rem 0.5rem' : '0.5rem',
                                             textAlign: 'center',
-                                            maxWidth: '120px',
-                                            minWidth: '60px',
+                                            maxWidth: isKioskMode ? '200px' : '120px',
+                                            minWidth: isKioskMode ? '100px' : '60px',
                                             whiteSpace: 'normal',
                                             wordBreak: 'keep-all',
                                             hyphens: 'none'
@@ -205,26 +260,7 @@ function KioskCertificationsInner() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {adultVisits.map(renderVisitRow)}
-                                
-                                {studentVisits.length > 0 && adultVisits.length > 0 && (
-                                    <tr>
-                                        <td colSpan={tools.length + 1} style={{ 
-                                            background: 'rgba(255,255,255,0.1)', 
-                                            padding: '0.4rem 1rem', 
-                                            fontWeight: 'bold',
-                                            color: 'var(--color-primary-light)',
-                                            fontSize: '0.9rem',
-                                            position: 'sticky',
-                                            left: 0,
-                                            zIndex: 5
-                                        }}>
-                                            Students
-                                        </td>
-                                    </tr>
-                                )}
-                                
-                                {studentVisits.map(renderVisitRow)}
+                                {sortedParticipants.map((p, i) => renderVisitRow(p, i))}
                             </tbody>
                         </table>
                     </div>

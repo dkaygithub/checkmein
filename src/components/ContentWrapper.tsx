@@ -6,10 +6,15 @@ import { Suspense } from "react";
 function ContentWrapperInner({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const isKioskMode = pathname.startsWith('/kioskdisplay') && (searchParams.get('mode') === 'kiosk' || searchParams.get('sig'));
+    const isKioskMode = searchParams.get('mode') === 'kiosk' || searchParams.get('sig');
 
     return (
-        <div style={{ paddingTop: isKioskMode ? '0px' : '70px', minHeight: '100vh' }}>
+        <div style={{ paddingTop: isKioskMode ? '0px' : '70px', minHeight: '100vh', cursor: isKioskMode ? 'none' : 'auto' }}>
+            {isKioskMode && (
+                <style dangerouslySetInnerHTML={{ __html: `
+                    body, * { cursor: none !important; }
+                `}} />
+            )}
             {children}
         </div>
     );
