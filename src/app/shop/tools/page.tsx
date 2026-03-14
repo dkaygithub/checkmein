@@ -222,8 +222,8 @@ export default function ToolManagementPage() {
     const getBadgeStyle = (level: string) => {
         switch (level) {
             case 'BASIC': return { bg: '#ef4444', color: '#fff', label: 'Basic' }; // Red
-            case 'CERTIFIED': return { bg: '#eab308', color: '#000', label: 'Certified' }; // Yellow
-            case 'DOF': return { bg: '#22c55e', color: '#000', label: 'DoF' }; // Green
+            case 'CERTIFIED': return { bg: '#22c55e', color: '#000', label: 'Certified' }; // Green
+            case 'DOF': return { bg: '#eab308', color: '#000', label: 'DoF' }; // Yellow
             case 'MAY_CERTIFY_OTHERS': return { bg: '#3b82f6', color: '#fff', label: 'Certifier' }; // Blue
             default: return { bg: 'transparent', color: 'gray', label: '-' };
         }
