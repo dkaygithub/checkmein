@@ -23,6 +23,7 @@ export async function getFullAttendance() {
                     phone: true,
                     household: {
                         select: {
+                            id: true,
                             emergencyContactName: true,
                             emergencyContactPhone: true,
                         }
