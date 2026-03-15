@@ -65,7 +65,8 @@ describe('Program Lifecycle Integration Tests', () => {
                 nonMemberPrice: 100,
                 shopifyProductId: "test-prod",
                 shopifyMemberVariantId: "test-mem-var",
-                shopifyNonMemberVariantId: "test-non-var"
+                shopifyNonMemberVariantId: "test-non-var",
+                enrollmentStatus: "OPEN"
             }
         });
         testProgramId = program.id;
@@ -217,7 +218,7 @@ describe('Program Lifecycle Integration Tests', () => {
         });
 
         let req = new Request(`http://localhost/api/cron/pending-participants`, {
-            headers: { 'Authorization': `Bearer cron_test_secret` }
+            headers: { 'authorization': `Bearer cron_test_secret` }
         });
 
         let res = await CronPending(req);
@@ -238,7 +239,7 @@ describe('Program Lifecycle Integration Tests', () => {
         });
 
          req = new Request(`http://localhost/api/cron/pending-participants`, {
-            headers: { 'Authorization': `Bearer cron_test_secret` }
+            headers: { 'authorization': `Bearer cron_test_secret` }
         });
 
         res = await CronPending(req);
