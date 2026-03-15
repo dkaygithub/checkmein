@@ -21,9 +21,9 @@ jobs:
           prompt: |
             You are an AI agent for the CheckMeIn project. Before starting, read and follow CONSTITUTION.md. 
 
-            Please diagnose and fix the following issue:
+            Please diagnose and fix the following GitHub issue:
 
-            ## ${{ github.event.issue.title }}
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
 
             ${{ github.event.issue.body }}
 
@@ -38,5 +38,7 @@ jobs:
             - Follow the CONSTITUTION.md guidelines
             - Keep changes minimal and targeted
             - All existing tests must pass
+            - In the PR title, include "Fixes #${{ github.event.issue.number }}"
+            - In the PR description, include "Fixes #${{ github.event.issue.number }}" so the issue is automatically linked and closed when the PR is merged
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: 'main'
