@@ -113,9 +113,22 @@ describe('Cron Reminders API Integration Tests', () => {
     });
 
     describe('GET /api/cron/reminders', () => {
+        const originalCronSecret = process.env.CRON_SECRET;
+
+        beforeAll(() => {
+            process.env.CRON_SECRET = 'cron_test_secret';
+        });
+
+        afterAll(() => {
+            process.env.CRON_SECRET = originalCronSecret;
+        });
+
         it('should process events within the 2-hour window and send notifications to ATTENDING RSVPs', async () => {
             const req = new Request('http://localhost:4000/api/cron/reminders', {
-                method: 'GET'
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer cron_test_secret`
+                }
             });
 
             const res = await GET(req as any);
