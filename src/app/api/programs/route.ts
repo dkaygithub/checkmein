@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/prisma";
 import { sendNotification } from "@/lib/notifications";
+import { createShopifyProgramVariants } from "@/lib/shopify";
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -103,10 +104,21 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { name, leadMentorId, begin, end, memberOnly, minAge, maxAge } = body;
+        const { name, leadMentorId, begin, end, memberOnly, minAge, maxAge, memberPrice, nonMemberPrice } = body;
 
         if (!name) {
             return NextResponse.json({ error: "Program name is required" }, { status: 400 });
+        }
+
+        const mPrice = memberPrice ? parseInt(memberPrice, 10) : null;
+        const nmPrice = nonMemberPrice ? parseInt(nonMemberPrice, 10) : null;
+
+        // Try to create Shopify entities
+        let shopifyData: { shopifyProductId: string, shopifyMemberVariantId: string | null, shopifyNonMemberVariantId: string | null } | null = null;
+        
+        // Only try to create if at least one price is provided. Otherwise it's a free program.
+        if ((mPrice && mPrice > 0) || (nmPrice && nmPrice > 0)) {
+            shopifyData = await createShopifyProgramVariants(name, mPrice, nmPrice);
         }
 
         const newProgram = await prisma.program.create({
@@ -117,7 +129,12 @@ export async function POST(req: Request) {
                 end: end ? new Date(end) : null,
                 memberOnly: memberOnly || false,
                 minAge: minAge || null,
-                maxAge: maxAge || null
+                maxAge: maxAge || null,
+                memberPrice: mPrice,
+                nonMemberPrice: nmPrice,
+                shopifyProductId: shopifyData?.shopifyProductId || null,
+                shopifyMemberVariantId: shopifyData?.shopifyMemberVariantId || null,
+                shopifyNonMemberVariantId: shopifyData?.shopifyNonMemberVariantId || null,
             }
         });
 
@@ -135,7 +152,12 @@ export async function POST(req: Request) {
             await sendNotification(newProgram.leadMentorId, 'PROGRAM_ASSIGNMENT', { programName: newProgram.name });
         }
 
-        return NextResponse.json({ success: true, program: newProgram });
+        const responseObj: any = { success: true, program: newProgram };
+        if (((mPrice && mPrice > 0) || (nmPrice && nmPrice > 0)) && !shopifyData) {
+            responseObj.warning = "Program created, but Shopify integration failed or is not configured. Payment links will not work.";
+        }
+
+        return NextResponse.json(responseObj);
     } catch (error: any) {
         console.error("Program creation error:", error);
         return NextResponse.json({ error: error?.message || "Failed to create program" }, { status: 500 });

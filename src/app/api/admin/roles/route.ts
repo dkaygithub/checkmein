@@ -36,7 +36,7 @@ export const GET = withAuth(
     }
 );
 
-export const POST = withAuth(
+export const PATCH = withAuth(
     { roles: ['sysadmin', 'boardMember'] },
     async (req, auth) => {
         try {

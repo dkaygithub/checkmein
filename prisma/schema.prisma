@@ -46,6 +46,11 @@ enum EnrollmentStatus {
   CLOSED
 }
 
+enum ProgramParticipantStatus {
+  PENDING
+  ACTIVE
+}
+
 model Participant {
   id            Int       @id @default(autoincrement())
   googleId      String?   @unique
@@ -188,6 +193,12 @@ model Program {
   maxParticipants              Int?
   leadMentorNotificationSettings Json?
 
+  memberPrice       Int?
+  nonMemberPrice    Int?
+  shopifyProductId  String?
+  shopifyMemberVariantId String?
+  shopifyNonMemberVariantId String?
+
   volunteers   ProgramVolunteer[]
   participants ProgramParticipant[]
   fees         Fee[]
@@ -208,6 +219,9 @@ model ProgramVolunteer {
 model ProgramParticipant {
   programId     Int
   participantId Int
+  status        ProgramParticipantStatus @default(PENDING)
+  paymentPlanRequested Boolean @default(false)
+  pendingSince         DateTime? @default(now())
 
   program     Program     @relation(fields: [programId], references: [id])
   participant Participant @relation(fields: [participantId], references: [id])

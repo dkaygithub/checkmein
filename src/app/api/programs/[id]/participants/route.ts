@@ -37,11 +37,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         const currentUserId = (session.user as { id: number }).id;
         const isSelfEnrollment = currentUserId === participantId;
-        const isLeadMentor = currentProgram.leadMentorId === currentUserId;
         const isSysAdminOrBoard = (session.user as { sysadmin?: boolean, boardMember?: boolean })?.sysadmin || (session.user as { sysadmin?: boolean, boardMember?: boolean })?.boardMember;
 
-        if (!isSelfEnrollment && !isLeadMentor && !isSysAdminOrBoard) {
-            return NextResponse.json({ error: "Forbidden: Not authorized to enroll this participant" }, { status: 403 });
+        if (!isSelfEnrollment && !isSysAdminOrBoard) {
+            return NextResponse.json({ error: "Forbidden: Not authorized to enroll this participant. Program leads cannot manually add participants." }, { status: 403 });
         }
 
         const participantData = await prisma.participant.findUnique({
@@ -51,8 +50,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         const override = body.override === true;
 
+        if (!isSelfEnrollment && isSysAdminOrBoard && !override) {
+             return NextResponse.json({ error: "This bypasses all payment. Are you sure?", requiresOverride: true }, { status: 400 });
+        }
+
         // Validation Checks
-        if (!override || (!isLeadMentor && !isSysAdminOrBoard)) {
+        if (!override || (!isSysAdminOrBoard)) {
             // Check Capacity
             if (currentProgram.maxParticipants !== null && currentProgram._count.participants >= currentProgram.maxParticipants) {
                 return NextResponse.json({ error: "Program has reached maximum capacity.", requiresOverride: true }, { status: 400 });
@@ -80,10 +83,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             }
         }
 
+        // Default status is PENDING, unless board is bypassing
+        const initialStatus = (isSysAdminOrBoard && override) ? 'ACTIVE' : 'PENDING';
+
         const enrollment = await prisma.programParticipant.create({
             data: {
                 programId,
-                participantId
+                participantId,
+                status: initialStatus
             }
         });
 
