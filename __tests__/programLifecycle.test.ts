@@ -139,7 +139,7 @@ describe('Program Lifecycle Integration Tests', () => {
         mockGetSession.mockResolvedValue({ user: { id: boardAdminId, boardMember: true } });
 
         // Clean previous runs
-        await prisma.programParticipant.deleteMany({ where: { programId_participantId: { programId: testProgramId, participantId: testParticipantId } } });
+        await prisma.programParticipant.deleteMany({ where: { programId: testProgramId, participantId: testParticipantId } });
 
         const req = new Request(`http://localhost/api/programs/${testProgramId}/participants`, {
             method: 'POST',
