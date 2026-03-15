@@ -29,7 +29,6 @@ describe('Program Lifecycle Integration Tests', () => {
             data: {
                 name: "Board Tester",
                 email: "board@test.com",
-                authId: "test-auth-board",
                 sysadmin: false,
                 boardMember: true,
                 dob: new Date('1990-01-01')
@@ -42,7 +41,6 @@ describe('Program Lifecycle Integration Tests', () => {
             data: {
                 name: "Mentor Tester",
                 email: "mentor@test.com",
-                authId: "test-auth-mentor",
                 dob: new Date('1985-01-01')
             }
         });
@@ -53,7 +51,6 @@ describe('Program Lifecycle Integration Tests', () => {
             data: {
                 name: "Standard Tester",
                 email: "participant@test.com",
-                authId: "test-auth-std",
                 dob: new Date('2000-01-01')
             }
         });
@@ -76,9 +73,15 @@ describe('Program Lifecycle Integration Tests', () => {
 
     afterAll(async () => {
         // Teardown
-        await prisma.programParticipant.deleteMany({ where: { programId: testProgramId } });
-        await prisma.program.delete({ where: { id: testProgramId } });
-        await prisma.participant.deleteMany({ where: { id: { in: [testParticipantId, leadMentorId, boardAdminId] } } });
+        if (testProgramId) {
+            await prisma.programParticipant.deleteMany({ where: { programId: testProgramId } });
+            await prisma.program.delete({ where: { id: testProgramId } });
+        }
+
+        const idsToDelete = [testParticipantId, leadMentorId, boardAdminId].filter(id => id);
+        if (idsToDelete.length > 0) {
+            await prisma.participant.deleteMany({ where: { id: { in: idsToDelete } } });
+        }
     });
 
     beforeEach(() => {
