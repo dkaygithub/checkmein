@@ -251,11 +251,18 @@ export default function Home() {
       </div>
 
       {showBoardDirectory && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.8)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
-        }}>
-          <div className="glass-container animate-float" style={{ maxWidth: '500px', width: '100%', padding: '2rem', position: 'relative' }}>
+        <div
+          onClick={() => setShowBoardDirectory(false)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <div
+            className="glass-container animate-float"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '500px', width: '100%', padding: '2rem', position: 'relative', background: 'var(--color-bg-base)' }}
+          >
             <button 
               onClick={() => setShowBoardDirectory(false)}
               style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
