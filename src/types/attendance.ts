@@ -18,6 +18,7 @@ export type VisitWithDetails = Prisma.VisitGetPayload<{
                 phone: true;
                 household: {
                     select: {
+                        id: true;
                         emergencyContactName: true;
                         emergencyContactPhone: true;
                     };
