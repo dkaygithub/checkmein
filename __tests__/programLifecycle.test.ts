@@ -61,6 +61,7 @@ describe('Program Lifecycle Integration Tests', () => {
             data: {
                 name: "Integration Test Program",
                 leadMentorId,
+                enrollmentStatus: "OPEN",
                 memberPrice: 50,
                 nonMemberPrice: 100,
                 shopifyProductId: "test-prod",
