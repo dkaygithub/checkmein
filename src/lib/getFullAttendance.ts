@@ -41,9 +41,8 @@ export async function getFullAttendance() {
 
     // Pre-compute isMinor once per visit to avoid repeated calculations
     const minorMap = new Map<number, boolean>();
-    const today = new Date();
     for (const v of activeVisits) {
-        minorMap.set(v.id, isMinor(v.participant.dob, today));
+        minorMap.set(v.id, isMinor(v.participant.dob));
     }
 
     const keyholderVisits = activeVisits.filter(v => v.participant.keyholder);
