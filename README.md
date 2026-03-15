@@ -21,3 +21,12 @@ npm run dev
 ```
 
 The app runs at **http://localhost:4000**.
+
+## Environment Variables
+
+For background cron jobs to work properly, ensure you have set a `CRON_SECRET` in your environment variables.
+You can generate a good secret using:
+
+```bash
+openssl rand -base64 32
+```

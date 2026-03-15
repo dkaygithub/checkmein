@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendNotification } from "@/lib/notifications";
@@ -8,11 +7,13 @@ import { sendNotification } from "@/lib/notifications";
  * GET /api/cron/reminders
  */
 export async function GET(req: Request) {
-    // Basic shared secret check if configured to prevent abuse
-    // const authHeader = req.headers.get('authorization');
-    // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    //     return new Response('Unauthorized', { status: 401 });
-    // }
+    const authHeader = req.headers.get('authorization');
+    if (!process.env.CRON_SECRET) {
+        return new Response('Internal Server Error: CRON_SECRET not configured', { status: 500 });
+    }
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return new Response('Unauthorized', { status: 401 });
+    }
 
     try {
         const now = new Date();

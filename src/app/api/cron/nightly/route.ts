@@ -3,7 +3,15 @@ import prisma from "@/lib/prisma";
 import { processPostEventEmails } from "@/lib/postEventEmails";
 import { processVisitCheckout } from "@/lib/attendanceTransitions";
 
-export async function GET() {
+export async function GET(req: Request) {
+    const authHeader = req.headers.get("authorization");
+    if (!process.env.CRON_SECRET) {
+        return NextResponse.json({ error: "Internal Server Error: CRON_SECRET not configured" }, { status: 500 });
+    }
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     try {
         const now = new Date();
 
