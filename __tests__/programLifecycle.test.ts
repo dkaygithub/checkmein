@@ -68,7 +68,8 @@ describe('Program Lifecycle Integration Tests', () => {
                 nonMemberPrice: 100,
                 shopifyProductId: "test-prod",
                 shopifyMemberVariantId: "test-mem-var",
-                shopifyNonMemberVariantId: "test-non-var"
+                shopifyNonMemberVariantId: "test-non-var",
+                enrollmentStatus: "OPEN"
             }
         });
         testProgramId = program.id;
