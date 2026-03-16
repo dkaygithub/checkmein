@@ -70,7 +70,6 @@ export default function AdminLayout({
       title: "People",
       links: [
         { name: "Participants", href: "/admin/participants", icon: "👥" },
-        { name: "Merge Participants", href: "/admin/participants/merge", icon: "🔗" },
         { name: "Manage Memberships", href: "/admin/households", icon: "🏠" },
         { name: "Pending Participants", href: "/admin/programs/pending", icon: "⏳" },
         { name: "Emergency Contacts", href: "/admin/emergency-contacts", icon: "🚑" },

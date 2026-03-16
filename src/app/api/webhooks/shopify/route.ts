@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prisma from "@/lib/prisma";
-import { logger } from "@/lib/logger";
 
 // Shopify Webhook for `orders/paid` or `orders/create`
 // Verifies HMAC signature, extracts custom attributes, and marks user as ACTIVE
@@ -9,7 +8,7 @@ export async function POST(req: Request) {
     const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
 
     if (!secret) {
-        logger.error("Shopify webhook received but SHOPIFY_WEBHOOK_SECRET is not configured.");
+        console.error("Shopify webhook received but SHOPIFY_WEBHOOK_SECRET is not configured.");
         return NextResponse.json({ error: "Configuration Error" }, { status: 500 });
     }
 
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
         const headerBuffer = Buffer.from(headerSignature);
 
         if (generatedBuffer.length !== headerBuffer.length || !crypto.timingSafeEqual(generatedBuffer, headerBuffer)) {
-            logger.error("Shopify webhook signature mismatch.");
+            console.error("Shopify webhook signature mismatch.");
             return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
         }
 
@@ -77,19 +76,19 @@ export async function POST(req: Request) {
                         }
                     });
                     
-                    logger.info(`[SHOPIFY WEBHOOK] Marked participant ${participantId} as ACTIVE for program ${programId}`);
+                    console.log(`[SHOPIFY WEBHOOK] Marked participant ${participantId} as ACTIVE for program ${programId}`);
                 } else {
-                    logger.warn(`[SHOPIFY WEBHOOK] Participant ${participantId} not found in Program ${programId}. Ignoring payment.`);
+                    console.warn(`[SHOPIFY WEBHOOK] Participant ${participantId} not found in Program ${programId}. Ignoring payment.`);
                 }
             }
         } else {
-             logger.info(`[SHOPIFY WEBHOOK] Payload received but missing CheckMeIn_Account_ID or Program_ID attributes. Ignoring.`);
+             console.log(`[SHOPIFY WEBHOOK] Payload received but missing CheckMeIn_Account_ID or Program_ID attributes. Ignoring.`);
         }
 
         // Always return 200 OK to Shopify to acknowledge receipt, even if missing attributes.
         return NextResponse.json({ success: true });
     } catch (error) {
-        logger.error("Shopify webhook error:", error);
+        console.error("Shopify webhook error:", error);
         return NextResponse.json({ error: "Webhook Error" }, { status: 500 });
     }
 }

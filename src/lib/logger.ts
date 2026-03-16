@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "./prisma";
 
-export const logger = {
-    info: (...args: any[]) => console.info(...args),
-    warn: (...args: any[]) => console.warn(...args),
-    error: (...args: any[]) => console.error(...args),
-};
-
 /**
  * Logs a backend error to the database and automatically purges logs older than 30 days.
  * 
