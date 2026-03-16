@@ -1,5 +1,4 @@
 import prisma from "@/lib/prisma";
-import { getFullAttendance } from "@/lib/getFullAttendance";
 import { findAssociatedEventAt, processVisitCheckout } from "@/lib/attendanceTransitions";
 import { sendCheckinNotifications } from "@/lib/notifications";
 import { apiError, apiJson } from "@/lib/api-response";
@@ -39,14 +38,12 @@ export async function processCheckin(participant: Participant, authType: string)
         console.error('Checkin notification error:', err)
     );
 
-    const checkinAttendance = await getFullAttendance();
     return apiJson({
         message: "Checked in successfully",
         type: "checkin" as const,
         participant,
         visit: newVisit,
         signedRequest: authType === "kiosk",
-        ...checkinAttendance,
     });
 }
 
@@ -122,7 +119,6 @@ export async function processCheckout(
     const finalVisits = await processVisitCheckout(activeVisitId, new Date());
     const updatedVisit = finalVisits.length > 0 ? finalVisits[finalVisits.length - 1] : null;
 
-    const checkoutAttendance = await getFullAttendance();
     return apiJson({
         message: facilityClosed ? "Checked out and Facility closed" : "Checked out successfully",
         type: "checkout" as const,
@@ -130,6 +126,5 @@ export async function processCheckout(
         visit: updatedVisit,
         facilityClosed,
         signedRequest: authType === "kiosk",
-        ...checkoutAttendance,
     });
 }
