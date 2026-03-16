@@ -77,14 +77,14 @@ describe('Program Lifecycle Integration Tests', () => {
 
     afterAll(async () => {
         // Teardown
-        if (testProgramId !== undefined) {
+        if (testProgramId) {
             await prisma.programParticipant.deleteMany({ where: { programId: testProgramId } });
             await prisma.program.delete({ where: { id: testProgramId } });
         }
 
-        const participantIds = [testParticipantId, leadMentorId, boardAdminId].filter(id => id !== undefined);
-        if (participantIds.length > 0) {
-            await prisma.participant.deleteMany({ where: { id: { in: participantIds } } });
+        const idsToDelete = [testParticipantId, leadMentorId, boardAdminId].filter(id => id);
+        if (idsToDelete.length > 0) {
+            await prisma.participant.deleteMany({ where: { id: { in: idsToDelete } } });
         }
     });
 
@@ -222,7 +222,7 @@ describe('Program Lifecycle Integration Tests', () => {
         });
 
         let req = new Request(`http://localhost/api/cron/pending-participants`, {
-            headers: { 'Authorization': `Bearer cron_test_secret` }
+            headers: { 'authorization': `Bearer cron_test_secret` }
         });
 
         let res = await CronPending(req);
@@ -243,7 +243,7 @@ describe('Program Lifecycle Integration Tests', () => {
         });
 
          req = new Request(`http://localhost/api/cron/pending-participants`, {
-            headers: { 'Authorization': `Bearer cron_test_secret` }
+            headers: { 'authorization': `Bearer cron_test_secret` }
         });
 
         res = await CronPending(req);
