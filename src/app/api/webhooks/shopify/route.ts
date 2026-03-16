@@ -25,7 +25,13 @@ export async function POST(req: Request) {
             .update(rawBody, "utf8")
             .digest("base64");
 
-        if (generatedSignature !== headerSignature) {
+        // Convert both signatures to Buffers to prevent timing attacks using crypto.timingSafeEqual.
+        // Since HMAC-SHA256 in base64 is a known fixed length, an early length check does not leak
+        // any secret information about the signature itself.
+        const generatedBuffer = Buffer.from(generatedSignature);
+        const headerBuffer = Buffer.from(headerSignature);
+
+        if (generatedBuffer.length !== headerBuffer.length || !crypto.timingSafeEqual(generatedBuffer, headerBuffer)) {
             console.error("Shopify webhook signature mismatch.");
             return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
         }
