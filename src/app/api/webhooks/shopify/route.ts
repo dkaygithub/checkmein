@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 // Shopify Webhook for `orders/paid` or `orders/create`
 // Verifies HMAC signature, extracts custom attributes, and marks user as ACTIVE
@@ -8,7 +9,7 @@ export async function POST(req: Request) {
     const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
 
     if (!secret) {
-        console.error("Shopify webhook received but SHOPIFY_WEBHOOK_SECRET is not configured.");
+        logger.error("Shopify webhook received but SHOPIFY_WEBHOOK_SECRET is not configured.");
         return NextResponse.json({ error: "Configuration Error" }, { status: 500 });
     }
 
@@ -25,12 +26,24 @@ export async function POST(req: Request) {
             .update(rawBody, "utf8")
             .digest("base64");
 
-        if (generatedSignature !== headerSignature) {
-            console.error("Shopify webhook signature mismatch.");
+        // Convert both signatures to Buffers to prevent timing attacks using crypto.timingSafeEqual.
+        // Since HMAC-SHA256 in base64 is a known fixed length, an early length check does not leak
+        // any secret information about the signature itself.
+        const generatedBuffer = Buffer.from(generatedSignature);
+        const headerBuffer = Buffer.from(headerSignature);
+
+        if (generatedBuffer.length !== headerBuffer.length || !crypto.timingSafeEqual(generatedBuffer, headerBuffer)) {
+            logger.error("Shopify webhook signature mismatch.");
             return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
         }
 
-        const order = JSON.parse(rawBody);
+        let order;
+        try {
+            order = JSON.parse(rawBody);
+        } catch (parseError) {
+            logger.error("Failed to parse Shopify webhook payload:", parseError);
+            return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+        }
 
         // Iterate through line items to find CheckMeIn_Account_ID and Program_ID
         // We set these custom attributes in the permalink URL:
@@ -70,19 +83,19 @@ export async function POST(req: Request) {
                         }
                     });
                     
-                    console.log(`[SHOPIFY WEBHOOK] Marked participant ${participantId} as ACTIVE for program ${programId}`);
+                    logger.info(`[SHOPIFY WEBHOOK] Marked participant ${participantId} as ACTIVE for program ${programId}`);
                 } else {
-                    console.warn(`[SHOPIFY WEBHOOK] Participant ${participantId} not found in Program ${programId}. Ignoring payment.`);
+                    logger.warn(`[SHOPIFY WEBHOOK] Participant ${participantId} not found in Program ${programId}. Ignoring payment.`);
                 }
             }
         } else {
-             console.log(`[SHOPIFY WEBHOOK] Payload received but missing CheckMeIn_Account_ID or Program_ID attributes. Ignoring.`);
+             logger.info(`[SHOPIFY WEBHOOK] Payload received but missing CheckMeIn_Account_ID or Program_ID attributes. Ignoring.`);
         }
 
         // Always return 200 OK to Shopify to acknowledge receipt, even if missing attributes.
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Shopify webhook error:", error);
+        logger.error("Shopify webhook error:", error);
         return NextResponse.json({ error: "Webhook Error" }, { status: 500 });
     }
 }
