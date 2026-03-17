@@ -11,7 +11,7 @@ export const GET = withAuth(
 
             const user = await prisma.participant.findUnique({
                 where: { id: userId },
-                include: { household: { include: { participants: true, leads: true } } }
+                include: { household: { include: { participants: true, leads: true, memberships: { where: { active: true } } } } }
             });
 
             if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
