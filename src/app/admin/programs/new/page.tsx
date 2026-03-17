@@ -23,6 +23,7 @@ export default function CreateProgramPage() {
     const [maxAge, setMaxAge] = useState("");
     const [memberPrice, setMemberPrice] = useState("");
     const [nonMemberPrice, setNonMemberPrice] = useState("");
+    const [maxParticipants, setMaxParticipants] = useState("");
     const [memberOnly, setMemberOnly] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
@@ -89,6 +90,7 @@ export default function CreateProgramPage() {
                     maxAge: maxAge ? parseInt(maxAge) : null,
                     memberPrice: memberPrice ? parseInt(memberPrice) : null,
                     nonMemberPrice: nonMemberPrice ? parseInt(nonMemberPrice) : null,
+                    maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
                     leadMentorId: leadMentorId ? parseInt(leadMentorId) : null
                 })
             });
@@ -277,6 +279,24 @@ export default function CreateProgramPage() {
                                 </div>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Leave prices blank or 0 for a free program. Setting a price automatically creates a checkout flow on Shopify.</p>
+                            <div style={{ marginTop: '1rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Max Participants (Optional)</label>
+                                <input
+                                    type="number"
+                                    className="glass-input"
+                                    value={maxParticipants}
+                                    onChange={e => setMaxParticipants(e.target.value)}
+                                    placeholder="Leave blank for unlimited"
+                                    min="1"
+                                    style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                />
+                                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Sets the inventory limit on Shopify. Leave blank for unlimited enrollment.</p>
+                                {(memberPrice || nonMemberPrice) && !maxParticipants && (
+                                    <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: '#eab308' }}>
+                                        ⚠️ No max participants set — Shopify will allow unlimited purchases for this program.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <input

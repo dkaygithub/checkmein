@@ -164,17 +164,18 @@ export default function ProgramEnrollmentPage({ params }: { params: Promise<{ id
                 if (isPayingOnShopify) {
                     setSuccessMessage("Redirecting to Shopify for secure payment...");
                     
-                    const userRes = await fetch(`/api/admin/participants/${selectedParticipantId}`);
+                    // Check membership via household data (already fetched)
+                    const householdRes = await fetch('/api/household');
                     let isMember = false;
-                    if (userRes.ok) {
-                        const userData = await userRes.json();
-                        isMember = userData.participant?.memberships?.some((m: any) => m.active) || false;
+                    if (householdRes.ok) {
+                        const householdData = await householdRes.json();
+                        isMember = householdData.household?.memberships?.some((m: any) => m.active) || false;
                     }
 
                     const variantId = isMember ? program.shopifyMemberVariantId : program.shopifyNonMemberVariantId;
                     
                     if (variantId) {
-                        const storeDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || 'innovationtreehouse.myshopify.com';
+                        const storeDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
                         const checkoutUrl = `https://${storeDomain}/cart/${variantId}:1?attributes[CheckMeIn_Account_ID]=${selectedParticipantId}&attributes[Program_ID]=${id}`;
                         window.location.href = checkoutUrl;
                     } else {

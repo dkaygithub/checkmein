@@ -104,7 +104,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { name, leadMentorId, begin, end, memberOnly, minAge, maxAge, memberPrice, nonMemberPrice } = body;
+        const { name, leadMentorId, begin, end, memberOnly, minAge, maxAge, memberPrice, nonMemberPrice, maxParticipants } = body;
 
         if (!name) {
             return NextResponse.json({ error: "Program name is required" }, { status: 400 });
@@ -112,13 +112,14 @@ export async function POST(req: Request) {
 
         const mPrice = memberPrice ? parseInt(memberPrice, 10) : null;
         const nmPrice = nonMemberPrice ? parseInt(nonMemberPrice, 10) : null;
+        const maxPart = maxParticipants ? parseInt(maxParticipants, 10) : null;
 
         // Try to create Shopify entities
         let shopifyData: { shopifyProductId: string, shopifyMemberVariantId: string | null, shopifyNonMemberVariantId: string | null } | null = null;
         
         // Only try to create if at least one price is provided. Otherwise it's a free program.
         if ((mPrice && mPrice > 0) || (nmPrice && nmPrice > 0)) {
-            shopifyData = await createShopifyProgramVariants(name, mPrice, nmPrice);
+            shopifyData = await createShopifyProgramVariants(name, mPrice, nmPrice, maxPart);
         }
 
         const newProgram = await prisma.program.create({
@@ -132,6 +133,7 @@ export async function POST(req: Request) {
                 maxAge: maxAge || null,
                 memberPrice: mPrice,
                 nonMemberPrice: nmPrice,
+                maxParticipants: maxPart,
                 shopifyProductId: shopifyData?.shopifyProductId || null,
                 shopifyMemberVariantId: shopifyData?.shopifyMemberVariantId || null,
                 shopifyNonMemberVariantId: shopifyData?.shopifyNonMemberVariantId || null,

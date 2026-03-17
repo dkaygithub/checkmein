@@ -7,6 +7,12 @@ import { sendEmail } from "@/lib/email";
 let cachedToken: string | null = null;
 let tokenExpiresAt: number = 0;
 
+/** @internal - Exported only for test isolation */
+export function resetTokenCache() {
+  cachedToken = null;
+  tokenExpiresAt = 0;
+}
+
 /**
  * Fetches a fresh Admin API access token using the client credentials grant.
  * Caches the token and refreshes ~5 minutes before expiry.
@@ -61,7 +67,7 @@ async function getAccessToken(): Promise<string | null> {
   }
 }
 
-export async function createShopifyProgramVariants(name: string, memberPrice: number | null, nonMemberPrice: number | null) {
+export async function createShopifyProgramVariants(name: string, memberPrice: number | null, nonMemberPrice: number | null, maxParticipants: number | null = null) {
   const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
   const accessToken = await getAccessToken();
 
@@ -75,7 +81,7 @@ export async function createShopifyProgramVariants(name: string, memberPrice: nu
     const productTitle = `Program Enrollment: ${name}`;
 
     // 1. Create Product
-    const productRes = await fetch(`https://${storeDomain}/admin/api/2024-01/products.json`, {
+    const productRes = await fetch(`https://${storeDomain}/admin/api/2026-01/products.json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,6 +114,8 @@ export async function createShopifyProgramVariants(name: string, memberPrice: nu
             option1: "Member",
             price: (memberPrice).toFixed(2),
             requires_shipping: false,
+            inventory_management: maxParticipants ? 'shopify' : null,
+            inventory_policy: maxParticipants ? 'deny' : 'continue',
         });
     }
 
@@ -117,6 +125,8 @@ export async function createShopifyProgramVariants(name: string, memberPrice: nu
             option1: "Non-Member",
             price: (nonMemberPrice).toFixed(2),
             requires_shipping: false,
+            inventory_management: maxParticipants ? 'shopify' : null,
+            inventory_policy: maxParticipants ? 'deny' : 'continue',
         });
     }
 
@@ -125,7 +135,7 @@ export async function createShopifyProgramVariants(name: string, memberPrice: nu
 
     if (variants.length > 0) {
         for (const variant of variants) {
-            const variantRes = await fetch(`https://${storeDomain}/admin/api/2024-01/products/${productId}/variants.json`, {
+            const variantRes = await fetch(`https://${storeDomain}/admin/api/2026-01/products/${productId}/variants.json`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -140,6 +150,41 @@ export async function createShopifyProgramVariants(name: string, memberPrice: nu
                     memberVariantId = variantData.variant.id.toString();
                 } else {
                     nonMemberVariantId = variantData.variant.id.toString();
+                }
+
+                // Set inventory level if maxParticipants is configured
+                if (maxParticipants && variantData.variant.inventory_item_id) {
+                    try {
+                        // Get the store's primary location
+                        const locRes = await fetch(`https://${storeDomain}/admin/api/2026-01/locations.json`, {
+                            headers: { 'X-Shopify-Access-Token': accessToken },
+                        });
+                        if (locRes.ok) {
+                            const locData = await locRes.json();
+                            const locationId = locData.locations?.[0]?.id;
+                            if (locationId) {
+                                const invRes = await fetch(`https://${storeDomain}/admin/api/2026-01/inventory_levels/set.json`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Shopify-Access-Token': accessToken,
+                                    },
+                                    body: JSON.stringify({
+                                        location_id: locationId,
+                                        inventory_item_id: variantData.variant.inventory_item_id,
+                                        available: maxParticipants,
+                                    })
+                                });
+                                if (invRes.ok) {
+                                    console.log(`[SHOPIFY] Set inventory for variant ${variant.option1} to ${maxParticipants} at location ${locationId}`);
+                                } else {
+                                    console.error(`[SHOPIFY] Failed to set inventory: ${invRes.status}`, await invRes.text());
+                                }
+                            }
+                        }
+                    } catch (invErr) {
+                        console.error("Failed to set Shopify inventory level:", invErr);
+                    }
                 }
             } else {
                 console.error("Failed to create Shopify variant:", await variantRes.text());
