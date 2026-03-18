@@ -185,6 +185,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 if (data.end) setEnd(data.end.split('T')[0]);
                 setMinAge(data.minAge !== null ? String(data.minAge) : "");
                 setMaxAge(data.maxAge !== null ? String(data.maxAge) : "");
+                setMaxParticipants(data.maxParticipants !== null ? String(data.maxParticipants) : "");
                 setPhase(data.phase || "PLANNING");
                 setEnrollmentStatus(data.enrollmentStatus || "CLOSED");
                 setMemberOnly(Boolean(data.memberOnly));
@@ -575,12 +576,18 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                 </label>
                                 <input type="number" className="glass-input" value={maxAge} onChange={e => setMaxAge(e.target.value)} placeholder="e.g. 18" style={{ width: '100%', padding: '0.75rem' }} />
                             </div>
-                            <div>
+                            <div style={{ marginTop: '1rem' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
                                     Max Participants (Optional)
                                     {program.maxParticipants !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: {program.maxParticipants})</span>}
                                 </label>
-                                <input type="number" className="glass-input" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} placeholder="e.g. 20" style={{ width: '100%', padding: '0.75rem' }} />
+                                <input type="number" min="1" className="glass-input" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} placeholder="Leave blank for unlimited" style={{ width: '100%', padding: '0.75rem' }} />
+                                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Sets the inventory limit on Shopify. Leave blank for unlimited enrollment.</p>
+                                {(memberPrice || nonMemberPrice) && !maxParticipants && (
+                                    <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: '#eab308' }}>
+                                        ⚠️ No max participants set — Shopify will allow unlimited purchases for this program.
+                                    </div>
+                                )}
                             </div>
                             
                             <div style={{ display: 'flex', gap: '1rem', gridColumn: '1 / -1', flexWrap: 'wrap' }}>
