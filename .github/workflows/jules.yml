@@ -1,14 +1,36 @@
 name: Jules AI Agent
 
-# Trigger only when an issue is labeled
+# Trigger when an issue is labeled or when an organization member mentions @jules
 on:
   issues:
-    types: [labeled]
+    types: [labeled, opened, edited]
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   jules:
-    # Restrict execution to issues labeled 'jules' and ignore pull requests
-    if: ${{ github.event.label.name == 'jules' && !github.event.issue.pull_request }}
+    # Restrict execution to:
+    # 1. Issues labeled 'jules'
+    # 2. Issues created/edited by an org member mentioning '@jules'
+    # 3. Issue comments created/edited by an org member mentioning '@jules'
+    # (And ignore pull requests)
+    if: >
+      !github.event.issue.pull_request &&
+      (
+        (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'jules') ||
+        (
+          github.event_name == 'issues' &&
+          (github.event.action == 'opened' || github.event.action == 'edited') &&
+          contains(github.event.issue.body, '@jules') &&
+          contains(fromJson('["MEMBER", "OWNER"]'), github.event.issue.author_association)
+        ) ||
+        (
+          github.event_name == 'issue_comment' &&
+          (github.event.action == 'created' || github.event.action == 'edited') &&
+          contains(github.event.comment.body, '@jules') &&
+          contains(fromJson('["MEMBER", "OWNER"]'), github.event.comment.author_association)
+        )
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read
