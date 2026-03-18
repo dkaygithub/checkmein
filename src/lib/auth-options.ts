@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
+import { config } from "@/lib/config";
 
 // NextAuth PrismaAdapter hardcodes `prisma.user` for its user operations.
 // We map `.user` to `.participant` so the adapter can find our custom model.
@@ -38,8 +39,15 @@ export const authOptions: NextAuthOptions = {
     adapter: patchedAdapter,
     providers: [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || "",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+            clientId: config.googleClientId(),
+            clientSecret: config.googleClientSecret(),
+            authorization: {
+                params: {
+                    prompt: "select_account",
+                    access_type: "offline",
+                    response_type: "code"
+                }
+            },
             profile(profile) {
                 return {
                     id: profile.sub,
@@ -81,7 +89,7 @@ export const authOptions: NextAuthOptions = {
             })
         ] : [])
     ],
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: config.nextAuthSecret(),
     session: {
         strategy: "jwt",
     },

@@ -69,7 +69,7 @@ function NavBarInner() {
                 My Profile
             </button>
             <button
-                onClick={() => { signOut(); closeMobileMenu(); }}
+                onClick={() => { signOut({ callbackUrl: '/' }); closeMobileMenu(); }}
                 style={{
                     background: 'rgba(239, 68, 68, 0.2)',
                     border: '1px solid rgba(239, 68, 68, 0.4)',
