@@ -1,14 +1,25 @@
 name: Jules AI Agent
 
-# Trigger only when an issue is labeled
+# Trigger when an issue is labeled, opened, or edited, or when a comment is created or edited
 on:
   issues:
-    types: [labeled]
+    types: [labeled, opened, edited]
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   jules:
-    # Restrict execution to issues labeled 'jules' and ignore pull requests
-    if: ${{ github.event.label.name == 'jules' && !github.event.issue.pull_request }}
+    # Restrict execution to:
+    # 1. Issues (not pull requests)
+    # 2. EITHER:
+    #    - Labeled 'jules'
+    #    - OR Issue/Comment body contains '@jules' AND author is an organization MEMBER or OWNER
+    if: >
+      !github.event.issue.pull_request && (
+        github.event.label.name == 'jules' ||
+        (github.event_name == 'issues' && contains(github.event.issue.body, '@jules') && (github.event.issue.author_association == 'MEMBER' || github.event.issue.author_association == 'OWNER')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@jules') && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER'))
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,6 +37,8 @@ jobs:
             Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
 
             ${{ github.event.issue.body }}
+
+            ${{ github.event.comment.body && format('Additional context from comment:\n{0}', github.event.comment.body) || '' }}
 
             Process:
             1. **Analysis** - Review the issue and identify the root cause
