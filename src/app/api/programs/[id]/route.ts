@@ -137,15 +137,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             ...(leadMentorNotificationSettings !== undefined && { leadMentorNotificationSettings }),
         };
 
-        // Only allow sysadmin or board to update prices
-        if (isSysAdminOrBoard) {
-            if (memberPrice !== undefined) {
-                updateData.memberPrice = memberPrice ? parseInt(memberPrice, 10) : null;
-            }
-            if (nonMemberPrice !== undefined) {
-                updateData.nonMemberPrice = nonMemberPrice ? parseInt(nonMemberPrice, 10) : null;
-            }
-        }
 
         const updatedProgram = await prisma.program.update({
             where: { id: programId },
