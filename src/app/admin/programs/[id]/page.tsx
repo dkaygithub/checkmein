@@ -589,14 +589,14 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                         Member Price ($)
                                         {program.memberPrice !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: ${program.memberPrice})</span>}
                                     </label>
-                                    <input type="number" className="glass-input" value={memberPrice} onChange={e => setMemberPrice(e.target.value)} disabled={!isSysAdminOrBoard} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: !isSysAdminOrBoard ? 0.5 : 1 }} title={!isSysAdminOrBoard ? "Only Board Members can alter program pricing." : ""} />
+                                    <input type="number" className="glass-input" value={memberPrice} onChange={e => setMemberPrice(e.target.value)} disabled={true} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: 0.5 }} title="Program pricing cannot be changed after creation." />
                                 </div>
                                 <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
                                         Non-Member Price ($)
                                         {program.nonMemberPrice !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: ${program.nonMemberPrice})</span>}
                                     </label>
-                                    <input type="number" className="glass-input" value={nonMemberPrice} onChange={e => setNonMemberPrice(e.target.value)} disabled={!isSysAdminOrBoard} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: !isSysAdminOrBoard ? 0.5 : 1 }} title={!isSysAdminOrBoard ? "Only Board Members can alter program pricing." : ""} />
+                                    <input type="number" className="glass-input" value={nonMemberPrice} onChange={e => setNonMemberPrice(e.target.value)} disabled={true} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: 0.5 }} title="Program pricing cannot be changed after creation." />
                                 </div>
                             </div>
 

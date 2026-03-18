@@ -121,7 +121,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const body = await req.json();
-        const { name, leadMentorId, begin, end, memberOnly, phase, enrollmentStatus, minAge, maxAge, maxParticipants, leadMentorNotificationSettings, memberPrice, nonMemberPrice } = body;
+        const { name, leadMentorId, begin, end, memberOnly, phase, enrollmentStatus, minAge, maxAge, maxParticipants, leadMentorNotificationSettings } = body;
 
         const updateData: any = {
             ...(name !== undefined && { name }),
@@ -136,16 +136,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             ...(maxParticipants !== undefined && { maxParticipants }),
             ...(leadMentorNotificationSettings !== undefined && { leadMentorNotificationSettings }),
         };
-
-        // Only allow sysadmin or board to update prices
-        if (isSysAdminOrBoard) {
-            if (memberPrice !== undefined) {
-                updateData.memberPrice = memberPrice ? parseInt(memberPrice, 10) : null;
-            }
-            if (nonMemberPrice !== undefined) {
-                updateData.nonMemberPrice = nonMemberPrice ? parseInt(nonMemberPrice, 10) : null;
-            }
-        }
 
         const updatedProgram = await prisma.program.update({
             where: { id: programId },
