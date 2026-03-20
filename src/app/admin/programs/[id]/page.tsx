@@ -77,6 +77,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
     const [enrollmentStatus, setEnrollmentStatus] = useState("CLOSED");
     const [memberOnly, setMemberOnly] = useState(false);
     const [leadMentorIdInput, setLeadMentorIdInput] = useState("");
+    const [isFree, setIsFree] = useState(false);
     const [memberPrice, setMemberPrice] = useState("");
     const [nonMemberPrice, setNonMemberPrice] = useState("");
 
@@ -193,6 +194,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                 setEnrollmentStatus(data.enrollmentStatus || "CLOSED");
                 setMemberOnly(Boolean(data.memberOnly));
                 setLeadMentorIdInput(data.leadMentorId !== null ? String(data.leadMentorId) : "");
+                setIsFree(data.memberPrice === null && data.nonMemberPrice === null);
                 setMemberPrice(data.memberPrice !== null ? String(data.memberPrice) : "");
                 setNonMemberPrice(data.nonMemberPrice !== null ? String(data.nonMemberPrice) : "");
                 if (data.leadMentor) {
@@ -596,22 +598,39 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                 )}
                             </div>
                             
-                            <div style={{ display: 'flex', gap: '1rem', gridColumn: '1 / -1', flexWrap: 'wrap' }}>
-                                <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                                        Member Price ($)
-                                        {program.memberPrice !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: ${program.memberPrice})</span>}
-                                    </label>
-                                    <input type="number" className="glass-input" value={memberPrice} onChange={e => setMemberPrice(e.target.value)} disabled={true} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: 0.5 }} title="Program pricing cannot be changed after creation." />
-                                </div>
-                                <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                                        Non-Member Price ($)
-                                        {program.nonMemberPrice !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: ${program.nonMemberPrice})</span>}
-                                    </label>
-                                    <input type="number" className="glass-input" value={nonMemberPrice} onChange={e => setNonMemberPrice(e.target.value)} disabled={true} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: 0.5 }} title="Program pricing cannot be changed after creation." />
-                                </div>
+                            <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', gridColumn: '1 / -1' }}>
+                                <input
+                                    type="checkbox"
+                                    id="isFree"
+                                    checked={isFree}
+                                    disabled={true}
+                                    title="Program pricing cannot be changed after creation."
+                                    onChange={() => {}}
+                                    style={{ width: '1.2rem', height: '1.2rem', cursor: 'not-allowed', opacity: 0.5 }}
+                                />
+                                <label htmlFor="isFree" style={{ fontWeight: 500, fontSize: '1.1rem', color: isFree ? '#4ade80' : 'white', cursor: 'not-allowed', opacity: 0.5 }}>
+                                    This is a free program (Pricing cannot be changed)
+                                </label>
                             </div>
+
+                            {!isFree && (
+                                <div style={{ display: 'flex', gap: '1rem', gridColumn: '1 / -1', flexWrap: 'wrap' }}>
+                                    <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                            Member Price ($)
+                                            {program.memberPrice !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: ${program.memberPrice})</span>}
+                                        </label>
+                                        <input type="number" className="glass-input" value={memberPrice} onChange={e => setMemberPrice(e.target.value)} disabled={true} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: 0.5 }} title="Program pricing cannot be changed after creation." />
+                                    </div>
+                                    <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                            Non-Member Price ($)
+                                            {program.nonMemberPrice !== null && <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--color-primary)' }}>(Current: ${program.nonMemberPrice})</span>}
+                                        </label>
+                                        <input type="number" className="glass-input" value={nonMemberPrice} onChange={e => setNonMemberPrice(e.target.value)} disabled={true} style={{ width: '100%', padding: '0.75rem', boxSizing: 'border-box', opacity: 0.5 }} title="Program pricing cannot be changed after creation." />
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <input type="checkbox" id="memberOnly" checked={memberOnly} onChange={e => setMemberOnly(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem' }} />

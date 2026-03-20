@@ -21,6 +21,7 @@ export default function CreateProgramPage() {
     const [end, setEnd] = useState("");
     const [minAge, setMinAge] = useState("");
     const [maxAge, setMaxAge] = useState("");
+    const [isFree, setIsFree] = useState(true);
     const [memberPrice, setMemberPrice] = useState("");
     const [nonMemberPrice, setNonMemberPrice] = useState("");
     const [maxParticipants, setMaxParticipants] = useState("");
@@ -88,8 +89,8 @@ export default function CreateProgramPage() {
                     memberOnly,
                     minAge: minAge ? parseInt(minAge) : null,
                     maxAge: maxAge ? parseInt(maxAge) : null,
-                    memberPrice: memberPrice ? parseInt(memberPrice) : null,
-                    nonMemberPrice: nonMemberPrice ? parseInt(nonMemberPrice) : null,
+                    memberPrice: (!isFree && memberPrice) ? parseInt(memberPrice) : null,
+                    nonMemberPrice: (!isFree && nonMemberPrice) ? parseInt(nonMemberPrice) : null,
                     maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
                     leadMentorId: leadMentorId ? parseInt(leadMentorId) : null
                 })
@@ -254,35 +255,59 @@ export default function CreateProgramPage() {
                                     />
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Member Price ($)</label>
-                                    <input
-                                        type="number"
-                                        className="glass-input"
-                                        value={memberPrice}
-                                        onChange={e => setMemberPrice(e.target.value)}
-                                        placeholder="0"
-                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
-                                    />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Non-Member Price ($)</label>
-                                    <input
-                                        type="number"
-                                        className="glass-input"
-                                        value={nonMemberPrice}
-                                        onChange={e => setNonMemberPrice(e.target.value)}
-                                        placeholder="0"
-                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
-                                    />
-                                </div>
+
+                            <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px' }}>
+                                <input
+                                    type="checkbox"
+                                    id="isFree"
+                                    checked={isFree}
+                                    onChange={e => {
+                                        setIsFree(e.target.checked);
+                                        if (e.target.checked) {
+                                            setMemberPrice("");
+                                            setNonMemberPrice("");
+                                        }
+                                    }}
+                                    style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                                />
+                                <label htmlFor="isFree" style={{ cursor: 'pointer', fontWeight: 500, fontSize: '1.1rem', color: isFree ? '#4ade80' : 'white' }}>
+                                    This is a free program
+                                </label>
                             </div>
-                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Leave prices blank or 0 for a free program. Setting a price automatically creates a checkout flow on Shopify.</p>
-                            {Number(memberPrice) > Number(nonMemberPrice) && (
-                                <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: '#eab308' }}>
-                                    ⚠️ Member price is higher than non-member price.
-                                </div>
+
+                            {!isFree && (
+                                <>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Member Price ($)</label>
+                                            <input
+                                                type="number"
+                                                className="glass-input"
+                                                value={memberPrice}
+                                                onChange={e => setMemberPrice(e.target.value)}
+                                                placeholder="0"
+                                                style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Non-Member Price ($)</label>
+                                            <input
+                                                type="number"
+                                                className="glass-input"
+                                                value={nonMemberPrice}
+                                                onChange={e => setNonMemberPrice(e.target.value)}
+                                                placeholder="0"
+                                                style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Setting a price automatically creates a checkout flow on Shopify.</p>
+                                    {Number(memberPrice) > Number(nonMemberPrice) && (
+                                        <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: '#eab308' }}>
+                                            ⚠️ Member price is higher than non-member price.
+                                        </div>
+                                    )}
+                                </>
                             )}
                             <div style={{ marginTop: '1rem' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Max Participants (Optional)</label>
