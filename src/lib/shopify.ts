@@ -91,6 +91,8 @@ export async function createShopifyProgramVariants(name: string, memberPrice: nu
         product: {
           title: productTitle,
           status: 'active',
+          product_type: 'Educational Services',
+          product_category: 'se-6-2',
           options: [{ name: "Membership Type" }]
         }
       })
