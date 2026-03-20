@@ -1,0 +1,55 @@
+name: Resolve Jules Conversation
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  resolve:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Resolve Linked Issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+            const fixesMatch = body.match(/(?:Fixes|Closes|Resolves) #(\d+)/gi);
+            if (fixesMatch) {
+              for (const match of fixesMatch) {
+                const issueNumber = parseInt(match.match(/#(\d+)/)[1]);
+
+                // 1. Remove 'jules' label
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    name: 'jules'
+                  });
+                  console.log(`Removed 'jules' label from issue #${issueNumber}`);
+                } catch (e) {
+                  console.log(`Could not remove 'jules' label from issue #${issueNumber} (might not have the label): ${e.message}`);
+                }
+
+                // 2. Ensure issue is closed (GitHub should do this via 'Fixes', but we do it to be sure)
+                try {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    state: 'closed'
+                  });
+                  console.log(`Closed issue #${issueNumber}`);
+                } catch (e) {
+                  console.log(`Could not close issue #${issueNumber}: ${e.message}`);
+                }
+              }
+            } else {
+              console.log("No linked issues found in PR body.");
+            }
