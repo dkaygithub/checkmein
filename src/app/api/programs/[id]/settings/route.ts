@@ -62,9 +62,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         // leadMentorId can only be changed by SysAdmin or Board
         if (leadMentorId !== undefined) {
+            if (!leadMentorId) {
+                return NextResponse.json({ error: "Lead Mentor is required" }, { status: 400 });
+            }
             if (isSysAdminOrBoard) {
-                updateData.leadMentorId = leadMentorId;
-            } else if (leadMentorId !== currentProgram.leadMentorId) {
+                updateData.leadMentorId = parseInt(leadMentorId, 10);
+            } else if (parseInt(leadMentorId, 10) !== currentProgram.leadMentorId) {
                 return NextResponse.json({ error: "Forbidden: Only administrators can reassign lead mentors" }, { status: 403 });
             }
         }

@@ -12,9 +12,7 @@ import { POST as markAttendance } from '@/app/api/events/[id]/attendance/route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 // Mock NextAuth
-jest.mock('next-auth', () => ({
-    __esModule: true,
-    default: jest.fn(() => ({})),
+jest.mock('next-auth/next', () => ({
     getServerSession: jest.fn(),
 }));
 // Mock Notifications to avoid external calls
@@ -88,7 +86,12 @@ describe('AuditLog Integration Tests', () => {
     it('should generate an AuditLog when a Program is created', async () => {
         const req = new Request('http://localhost:4000/api/programs', {
             method: 'POST',
-            body: JSON.stringify({ name: 'Audit Test Program', enrollmentStatus: 'OPEN', begin: new Date() })
+            body: JSON.stringify({
+                name: 'Audit Test Program',
+                enrollmentStatus: 'OPEN',
+                begin: new Date(),
+                leadMentorId: testAdminId
+            })
         });
 
         const res = await createProgram(req);
