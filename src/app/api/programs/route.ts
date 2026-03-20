@@ -110,6 +110,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Program name is required" }, { status: 400 });
         }
 
+        if (!leadMentorId) {
+            return NextResponse.json({ error: "Lead Mentor is required" }, { status: 400 });
+        }
+
         const mPrice = memberPrice ? parseInt(memberPrice, 10) : null;
         const nmPrice = nonMemberPrice ? parseInt(nonMemberPrice, 10) : null;
         const maxPart = maxParticipants ? parseInt(maxParticipants, 10) : null;
@@ -125,7 +129,7 @@ export async function POST(req: Request) {
         const newProgram = await prisma.program.create({
             data: {
                 name,
-                leadMentorId: leadMentorId || null,
+                leadMentorId: parseInt(leadMentorId, 10),
                 begin: begin ? new Date(begin) : null,
                 end: end ? new Date(end) : null,
                 memberOnly: memberOnly || false,
