@@ -634,7 +634,7 @@ export default function ProgramDetailsPage({ params }: { params: Promise<{ id: s
                                 </select>
                             </div>
                         </div >
-                        <button type="submit" className="glass-button" disabled={saving} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
+                        <button type="submit" className="glass-button" disabled={saving || !leadMentorIdInput} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
                             {saving ? "Saving..." : "Save Settings"}
                         </button>
                     </form >

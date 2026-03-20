@@ -168,7 +168,7 @@ export default function CreateProgramPage() {
 
                             {/* Lead Mentor Selector */}
                             <div style={{ position: 'relative' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Lead Mentor / Program Coordinator (Optional)</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Lead Mentor / Program Coordinator</label>
                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                     <input
                                         type="text"
@@ -319,7 +319,7 @@ export default function CreateProgramPage() {
                             If checked, this program will only be visible to logged-in users with active memberships.
                         </p>
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                            <button type="submit" className="glass-button" disabled={saving || !name.trim()} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
+                            <button type="submit" className="glass-button" disabled={saving || !name.trim() || !leadMentorId} style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
                                 {saving ? "Saving..." : "Create Program"}
                             </button>
                         </div>

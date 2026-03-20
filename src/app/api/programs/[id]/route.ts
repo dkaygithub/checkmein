@@ -121,7 +121,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const body = await req.json();
-        const { name, leadMentorId, begin, end, memberOnly, phase, enrollmentStatus, minAge, maxAge, maxParticipants, leadMentorNotificationSettings } = body;
+        let { name, leadMentorId, begin, end, memberOnly, phase, enrollmentStatus, minAge, maxAge, maxParticipants, leadMentorNotificationSettings } = body;
+
+        if (body.hasOwnProperty('leadMentorId')) {
+            if (!leadMentorId) {
+                return NextResponse.json({ error: "Lead Mentor is required" }, { status: 400 });
+            }
+            leadMentorId = parseInt(leadMentorId);
+        }
 
         const updateData: any = {
             ...(name !== undefined && { name }),
