@@ -26,6 +26,7 @@ describe('Program Participants API Integration Tests', () => {
     let otherId: number;
     
     let standardProgramId: number;
+    let freeProgramId: number;
     let fullProgramId: number;
     let exactAgeProgramId: number;
 
@@ -87,9 +88,14 @@ describe('Program Participants API Integration Tests', () => {
 
         // Create mock programs
         const standardProgram = await prisma.program.create({
-            data: { name: 'Standard Partic API Test', phase: 'RUNNING', enrollmentStatus: 'OPEN', leadMentorId: leadId }
+            data: { name: 'Standard Partic API Test', phase: 'RUNNING', enrollmentStatus: 'OPEN', leadMentorId: leadId, memberPrice: 1000, nonMemberPrice: 1500 }
         });
         standardProgramId = standardProgram.id;
+
+        const freeProgram = await prisma.program.create({
+            data: { name: 'Free Partic API Test', phase: 'RUNNING', enrollmentStatus: 'OPEN', leadMentorId: leadId, memberPrice: null, nonMemberPrice: null }
+        });
+        freeProgramId = freeProgram.id;
 
         // Create a capped program and pre-fill it to its capacity (1 participant)
         const fullProgram = await prisma.program.create({
@@ -113,7 +119,7 @@ describe('Program Participants API Integration Tests', () => {
 
     afterAll(async () => {
         const existingUserIds = [adminId, leadId, commonId, otherId].filter(id => id !== undefined);
-        const validProgramIds = [standardProgramId, fullProgramId, exactAgeProgramId].filter(id => id !== undefined);
+        const validProgramIds = [standardProgramId, freeProgramId, fullProgramId, exactAgeProgramId].filter(id => id !== undefined);
 
         if (existingUserIds.length > 0) {
             await prisma.programParticipant.deleteMany({
@@ -166,7 +172,7 @@ describe('Program Participants API Integration Tests', () => {
              expect(data.error).toMatch(/Forbidden/);
         });
 
-        it('should allow a common user to self-enroll into an unrestricted program', async () => {
+        it('should allow a common user to self-enroll into a paid program as PENDING', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
              const req = new Request(`http://localhost:4000/api/programs/${standardProgramId}/participants`, {
@@ -179,6 +185,23 @@ describe('Program Participants API Integration Tests', () => {
              const data = await res.json();
              expect(data.success).toBe(true);
              expect(data.enrollment.participantId).toBe(commonId);
+             expect(data.enrollment.status).toBe('PENDING');
+        });
+
+        it('should allow a common user to self-enroll into a free program as ACTIVE', async () => {
+             (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
+
+             const req = new Request(`http://localhost:4000/api/programs/${freeProgramId}/participants`, {
+                 method: 'POST',
+                 body: JSON.stringify({ participantId: commonId }) // self-enrollment
+             });
+             const res = await POST(req as any, createParams(freeProgramId) as any);
+             expect(res.status).toBe(200);
+             
+             const data = await res.json();
+             expect(data.success).toBe(true);
+             expect(data.enrollment.participantId).toBe(commonId);
+             expect(data.enrollment.status).toBe('ACTIVE');
         });
 
         it('should block self-enrollment if the program is at full capacity', async () => {

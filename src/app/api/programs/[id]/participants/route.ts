@@ -96,8 +96,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             }
         }
 
-        // Default status is PENDING, unless board is bypassing
-        const initialStatus = (isSysAdminOrBoard && override) ? 'ACTIVE' : 'PENDING';
+        const isFree = currentProgram.memberPrice === null && currentProgram.nonMemberPrice === null;
+        
+        // Default status is PENDING, unless board is bypassing or the program is free
+        const initialStatus = ((isSysAdminOrBoard && override) || isFree) ? 'ACTIVE' : 'PENDING';
 
         const enrollment = await prisma.programParticipant.create({
             data: {
