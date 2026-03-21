@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -124,7 +123,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: candidateId })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -135,7 +134,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: candidateId })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -149,7 +148,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: candidateId })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -167,7 +166,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ participantId: existingVolunteerId, isCore: true })
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(403);
         });
 
@@ -178,7 +177,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ participantId: existingVolunteerId }) // missing isCore
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(400);
              
              const data = await res.json();
@@ -192,7 +191,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ participantId: existingVolunteerId, isCore: true })
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -208,7 +207,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: existingVolunteerId })
              });
-             const res = await DELETE(req as any, createParams(targetProgramId) as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(403);
         });
 
@@ -219,7 +218,7 @@ describe('Program Volunteers API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: existingVolunteerId })
              });
-             const res = await DELETE(req as any, createParams(targetProgramId) as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();

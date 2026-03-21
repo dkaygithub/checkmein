@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -79,7 +78,7 @@ describe('Admin Audit API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request('http://localhost:4000/api/admin/audit', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -87,7 +86,7 @@ describe('Admin Audit API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId, sysadmin: false } });
 
              const req = new Request('http://localhost:4000/api/admin/audit', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -95,7 +94,7 @@ describe('Admin Audit API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId, sysadmin: true } });
 
              const req = new Request('http://localhost:4000/api/admin/audit', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -103,7 +102,7 @@ describe('Admin Audit API Integration Tests', () => {
              expect(data.logs.length).toBeGreaterThanOrEqual(1);
 
              // Verify it contains our generated log
-             const ourLog = data.logs.find((log: any) => log.actorId === adminId && log.action === 'CREATE');
+             const ourLog = data.logs.find((log: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => log.actorId === adminId && log.action === 'CREATE');
              expect(ourLog).toBeDefined();
         });
     });

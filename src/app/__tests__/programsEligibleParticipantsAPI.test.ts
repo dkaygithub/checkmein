@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -191,7 +190,7 @@ describe('Eligible Participants API Integration Tests', () => {
         return {
             nextUrl: new URL(`http://localhost:4000/api/programs/${id}/eligible-participants${search ? `?q=${encodeURIComponent(search)}` : ''}`),
             method: 'GET'
-        } as any;
+        } as unknown as never;
     };
 
     describe('GET /api/programs/[id]/eligible-participants', () => {
@@ -227,7 +226,7 @@ describe('Eligible Participants API Integration Tests', () => {
              
              const data = await res.json();
              // Should fetch nonMember, activeMember, and householdMember, but NOT alreadyEnrolled
-             const names = data.members.map((m: any) => m.name);
+             const names = data.members.map((m: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => m.name);
              
              expect(names).toContain('Active Member Candidate');
              expect(names).toContain('Household Member Candidate');
@@ -264,7 +263,7 @@ describe('Eligible Participants API Integration Tests', () => {
              expect(res.status).toBe(200);
              
              const data = await res.json();
-             const names = data.members.map((m: any) => m.name);
+             const names = data.members.map((m: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => m.name);
              
              expect(names).toContain('Active Member Candidate'); // Individual member
              expect(names).toContain('Household Member Candidate'); // Under household member

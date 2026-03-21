@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -30,7 +29,7 @@ export default function PublicProgramsDirectory() {
     const [message, setMessage] = useState("");
     const [activeOnly, setActiveOnly] = useState(true);
 
-    const isAuthorized = session && ((session.user as any)?.sysadmin || (session.user as any)?.boardMember);
+    const isAuthorized = session && (session.user?.sysadmin || session.user?.boardMember);
 
 
 
@@ -144,7 +143,7 @@ export default function PublicProgramsDirectory() {
                                 <Link href={`/programs/${program.id}`} style={{ flex: 1, display: 'block', textAlign: 'center', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '0.75rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 500 }}>
                                     View Details
                                 </Link>
-                                {(session && ((session.user as any)?.sysadmin || (session.user as any)?.boardMember || (session.user as any)?.id === program.leadMentorId)) && (
+                                {(session && (session.user?.sysadmin || session.user?.boardMember || session.user?.id === program.leadMentorId)) && (
                                     <Link href={`/admin/programs/${program.id}`} style={{ flex: 1, display: 'block', textAlign: 'center', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '0.75rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 500 }}>
                                         Manage
                                     </Link>

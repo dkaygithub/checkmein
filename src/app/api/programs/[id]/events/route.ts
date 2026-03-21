@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -23,8 +22,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const isLeadMentor = currentProgram.leadMentorId === (session.user as any).id;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const isLeadMentor = currentProgram.leadMentorId === session.user.id;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
 
         if (!isLeadMentor && !isSysAdminOrBoard) {
             return NextResponse.json({ error: "Forbidden: Only Admin, Board Members, or Lead Mentors can add events" }, { status: 403 });
@@ -49,7 +48,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         await prisma.auditLog.create({
             data: {
-                actorId: (session.user as any).id,
+                actorId: session.user.id,
                 action: 'CREATE',
                 tableName: 'Event',
                 affectedEntityId: newEvent.id,

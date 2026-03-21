@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -23,9 +22,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
+        const currentUserId = session.user.id;
         const isLeadMentor = currentProgram.leadMentorId === currentUserId;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
 
         if (!isLeadMentor && !isSysAdminOrBoard) {
             return NextResponse.json({ error: "Forbidden: Not authorized" }, { status: 403 });
@@ -33,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
         const q = req.nextUrl.searchParams.get("q") || "";
 
-        const andClauses: any[] = [
+        const andClauses: Record<string, unknown>[] = [
             {
                 NOT: {
                     OR: [

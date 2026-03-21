@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
@@ -60,7 +59,7 @@ function NewParticipantForm() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+            const isAuthorized = session?.user?.sysadmin || session?.user?.boardMember;
             if (!isAuthorized) {
                 router.push('/');
             }
@@ -116,7 +115,7 @@ function NewParticipantForm() {
         return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
     }
 
-    if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
+    if (!session || (!session.user?.sysadmin && !session.user?.boardMember)) {
         return null;
     }
 

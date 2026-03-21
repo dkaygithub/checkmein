@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -122,7 +121,7 @@ describe('Event Attendance API Integration Tests', () => {
                  body: JSON.stringify({ participantIds: [testParticipant1Id] })
              });
 
-             const res = await POST(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+             const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
              expect(res.status).toBe(401);
         });
 
@@ -136,7 +135,7 @@ describe('Event Attendance API Integration Tests', () => {
                  body: JSON.stringify({ participantIds: [testParticipant1Id] })
              });
 
-             const res = await POST(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+             const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
              expect(res.status).toBe(403);
         });
 
@@ -150,7 +149,7 @@ describe('Event Attendance API Integration Tests', () => {
                 body: JSON.stringify({ participantIds: [testParticipant1Id] })
             });
 
-            const res = await POST(req as any, { params: Promise.resolve({ id: '9999999' }) });
+            const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: '9999999' }) });
             expect(res.status).toBe(404);
         });
 
@@ -164,7 +163,7 @@ describe('Event Attendance API Integration Tests', () => {
                 body: JSON.stringify({ participantIds: [testParticipant1Id] })
             });
 
-            const res = await POST(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+            const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -201,7 +200,7 @@ describe('Event Attendance API Integration Tests', () => {
                 body: JSON.stringify({ participantIds: [testParticipant2Id] })
             });
 
-            const res = await POST(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+            const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
             expect(res.status).toBe(200);
 
             const data = await res.json();

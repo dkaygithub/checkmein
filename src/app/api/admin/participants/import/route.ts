@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth";
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
 
-        const rawData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+        const rawData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
 
         if (rawData.length < 2) {
             return NextResponse.json({ error: "Empty spreadsheet or no data rows found" }, { status: 400 });

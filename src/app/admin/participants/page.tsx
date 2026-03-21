@@ -287,8 +287,8 @@ export default function AdminParticipantsIndex() {
                                 <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--color-text-muted)' }}>Current Household: {selectedParticipant.household.name}</div>
                                 <div style={{ fontSize: '0.85rem' }}>
                                     Members: {selectedParticipant.household.participants
-                                        .filter((p: any) => p.id !== selectedParticipant.id)
-                                        .map((p: any) => p.name || p.email)
+                                        .filter((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.id !== selectedParticipant.id)
+                                        .map((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name || p.email)
                                         .join(', ') || 'No other members'}
                                 </div>
                             </div>
@@ -379,7 +379,7 @@ export default function AdminParticipantsIndex() {
                                             >
                                                 <div style={{ fontWeight: 500 }}>{h.name || `Household #${h.id}`}</div>
                                                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                                                    {h.participants.map((p: any) => p.name || p.email || 'Unnamed').join(', ') || 'Empty'}
+                                                    {h.participants.map((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name || p.email || 'Unnamed').join(', ') || 'Empty'}
                                                 </div>
                                             </div>
                                         ))}

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -70,7 +69,7 @@ describe('Admin Badges API Integration Tests', () => {
                  method: 'GET'
              });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -83,7 +82,7 @@ describe('Admin Badges API Integration Tests', () => {
                  method: 'GET'
              });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -96,7 +95,7 @@ describe('Admin Badges API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -104,7 +103,7 @@ describe('Admin Badges API Integration Tests', () => {
             expect(Array.isArray(data.badges)).toBe(true);
             
             // Verify our test event is in the response with participant joined
-            const foundEvent = data.badges.find((b: any) => b.id === testBadgeEventId);
+            const foundEvent = data.badges.find((b: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => b.id === testBadgeEventId);
             expect(foundEvent).toBeDefined();
             expect(foundEvent.location).toBe('Front Door');
             expect(foundEvent.participant).toBeDefined();

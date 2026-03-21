@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -10,7 +9,7 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = session.user as any;
+    const user = session.user;
     if (!user.sysadmin && !user.keyholder && !user.boardMember) {
         return NextResponse.json({ error: "Forbidden. Only Keyholders, Board Members, or Admins can access." }, { status: 403 });
     }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -103,7 +102,7 @@ describe('Program Settings API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ phase: 'RUNNING' })
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -114,7 +113,7 @@ describe('Program Settings API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ name: 'Hacked Settings Program' })
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -128,7 +127,7 @@ describe('Program Settings API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ maxParticipants: 30, minAge: 15 })
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -144,7 +143,7 @@ describe('Program Settings API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ leadMentorId: newLeadId }) // lead attempting to hand off control
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -158,7 +157,7 @@ describe('Program Settings API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ leadMentorId: newLeadId, phase: 'RUNNING' })
              });
-             const res = await PATCH(req as any, createParams(targetProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();

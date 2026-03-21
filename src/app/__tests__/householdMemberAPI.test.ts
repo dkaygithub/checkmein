@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -132,7 +131,7 @@ describe('Household Member API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ participantId: testMemberId, name: 'Changed' })
              });
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -144,7 +143,7 @@ describe('Household Member API Integration Tests', () => {
                 body: JSON.stringify({ name: 'Changed' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
             const data = await res.json();
             expect(data.error).toBe('Participant ID is required');
@@ -158,7 +157,7 @@ describe('Household Member API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testMemberId, name: 'Changed' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
             const data = await res.json();
             expect(data.error).toBe('Only household leads can edit members');
@@ -172,7 +171,7 @@ describe('Household Member API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testOtherMemberId, name: 'Stolen' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(404);
             const data = await res.json();
             expect(data.error).toBe('Member not found in your household');
@@ -193,7 +192,7 @@ describe('Household Member API Integration Tests', () => {
                 })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             
             const data = await res.json();
@@ -227,7 +226,7 @@ describe('Household Member API Integration Tests', () => {
                 })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const updatedProfile = await prisma.participant.findUnique({ where: { id: testMemberId } });
@@ -247,7 +246,7 @@ describe('Household Member API Integration Tests', () => {
                  })
              });
 
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
 
              // Verify they are now a lead
@@ -268,7 +267,7 @@ describe('Household Member API Integration Tests', () => {
                  })
              });
 
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
 
              // Verify they are no longer a lead
@@ -289,7 +288,7 @@ describe('Household Member API Integration Tests', () => {
                  })
              });
 
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200); // the edit still succeeds technically even if it ignored the lea demotion request since it doesn't hard error it, this is intended
 
              // Verify they are STILL a lead

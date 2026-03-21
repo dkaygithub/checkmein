@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any, react/no-unescaped-entities */
+/* eslint-disable react/no-unescaped-entities */
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -51,7 +51,7 @@ export default function CreateToolPage() {
         return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
     }
 
-    const isAdmin = (session?.user as any)?.boardMember || (session?.user as any)?.sysadmin || (session?.user as any)?.shopSteward;
+    const isAdmin = session?.user?.boardMember || session?.user?.sysadmin || session?.user?.shopSteward;
 
     if (!isAdmin) {
         return (

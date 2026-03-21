@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -126,7 +125,7 @@ describe('Individual Program API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request(`http://localhost:4000/api/programs/${publicProgramId}`, { method: 'GET' });
-             const res = await GET(req as any, createParams(publicProgramId) as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest, createParams(publicProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -134,7 +133,7 @@ describe('Individual Program API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId } });
 
              const req = new Request('http://localhost:4000/api/programs/999999', { method: 'GET' });
-             const res = await GET(req as any, createParams(999999) as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest, createParams(999999) as unknown as never);
              expect(res.status).toBe(404);
         });
 
@@ -142,7 +141,7 @@ describe('Individual Program API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
              const req = new Request(`http://localhost:4000/api/programs/${publicProgramId}`, { method: 'GET' });
-             const res = await GET(req as any, createParams(publicProgramId) as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest, createParams(publicProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -154,7 +153,7 @@ describe('Individual Program API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
              const req = new Request(`http://localhost:4000/api/programs/${memberOnlyProgramId}`, { method: 'GET' });
-             const res = await GET(req as any, createParams(memberOnlyProgramId) as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest, createParams(memberOnlyProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -165,7 +164,7 @@ describe('Individual Program API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: memberId } });
 
              const req = new Request(`http://localhost:4000/api/programs/${memberOnlyProgramId}`, { method: 'GET' });
-             const res = await GET(req as any, createParams(memberOnlyProgramId) as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest, createParams(memberOnlyProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -176,7 +175,7 @@ describe('Individual Program API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId, sysadmin: true } });
 
              const req = new Request(`http://localhost:4000/api/programs/${memberOnlyProgramId}`, { method: 'GET' });
-             const res = await GET(req as any, createParams(memberOnlyProgramId) as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest, createParams(memberOnlyProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -192,7 +191,7 @@ describe('Individual Program API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ name: 'Hacked' })
              });
-             const res = await PATCH(req as any, createParams(publicProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(publicProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -203,7 +202,7 @@ describe('Individual Program API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ name: 'Hacked' })
              });
-             const res = await PATCH(req as any, createParams(publicProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(publicProgramId) as unknown as never);
              expect(res.status).toBe(403);
         });
 
@@ -214,7 +213,7 @@ describe('Individual Program API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ maxParticipants: 50 })
              });
-             const res = await PATCH(req as any, createParams(publicProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(publicProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -228,7 +227,7 @@ describe('Individual Program API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ phase: 'FINISHED' })
              });
-             const res = await PATCH(req as any, createParams(publicProgramId) as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, createParams(publicProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
@@ -89,7 +88,7 @@ export const GET = withAuth(
             const lookbackMs = getLookbackMonths(period) * 30 * 24 * 60 * 60 * 1000;
             const since = new Date(Date.now() - lookbackMs);
 
-            const whereClause: any = {
+            const whereClause: Record<string, unknown> = {
                 arrived: { gte: since },
                 departed: { not: null },
             };

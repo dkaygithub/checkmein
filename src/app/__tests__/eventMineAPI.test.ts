@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -169,7 +168,7 @@ describe('My Events API Integration Tests', () => {
                  method: 'GET'
              });
 
-             const res = await GET(req as any);
+             const res = await GET() as Response;
              expect(res.status).toBe(401);
         });
 
@@ -182,7 +181,7 @@ describe('My Events API Integration Tests', () => {
                  method: 'GET'
              });
 
-             const res = await GET(req as any);
+             const res = await GET() as Response;
              expect(res.status).toBe(200);
 
              const data = await res.json();
@@ -205,7 +204,7 @@ describe('My Events API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET() as Response;
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -225,10 +224,10 @@ describe('My Events API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET() as Response;
             const data = await res.json();
             
-            const hasPastEvent = data.some((e: any) => e.name === 'Mine Test Event Past');
+            const hasPastEvent = data.some((e: { name: string }) => e.name === 'Mine Test Event Past');
             expect(hasPastEvent).toBe(false);
         });
     });

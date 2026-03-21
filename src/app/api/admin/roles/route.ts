@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
@@ -56,7 +55,7 @@ export const PATCH = withAuth(
             }
 
             const allowedFields = ["sysadmin", "boardMember", "keyholder", "shopSteward"];
-            const updateData: any = {};
+            const updateData: Record<string, NonNullable<unknown> | null | string | number | boolean | Date> = {};
             for (const field of allowedFields) {
                 if (roleUpdates[field] !== undefined) {
                     updateData[field] = Boolean(roleUpdates[field]);

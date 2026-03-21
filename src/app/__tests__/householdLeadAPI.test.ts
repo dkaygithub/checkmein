@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -142,7 +141,7 @@ describe('Household Lead API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: testAdultId })
              });
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -154,7 +153,7 @@ describe('Household Lead API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testChildId })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
             const data = await res.json();
             expect(data.error).toBe('Only household leads or sysadmins can promote members');
@@ -168,7 +167,7 @@ describe('Household Lead API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testOtherMemberId })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(404);
             const data = await res.json();
             expect(data.error).toBe('Member not found in your household');
@@ -181,7 +180,7 @@ describe('Household Lead API Integration Tests', () => {
                 method: 'POST',
                 body: JSON.stringify({ participantId: testLeadId })
             });
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             const data = await res.json();
             expect(data.message).toBe('Member is already a lead');
@@ -195,7 +194,7 @@ describe('Household Lead API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testAdultId })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             
             const data = await res.json();
@@ -229,7 +228,7 @@ describe('Household Lead API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: testAdultId })
              });
-             const res = await DELETE(req as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
         
@@ -241,7 +240,7 @@ describe('Household Lead API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testAdultId })
             });
 
-            const res = await DELETE(req as any);
+            const res = await DELETE(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
             const data = await res.json();
             expect(data.error).toBe('Only household leads or sysadmins can remove leads');
@@ -255,7 +254,7 @@ describe('Household Lead API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: testOtherLeadId })
              });
-             const res = await DELETE(req as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(400);
              const data = await res.json();
              expect(data.error).toBe('Cannot remove the last lead of a household.');
@@ -270,7 +269,7 @@ describe('Household Lead API Integration Tests', () => {
                 body: JSON.stringify({ participantId: testAdultId })
             });
 
-            const res = await DELETE(req as any);
+            const res = await DELETE(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             
             const data = await res.json();

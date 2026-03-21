@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -122,7 +121,7 @@ describe('Cron Reminders API Integration Tests', () => {
                 }
             });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();

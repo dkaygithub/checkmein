@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -8,7 +7,7 @@ import { config } from "@/lib/config";
 
 // NextAuth PrismaAdapter hardcodes `prisma.user` for its user operations.
 // We map `.user` to `.participant` so the adapter can find our custom model.
-const prismaAdapterCore = prisma as any;
+const prismaAdapterCore = prisma as unknown as Record<string, unknown> & { participant: unknown };
 const prismaAdapterClient = {
     ...prismaAdapterCore,
     user: prismaAdapterCore.participant,
@@ -16,14 +15,14 @@ const prismaAdapterClient = {
 
 // Wrap the adapter so `getUser` can handle string IDs from CredentialsProvider.
 // NextAuth always coerces IDs to strings, but our Participant.id is an Int.
-const baseAdapter = PrismaAdapter(prismaAdapterClient) as any;
+const baseAdapter = PrismaAdapter(prismaAdapterClient) as unknown as Record<string, unknown>;
 const patchedAdapter = {
     ...baseAdapter,
     getUser: async (id: string) => {
         const numericId = parseInt(id, 10);
         if (isNaN(numericId)) return null;
         const user = await prisma.participant.findUnique({ where: { id: numericId } });
-        return user ? { ...user, id: String(user.id) } : null;
+        return user ? { ...user, id: String(user.id), email: user.email || "" } : null;
     },
 };
 
@@ -134,13 +133,13 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             if (session.user) {
-                (session.user as any).id = token.id;
-                (session.user as any).sysadmin = token.sysadmin;
-                (session.user as any).keyholder = token.keyholder;
-                (session.user as any).boardMember = token.boardMember;
-                (session.user as any).shopSteward = token.shopSteward;
-                (session.user as any).householdId = token.householdId;
-                (session.user as any).toolStatuses = token.toolStatuses || [];
+                session.user.id = token.id;
+                session.user.sysadmin = token.sysadmin;
+                session.user.keyholder = token.keyholder;
+                session.user.boardMember = token.boardMember;
+                session.user.shopSteward = token.shopSteward;
+                session.user.householdId = token.householdId;
+                session.user.toolStatuses = token.toolStatuses || [];
             }
             return session;
         }

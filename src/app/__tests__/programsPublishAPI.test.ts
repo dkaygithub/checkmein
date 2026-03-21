@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -138,7 +137,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: true })
              });
-             const res = await POST(req as any, createParams(validProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(validProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -149,7 +148,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: false })
              });
-             const res = await POST(req as any, createParams(validProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(validProgramId) as unknown as never);
              expect(res.status).toBe(400);
              const data = await res.json();
              expect(data.error).toBe("publish must be true");
@@ -162,7 +161,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: true })
              });
-             const res = await POST(req as any, createParams(999999) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(999999) as unknown as never);
              expect(res.status).toBe(404);
         });
 
@@ -173,7 +172,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: true })
              });
-             const res = await POST(req as any, createParams(validProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(validProgramId) as unknown as never);
              expect(res.status).toBe(403);
              const data = await res.json();
              expect(data.error).toMatch(/Forbidden/);
@@ -186,7 +185,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: true })
              });
-             const res = await POST(req as any, createParams(noLeadProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(noLeadProgramId) as unknown as never);
              expect(res.status).toBe(400);
              const data = await res.json();
              expect(data.error).toBe('Cannot publish a program without a Lead Mentor assigned');
@@ -199,7 +198,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: true })
              });
-             const res = await POST(req as any, createParams(noEventsProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(noEventsProgramId) as unknown as never);
              expect(res.status).toBe(400);
              const data = await res.json();
              expect(data.error).toBe('Cannot publish a program without any scheduled events');
@@ -212,7 +211,7 @@ describe('Program Publish API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ publish: true })
              });
-             const res = await POST(req as any, createParams(validProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(validProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();

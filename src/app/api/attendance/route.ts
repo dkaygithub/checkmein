@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -12,7 +11,7 @@ export async function GET(req: NextRequest) {
     try {
         // Determine caller identity
         const session = await getServerSession(authOptions);
-        const user = session?.user as any;
+        const user = session?.user;
         const hasKioskHeaders = req.headers.get("x-kiosk-signature");
         const pubKeys = getKioskPublicKeys();
 
@@ -82,7 +81,7 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: Request) {
     const session = await getServerSession(authOptions);
-    const user = session?.user as any;
+    const user = session?.user;
 
     if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -130,7 +129,7 @@ export async function DELETE(req: Request) {
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
-    const user = session?.user as any;
+    const user = session?.user;
 
     if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -217,7 +216,7 @@ export async function POST(req: Request) {
                     action: 'CREATE',
                     tableName: 'SYSTEM_NOTIFY',
                     affectedEntityId: 0,
-                    newData: { message: `Sent Two-Deep warning to ${boardMembers.length} board member(s).` } as any
+                    newData: { message: `Sent Two-Deep warning to ${boardMembers.length} board member(s).` } as unknown as never
                 }
             });
 

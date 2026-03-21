@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -68,7 +67,7 @@ describe('Manual Attendance API Integration Tests', () => {
                 body: JSON.stringify({ arrived: new Date().toISOString() })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(401);
             const data = await res.json();
             expect(data.error).toBe('Unauthorized');
@@ -84,7 +83,7 @@ describe('Manual Attendance API Integration Tests', () => {
                 body: JSON.stringify({ departed: new Date().toISOString() }) // No arrived time
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
             const data = await res.json();
             expect(data.error).toBe('Arrival time is required');
@@ -103,7 +102,7 @@ describe('Manual Attendance API Integration Tests', () => {
                 body: JSON.stringify({ arrived: arrived.toISOString(), departed: departed.toISOString() })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
             const data = await res.json();
             expect(data.error).toBe('Departure time must be after arrival time');
@@ -126,7 +125,7 @@ describe('Manual Attendance API Integration Tests', () => {
                 body: JSON.stringify({ arrived: arrived.toISOString(), departed: departed.toISOString() })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(201);
             const data = await res.json();
             
@@ -154,7 +153,7 @@ describe('Manual Attendance API Integration Tests', () => {
                 body: JSON.stringify({ arrived: arrived.toISOString() })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(201);
             const data = await res.json();
             

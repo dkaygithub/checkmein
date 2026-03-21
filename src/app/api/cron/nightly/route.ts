@@ -52,8 +52,7 @@ export async function GET(req: Request) {
                         action: 'CREATE',
                         tableName: 'SYSTEM_NOTIFY',
                         affectedEntityId: 0,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        newData: { message: `Auto-closed facility at midnight. Abandoned keyholders: ${keyholderNames}` } as any
+                        newData: { message: `Auto-closed facility at midnight. Abandoned keyholders: ${keyholderNames}` } as unknown as never
                     }
                 });
 

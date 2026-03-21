@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -34,8 +33,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const currentUserId = session.user.id;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
         const isLeadMentor = currentProgram.leadMentorId === currentUserId;
 
         if (!isSysAdminOrBoard && !isLeadMentor) {
@@ -63,7 +62,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 action: 'EDIT',
                 tableName: 'Program',
                 affectedEntityId: programId,
-                newData: { phase: 'UPCOMING', enrollmentStatus: 'OPEN' } as any
+                newData: { phase: 'UPCOMING', enrollmentStatus: 'OPEN' } as unknown as never
             }
         });
 

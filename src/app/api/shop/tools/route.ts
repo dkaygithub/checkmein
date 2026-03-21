@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const isAuthorized = (session.user as any)?.sysadmin || (session.user as any)?.boardMember || (session.user as any)?.shopSteward;
+    const isAuthorized = session.user?.sysadmin || session.user?.boardMember || session.user?.shopSteward;
 
     if (!isAuthorized) {
         return NextResponse.json({ error: "Forbidden: Only admins, board members, and shop stewards can create tools" }, { status: 403 });
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
 
         await prisma.auditLog.create({
             data: {
-                actorId: parseInt((session.user as any).id, 10),
+                actorId: session.user.id,
                 action: 'CREATE',
                 tableName: 'Tool',
                 affectedEntityId: newTool.id,
@@ -67,8 +66,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ success: true, tool: newTool });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Tool creation error:", error);
-        return NextResponse.json({ error: error?.message || "Failed to create tool" }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create tool" }, { status: 500 });
     }
 }

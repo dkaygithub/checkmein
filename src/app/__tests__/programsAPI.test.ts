@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -93,14 +92,14 @@ describe('Programs API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request('http://localhost:4000/api/programs', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
 
              const programs = await res.json();
              
-             const publicActive = programs.find((p: any) => p.name === 'Public API Test Program');
-             const draft = programs.find((p: any) => p.name === 'Draft API Test Program');
-             const memberOnly = programs.find((p: any) => p.name === 'Member Only API Test Program');
+             const publicActive = programs.find((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name === 'Public API Test Program');
+             const draft = programs.find((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name === 'Draft API Test Program');
+             const memberOnly = programs.find((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name === 'Member Only API Test Program');
 
              expect(publicActive).toBeDefined();
              expect(draft).toBeUndefined(); // Filtered because it is in PLANNING
@@ -111,11 +110,11 @@ describe('Programs API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: leadId } });
 
              const req = new Request('http://localhost:4000/api/programs', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
 
              const programs = await res.json();
-             const draft = programs.find((p: any) => p.name === 'Draft API Test Program');
+             const draft = programs.find((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name === 'Draft API Test Program');
 
              expect(draft).toBeDefined(); // Revealed because the user is the lead
         });
@@ -124,12 +123,12 @@ describe('Programs API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId, sysadmin: true } });
 
              const req = new Request('http://localhost:4000/api/programs', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
 
              const programs = await res.json();
-             const draft = programs.find((p: any) => p.name === 'Draft API Test Program');
-             const memberOnly = programs.find((p: any) => p.name === 'Member Only API Test Program');
+             const draft = programs.find((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name === 'Draft API Test Program');
+             const memberOnly = programs.find((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.name === 'Member Only API Test Program');
 
              expect(draft).toBeDefined(); // Revealed because admin
              expect(memberOnly).toBeDefined(); // Revealed because admin
@@ -144,7 +143,7 @@ describe('Programs API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'New API Test Program' })
              });
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
              const data = await res.json();
              expect(data.error).toMatch(/Forbidden/);
@@ -157,7 +156,7 @@ describe('Programs API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ leadMentorId: leadId })
              });
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(400);
         });
 
@@ -168,7 +167,7 @@ describe('Programs API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'Created API Test Program', leadMentorId: leadId, minAge: 12, maxAge: 17 })
              });
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
              
              const data = await res.json();

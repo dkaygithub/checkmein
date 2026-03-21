@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -11,7 +10,7 @@ export default function AdminHouseholdsPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    const [households, setHouseholds] = useState<any[]>([]);
+    const [households, setHouseholds] = useState<{ id: number, name?: string | null, memberships?: { active: boolean }[] | null, participants?: { id: number, name?: string | null, email?: string | null }[] | null }[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -19,7 +18,7 @@ export default function AdminHouseholdsPage() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            const isAuthorized = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+            const isAuthorized = session?.user?.sysadmin || session?.user?.boardMember;
             if (!isAuthorized) {
                 router.push('/');
             } else {
@@ -67,7 +66,7 @@ export default function AdminHouseholdsPage() {
         return <main className={styles.main}><div className="glass-container animate-float">Loading...</div></main>;
     }
 
-    if (!session || (!(session.user as any)?.sysadmin && !(session.user as any)?.boardMember)) {
+    if (!session || (!session.user?.sysadmin && !session.user?.boardMember)) {
         return null;
     }
 
@@ -99,7 +98,7 @@ export default function AdminHouseholdsPage() {
                         </thead>
                         <tbody>
                             {households.map((household) => {
-                                const hasActiveMembership = household.memberships?.some((m: any) => m.active);
+                                const hasActiveMembership = (household.memberships as { active: boolean }[])?.some((m) => m.active);
 
                                 return (
                                     <tr key={household.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -108,7 +107,7 @@ export default function AdminHouseholdsPage() {
                                         </td>
                                         <td style={{ padding: '1rem' }}>
                                             <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.9rem' }}>
-                                                {household.participants?.map((p: any) => (
+                                                {(household.participants as { id: number; email: string; name: string | null }[])?.map((p) => (
                                                     <li key={p.id}>{p.name || p.email}</li>
                                                 ))}
                                             </ul>

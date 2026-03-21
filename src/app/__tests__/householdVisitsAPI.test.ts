@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -156,7 +155,7 @@ describe('Household Visits API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request('http://localhost:4000/api/household/visits', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -164,7 +163,7 @@ describe('Household Visits API Integration Tests', () => {
             (getServerSession as jest.Mock).mockResolvedValue({ user: { id: testNoHouseId } });
 
             const req = new Request('http://localhost:4000/api/household/visits', { method: 'GET' });
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -176,7 +175,7 @@ describe('Household Visits API Integration Tests', () => {
             (getServerSession as jest.Mock).mockResolvedValue({ user: { id: testUserId } });
 
             const req = new Request('http://localhost:4000/api/household/visits', { method: 'GET' });
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -186,7 +185,7 @@ describe('Household Visits API Integration Tests', () => {
             expect(data.visits.length).toBe(2);
             
             // Verify no cross-pollution from other household
-            const hasOtherHouseholdVisits = data.visits.some((v: any) => v.participantId === testOtherHouseUserId);
+            const hasOtherHouseholdVisits = data.visits.some((v: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => v.participantId === testOtherHouseUserId);
             expect(hasOtherHouseholdVisits).toBe(false);
 
             // Verify ordered correctly (descending)
@@ -201,7 +200,7 @@ describe('Household Visits API Integration Tests', () => {
             const searchWindow = new Date(Date.now() - (9 * 86400000)).toISOString();
             
             const req = new Request(`http://localhost:4000/api/household/visits?date=${encodeURIComponent(searchWindow)}`, { method: 'GET' });
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();

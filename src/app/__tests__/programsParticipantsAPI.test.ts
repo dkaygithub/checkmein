@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -154,7 +153,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: commonId })
              });
-             const res = await POST(req as any, createParams(standardProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(standardProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -165,7 +164,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: otherId }) // common trying to enroll other
              });
-             const res = await POST(req as any, createParams(standardProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(standardProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -179,7 +178,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: commonId }) // self-enrollment
              });
-             const res = await POST(req as any, createParams(standardProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(standardProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -195,7 +194,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: commonId }) // self-enrollment
              });
-             const res = await POST(req as any, createParams(freeProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(freeProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -211,7 +210,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: commonId })
              });
-             const res = await POST(req as any, createParams(fullProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(fullProgramId) as unknown as never);
              expect(res.status).toBe(400); // 400 Bad Request
              
              const data = await res.json();
@@ -226,7 +225,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: otherId })
              });
-             const res = await POST(req as any, createParams(exactAgeProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(exactAgeProgramId) as unknown as never);
              expect(res.status).toBe(400);
              
              const data = await res.json();
@@ -241,7 +240,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ participantId: otherId, override: true }) // ignoring age rules
              });
-             const res = await POST(req as any, createParams(exactAgeProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(exactAgeProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -257,7 +256,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: commonId })
              });
-             const res = await DELETE(req as any, createParams(standardProgramId) as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest, createParams(standardProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -268,7 +267,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: otherId })
              });
-             const res = await DELETE(req as any, createParams(exactAgeProgramId) as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest, createParams(exactAgeProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -282,7 +281,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: commonId }) // assigned lead removing common from standardProgram
              });
-             const res = await DELETE(req as any, createParams(standardProgramId) as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest, createParams(standardProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -297,7 +296,7 @@ describe('Program Participants API Integration Tests', () => {
                  method: 'DELETE',
                  body: JSON.stringify({ participantId: otherId }) // self-removal
              });
-             const res = await DELETE(req as any, createParams(fullProgramId) as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest, createParams(fullProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -30,9 +29,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
+        const currentUserId = session.user.id;
         const isLeadMentor = currentProgram.leadMentorId === currentUserId;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
 
         if (!isLeadMentor && !isSysAdminOrBoard) {
             return NextResponse.json({ error: "Forbidden: Not authorized to assign volunteers" }, { status: 403 });
@@ -90,9 +89,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
+        const currentUserId = session.user.id;
         const isLeadMentor = currentProgram.leadMentorId === currentUserId;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
 
         if (!isLeadMentor && !isSysAdminOrBoard) {
             return NextResponse.json({ error: "Forbidden: Not authorized to remove volunteers" }, { status: 403 });
@@ -151,9 +150,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
+        const currentUserId = session.user.id;
         const isLeadMentor = currentProgram.leadMentorId === currentUserId;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
 
         if (!isLeadMentor && !isSysAdminOrBoard) {
             return NextResponse.json({ error: "Forbidden: Not authorized to modify volunteers" }, { status: 403 });
