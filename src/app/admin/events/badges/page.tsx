@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -12,14 +11,14 @@ export default function AdminBadgesPage() {
     const router = useRouter();
 
     const [loading, setLoading] = useState(true);
-    const [badges, setBadges] = useState<any[]>([]);
+    const [badges, setBadges] = useState<{ id: number, time: string, participant?: { name?: string, email?: string }, location?: string }[]>([]);
     const [message, setMessage] = useState("");
 
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            if (!(session.user as any)?.sysadmin) {
+            if (!session.user?.sysadmin) {
                 router.push('/');
             } else {
                 fetchBadges();
@@ -53,7 +52,7 @@ export default function AdminBadgesPage() {
         );
     }
 
-    if (!session || !(session.user as any)?.sysadmin) return null;
+    if (!session || !session.user?.sysadmin) return null;
 
     return (
         <main className={styles.main}>

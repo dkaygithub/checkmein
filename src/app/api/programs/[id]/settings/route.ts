@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -26,8 +25,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: "Program not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const currentUserId = session.user.id;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
         const isLeadMentor = currentProgram.leadMentorId === currentUserId;
 
         if (!isSysAdminOrBoard && !isLeadMentor) {
@@ -49,7 +48,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         } = body;
 
         // Build data object for Prisma
-        const updateData: any = {};
+        const updateData: Record<string, NonNullable<unknown> | null | string | number | boolean | Date> = {};
         if (name !== undefined) updateData.name = name;
         if (begin !== undefined) updateData.begin = begin ? new Date(begin) : null;
         if (end !== undefined) updateData.end = end ? new Date(end) : null;
@@ -58,7 +57,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         if (memberOnly !== undefined) updateData.memberOnly = memberOnly;
         if (minAge !== undefined) updateData.minAge = minAge;
         if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;
-        if (leadMentorNotificationSettings !== undefined) updateData.leadMentorNotificationSettings = leadMentorNotificationSettings === null ? null : (leadMentorNotificationSettings as any);
+        if (leadMentorNotificationSettings !== undefined) updateData.leadMentorNotificationSettings = leadMentorNotificationSettings === null ? null : (leadMentorNotificationSettings as unknown as never);
 
         // leadMentorId can only be changed by SysAdmin or Board
         if (leadMentorId !== undefined) {

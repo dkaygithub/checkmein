@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -17,13 +16,13 @@ export async function GET(req: Request) {
         const participantIdParam = searchParams.get('participantId');
         const toolIdParam = searchParams.get('toolId');
 
-        let targetUserId = parseInt((session.user as any).id, 10);
+        let targetUserId = session.user.id;
 
         if (participantIdParam) {
             targetUserId = parseInt(participantIdParam, 10);
         }
 
-        let whereClause: any = {};
+        let whereClause: Record<string, NonNullable<unknown> | null | string | number | boolean | Date> = {};
 
         if (toolIdParam) {
             // If checking who is certified on a tool
@@ -68,8 +67,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid certification level" }, { status: 400 });
         }
 
-        const currentUserId = parseInt((session.user as any).id, 10);
-        const isSysAdminOrBoard = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+        const currentUserId = session.user.id;
+        const isSysAdminOrBoard = session.user?.sysadmin || session.user?.boardMember;
 
         let hasCertifierPermission = isSysAdminOrBoard;
 
@@ -108,12 +107,12 @@ export async function POST(req: Request) {
                 }
             },
             update: {
-                level: level as any
+                level: level as 'BASIC' | 'DOF' | 'CERTIFIED' | 'MAY_CERTIFY_OTHERS'
             },
             create: {
                 userId: pId,
                 toolId: tId,
-                level: level as any
+                level: level as 'BASIC' | 'DOF' | 'CERTIFIED' | 'MAY_CERTIFY_OTHERS'
             }
         });
 
@@ -130,8 +129,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ success: true, certification: upsertedCert });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Certification error:", error);
-        return NextResponse.json({ error: error.message || "Failed to upsert certification" }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to upsert certification" }, { status: 500 });
     }
 }

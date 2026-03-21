@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -112,7 +111,7 @@ describe('Admin Orphans API Integration Tests', () => {
 
              const req = new Request('http://localhost:4000/api/admin/orphans', { method: 'GET' });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -123,14 +122,14 @@ describe('Admin Orphans API Integration Tests', () => {
 
             const req = new Request('http://localhost:4000/api/admin/orphans', { method: 'GET' });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
             expect(data.orphans).toBeDefined();
             expect(Array.isArray(data.orphans)).toBe(true);
             
-            const orphanIds = data.orphans.map((o: any) => o.id);
+            const orphanIds = data.orphans.map((o: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => o.id);
 
             // Should be orphans
             expect(orphanIds).toContain(testStudentNoHouseholdId);

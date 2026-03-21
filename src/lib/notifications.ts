@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "./prisma";
 import { sendEmail } from "./email";
 import { formatTime, formatDate } from "./time";
@@ -19,7 +18,7 @@ export type NotificationEvent =
     | 'CHECKIN'
     | 'CHECKOUT';
 
-export async function sendNotification(userId: number, eventType: NotificationEvent, payload: Record<string, any>) {
+export async function sendNotification(userId: number, eventType: NotificationEvent, payload: Record<string, unknown>) {
     try {
         const user = await prisma.participant.findUnique({
             where: { id: userId },
@@ -58,7 +57,7 @@ export async function sendNotification(userId: number, eventType: NotificationEv
         }
 
         // Check user preferences
-        const settings = user.notificationSettings as any;
+        const settings = user.notificationSettings as unknown as Record<string, boolean>;
         const wantsEmail = settings?.email !== false; // Active by default
 
         if (wantsEmail) {
@@ -108,10 +107,10 @@ export async function sendCheckinNotifications(participantId: number, type: 'che
         const emoji = type === 'checkin' ? '✅' : '👋';
         const name = participant.name || 'A member';
 
-        const emailPromises: Promise<any>[] = [];
+        const emailPromises: Promise<unknown>[] = [];
 
         // 1. Send receipt to the participant themselves if they opted in
-        const settings = participant.notificationSettings as any;
+        const settings = participant.notificationSettings as unknown as Record<string, boolean>;
         if (settings?.emailCheckinReceipts && participant.email) {
             const subject = `${emoji} ${name} ${action} Innovation Treehouse`;
             const html = checkinReceiptTemplate({ name, type, date: dateStr, time: timeStr });
@@ -138,7 +137,7 @@ export async function sendCheckinNotifications(participantId: number, type: 'che
                 // Don't double-notify if the lead IS the participant
                 if (lead.participant.id === participant.id) continue;
 
-                const leadSettings = lead.participant.notificationSettings as any;
+                const leadSettings = lead.participant.notificationSettings as unknown as Record<string, boolean>;
                 if (leadSettings?.emailDependentCheckins && lead.participant.email) {
                     const subject = `${emoji} ${name} ${action} Innovation Treehouse`;
                     const html = householdMemberTemplate({

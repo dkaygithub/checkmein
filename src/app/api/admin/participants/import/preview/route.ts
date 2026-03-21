@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth";
@@ -46,13 +45,13 @@ export async function POST(req: NextRequest) {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
 
-        const rawData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+        const rawData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
 
         if (rawData.length < 2) {
             return NextResponse.json({ error: "Empty spreadsheet or no data rows found" }, { status: 400 });
         }
 
-        const headers = rawData[0].map((h: any) => String(h).trim().toLowerCase());
+        const headers = rawData[0].map((h: unknown) => String(h).trim().toLowerCase());
         const rows = rawData.slice(1);
 
         const emailIndex = headers.findIndex(h => h.includes("email") && !h.includes("parent") && !h.includes("household"));
@@ -258,7 +257,7 @@ export async function POST(req: NextRequest) {
                 }
             } else if (!sameHouseholdAs) {
                 // No email, no parent email, no household ref — match by name
-                const matchQuery: any = { name: fullName };
+                const matchQuery: Record<string, unknown> = { name: fullName };
                 if (parsedDob) matchQuery.dob = parsedDob;
 
                 const existing = await prisma.participant.findFirst({

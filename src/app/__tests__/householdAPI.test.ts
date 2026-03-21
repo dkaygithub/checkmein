@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -147,7 +146,7 @@ describe('Household API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request('http://localhost:4000/api/household', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -157,7 +156,7 @@ describe('Household API Integration Tests', () => {
             });
 
             const req = new Request('http://localhost:4000/api/household', { method: 'GET' });
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -172,7 +171,7 @@ describe('Household API Integration Tests', () => {
             (getServerSession as jest.Mock).mockResolvedValue({ user: { id: testUserId } });
 
             const req = new Request('http://localhost:4000/api/household', { method: 'POST' });
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             
             expect(res.status).toBe(400);
             const data = await res.json();
@@ -183,7 +182,7 @@ describe('Household API Integration Tests', () => {
             (getServerSession as jest.Mock).mockResolvedValue({ user: { id: testNoHouseId } });
 
             const req = new Request('http://localhost:4000/api/household', { method: 'POST' });
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             
             expect(res.status).toBe(201);
             const data = await res.json();
@@ -192,7 +191,7 @@ describe('Household API Integration Tests', () => {
             expect(data.household.name).toBe('User Household');
 
             // Verify they are lead
-            const isLead = data.household.leads.some((l: any) => l.participantId === testNoHouseId);
+            const isLead = data.household.leads.some((l: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => l.participantId === testNoHouseId);
             expect(isLead).toBe(true);
 
             // Need to clean this newly created household up in afterAll, already handled
@@ -208,7 +207,7 @@ describe('Household API Integration Tests', () => {
                 body: JSON.stringify({ memberName: 'Child' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(401);
         });
 
@@ -220,7 +219,7 @@ describe('Household API Integration Tests', () => {
                 body: JSON.stringify({ memberName: 'Child' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
             const data = await res.json();
             expect(data.error).toBe('Only household leads can add members');
@@ -234,7 +233,7 @@ describe('Household API Integration Tests', () => {
                 body: JSON.stringify({ memberName: 'T', memberEmail: 'other-household-api-test@example.com' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
             const data = await res.json();
             expect(data.error).toBe('A user with this email already belongs to a household.');
@@ -248,7 +247,7 @@ describe('Household API Integration Tests', () => {
                 body: JSON.stringify({ memberName: 'New Child', memberEmail: 'new-child-household-api-test@example.com' })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             
             const data = await res.json();

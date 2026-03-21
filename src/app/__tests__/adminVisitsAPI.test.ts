@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -85,7 +84,7 @@ describe('Admin Visits API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(401);
         });
 
@@ -98,7 +97,7 @@ describe('Admin Visits API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
         });
 
@@ -111,13 +110,13 @@ describe('Admin Visits API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             const data = await res.json();
             expect(Array.isArray(data.visits)).toBe(true);
             expect(data.visits.length).toBeGreaterThanOrEqual(1);
 
-            const visitMatches = data.visits.filter((v: any) => v.participantId === testUserId);
+            const visitMatches = data.visits.filter((v: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => v.participantId === testUserId);
             expect(visitMatches.length).toBe(1);
             expect(visitMatches[0].participant).toBeDefined();
         });
@@ -132,7 +131,7 @@ describe('Admin Visits API Integration Tests', () => {
                 body: JSON.stringify({ visitId: testVisitId, departed: new Date().toISOString() })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(401);
         });
 
@@ -146,7 +145,7 @@ describe('Admin Visits API Integration Tests', () => {
                 body: JSON.stringify({ visitId: testVisitId, departed: new Date().toISOString() })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
         });
 
@@ -160,7 +159,7 @@ describe('Admin Visits API Integration Tests', () => {
                 body: JSON.stringify({ departed: new Date().toISOString() })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
             const data = await res.json();
             expect(data.error).toBe('visitId is required.');
@@ -181,7 +180,7 @@ describe('Admin Visits API Integration Tests', () => {
                 body: JSON.stringify({ visitId: testVisitId, departed: now.toISOString() })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             const data = await res.json();
             expect(new Date(data.visit.departed).toISOString()).toBe(now.toISOString());

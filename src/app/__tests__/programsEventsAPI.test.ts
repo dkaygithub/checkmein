@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -103,7 +102,7 @@ describe('Program Events API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'New Test Event', start: new Date(), end: new Date() })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(401);
         });
 
@@ -114,7 +113,7 @@ describe('Program Events API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'New Test Event', start: new Date(), end: new Date() })
              });
-             const res = await POST(req as any, createParams(999999) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(999999) as unknown as never);
              expect(res.status).toBe(404);
         });
 
@@ -125,7 +124,7 @@ describe('Program Events API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'Hacked Event', start: new Date(), end: new Date() })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -139,7 +138,7 @@ describe('Program Events API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'Incomplete Event' }) // missing start and end
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(400);
              
              const data = await res.json();
@@ -156,7 +155,7 @@ describe('Program Events API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'Mentor Events API Test', start, end, description: 'Created by Mentor' })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -182,7 +181,7 @@ describe('Program Events API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ name: 'Admin Events API Test', start, end })
              });
-             const res = await POST(req as any, createParams(targetProgramId) as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest, createParams(targetProgramId) as unknown as never);
              expect(res.status).toBe(200);
              
              const data = await res.json();

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -99,7 +98,7 @@ describe('Attendance API Integration Tests', () => {
                  method: 'GET'
              });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -112,7 +111,7 @@ describe('Attendance API Integration Tests', () => {
                 method: 'GET'
             });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -120,7 +119,7 @@ describe('Attendance API Integration Tests', () => {
             expect(Array.isArray(data.attendance)).toBe(true);
             
             // Should contain at least the visit we seeded
-            const foundVisit = data.attendance.find((v: any) => v.id === activeVisitId);
+            const foundVisit = data.attendance.find((v: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => v.id === activeVisitId);
             expect(foundVisit).toBeDefined();
             expect(foundVisit.participant.name).toBe('Participant Test');
         });
@@ -147,7 +146,7 @@ describe('Attendance API Integration Tests', () => {
                 body: JSON.stringify({ visitId: memberVisit.id })
             });
 
-            const res = await DELETE(req as any);
+            const res = await DELETE(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -165,7 +164,7 @@ describe('Attendance API Integration Tests', () => {
                 body: JSON.stringify({ visitId: activeVisitId }) // activeVisitId belongs to testParticipantId
             });
 
-            const res = await DELETE(req as any);
+            const res = await DELETE(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
             
             const data = await res.json();
@@ -189,7 +188,7 @@ describe('Attendance API Integration Tests', () => {
                 body: JSON.stringify({ type: 'MANUAL_CHECKIN', participantId: testHouseholdMemberId })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -207,7 +206,7 @@ describe('Attendance API Integration Tests', () => {
                 body: JSON.stringify({ type: 'MANUAL_CHECKIN', participantId: testParticipantId }) // Already checked in
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
 
             const data = await res.json();

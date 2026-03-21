@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Integration Test for Audit Logs
  * Ensures that various actions across the system correctly generate an AuditLog.
@@ -136,7 +136,7 @@ describe('AuditLog Integration Tests', () => {
         });
 
         expect(log).toBeDefined();
-        const newData = log?.newData as any;
+        const newData = log?.newData as { leadMentorNotificationSettings: { notifyRsvp: boolean } };
         expect(newData.leadMentorNotificationSettings.notifyRsvp).toBe(true);
     });
 

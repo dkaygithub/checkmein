@@ -85,8 +85,7 @@ describe('Cron Nightly API Integration Tests', () => {
         await prisma.visit.deleteMany({ where: { participant: { email: { contains: '-nightly@' } } } });
         await prisma.event.deleteMany({ where: { name: { startsWith: 'Test Event - Nightly' } } });
         await prisma.program.deleteMany({ where: { name: 'Nightly Test Program' } });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await prisma.auditLog.deleteMany({ where: { newData: { string_contains: 'keyholder-nightly' } as any } });
+        await prisma.auditLog.deleteMany();
         await prisma.participant.deleteMany({
             where: { email: { contains: '-nightly@' } }
         });

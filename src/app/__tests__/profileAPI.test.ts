@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -78,7 +77,7 @@ describe('Profile API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request('http://localhost:4000/api/profile', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -86,7 +85,7 @@ describe('Profile API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: 999999 } });
 
              const req = new Request('http://localhost:4000/api/profile', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(404);
         });
 
@@ -94,7 +93,7 @@ describe('Profile API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: testUserId } });
 
              const req = new Request('http://localhost:4000/api/profile', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(200);
 
              const data = await res.json();
@@ -115,7 +114,7 @@ describe('Profile API Integration Tests', () => {
                  method: 'PATCH',
                  body: JSON.stringify({ name: 'Hacker' })
              });
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -130,7 +129,7 @@ describe('Profile API Integration Tests', () => {
                 })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
             
             const data = await res.json();

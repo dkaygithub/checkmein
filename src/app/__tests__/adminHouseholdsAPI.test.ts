@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -88,7 +87,7 @@ describe('Admin Households API Integration Tests', () => {
 
              const req = new Request('http://localhost:4000/api/admin/households', { method: 'GET' });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -99,15 +98,15 @@ describe('Admin Households API Integration Tests', () => {
 
             const req = new Request('http://localhost:4000/api/admin/households', { method: 'GET' });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
             expect(data.households).toBeDefined();
             expect(Array.isArray(data.households)).toBe(true);
             
-            const h1 = data.households.find((h: any) => h.id === testHousehold1Id);
-            const h2 = data.households.find((h: any) => h.id === testHousehold2Id);
+            const h1 = data.households.find((h: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => h.id === testHousehold1Id);
+            const h2 = data.households.find((h: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => h.id === testHousehold2Id);
             expect(h1).toBeDefined();
             expect(h2).toBeDefined();
         });
@@ -120,12 +119,12 @@ describe('Admin Households API Integration Tests', () => {
             // Search by user email in household 2
             const req = new Request('http://localhost:4000/api/admin/households?q=user-households-api-test', { method: 'GET' });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
-            const h2 = data.households.find((h: any) => h.id === testHousehold2Id);
-            const h1 = data.households.find((h: any) => h.id === testHousehold1Id);
+            const h2 = data.households.find((h: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => h.id === testHousehold2Id);
+            const h1 = data.households.find((h: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => h.id === testHousehold1Id);
             
             expect(h2).toBeDefined();
             expect(h1).toBeUndefined(); // Should be filtered out
@@ -143,7 +142,7 @@ describe('Admin Households API Integration Tests', () => {
                  body: JSON.stringify({ householdId: testHousehold1Id, active: true })
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -157,7 +156,7 @@ describe('Admin Households API Integration Tests', () => {
                 body: JSON.stringify({ active: true })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
         });
 
@@ -171,7 +170,7 @@ describe('Admin Households API Integration Tests', () => {
                 body: JSON.stringify({ householdId: testHousehold1Id, active: true })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -194,7 +193,7 @@ describe('Admin Households API Integration Tests', () => {
                 body: JSON.stringify({ householdId: testHousehold2Id, active: false })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();

@@ -33,7 +33,7 @@ export default function AdminDashboardIndex() {
             <div className="glass-container animate-float" style={{ padding: '2rem', marginBottom: '2rem' }}>
                 <h1 className="text-gradient" style={{ marginTop: 0 }}>Admin Dashboard</h1>
                 <p style={{ color: 'var(--color-text-muted)' }}>
-                    Welcome back, {(session?.user as any)?.name || 'Admin'}. Here is an overview of the facility status and pending tasks.
+                    Welcome back, {session?.user?.name || 'Admin'}. Here is an overview of the facility status and pending tasks.
                 </p>
             </div>
 

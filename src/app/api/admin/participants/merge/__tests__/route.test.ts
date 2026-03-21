@@ -58,7 +58,7 @@ describe("Merge Participants API", () => {
         const req = new Request("http://localhost/api/admin/participants/merge", {
             method: "POST",
             body: JSON.stringify({ keepId: pKeepId, mergeId: pMergeId })
-        }) as unknown as Request;
+        }) as unknown as import('next/server').NextRequest;
 
         const res = await POST(req);
         expect(res.status).toBe(200);
@@ -98,7 +98,7 @@ describe("Merge Participants API", () => {
         const req = new Request("http://localhost/api/admin/participants/merge", {
             method: "POST",
             body: JSON.stringify({ keepId: pKeepId, mergeId: pMergeId })
-        }) as unknown as Request;
+        }) as unknown as import('next/server').NextRequest;
 
         const res = await POST(req);
         expect(res.status).toBe(400);

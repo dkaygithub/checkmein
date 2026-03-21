@@ -35,8 +35,7 @@ export default function PaymentPlansPage() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const user = session.user as any;
+            const user = session.user;
             if (!user?.sysadmin && !user?.boardMember) {
                  router.push('/admin'); // Redirect if entirely unauthorized
             } else if (!user?.boardMember && user?.sysadmin) {
@@ -98,8 +97,7 @@ export default function PaymentPlansPage() {
 
     if (!session) return null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = session.user as any;
+    const user = session.user;
     if (!user.boardMember && !user.sysadmin) {
         return (
              <main className={styles.main}>

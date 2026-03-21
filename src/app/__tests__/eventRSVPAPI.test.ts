@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -110,7 +109,7 @@ describe('Event RSVP API Integration Tests', () => {
                  body: JSON.stringify({ status: 'ATTENDING' })
              });
 
-             const res = await PATCH(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
              expect(res.status).toBe(401);
         });
 
@@ -124,7 +123,7 @@ describe('Event RSVP API Integration Tests', () => {
                  body: JSON.stringify({ status: 'INVALID_STATUS' })
              });
 
-             const res = await PATCH(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+             const res = await PATCH(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
              expect(res.status).toBe(400);
 
              const data = await res.json();
@@ -141,7 +140,7 @@ describe('Event RSVP API Integration Tests', () => {
                 body: JSON.stringify({ status: 'ATTENDING' })
             });
 
-            const res = await PATCH(req as any, { params: Promise.resolve({ id: '9999999' }) });
+            const res = await PATCH(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: '9999999' }) });
             expect(res.status).toBe(404);
         });
 
@@ -155,7 +154,7 @@ describe('Event RSVP API Integration Tests', () => {
                 body: JSON.stringify({ status: 'ATTENDING' })
             });
 
-            const res = await PATCH(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+            const res = await PATCH(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
             expect(res.status).toBe(403);
             
             const data = await res.json();
@@ -172,7 +171,7 @@ describe('Event RSVP API Integration Tests', () => {
                 body: JSON.stringify({ status: 'ATTENDING' })
             });
 
-            const res = await PATCH(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+            const res = await PATCH(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -217,7 +216,7 @@ describe('Event RSVP API Integration Tests', () => {
                 body: JSON.stringify({ status: 'NOT_ATTENDING' })
             });
 
-            const res = await PATCH(req as any, { params: Promise.resolve({ id: String(testEventId) }) });
+            const res = await PATCH(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testEventId) }) });
             expect(res.status).toBe(200);
 
             const data = await res.json();

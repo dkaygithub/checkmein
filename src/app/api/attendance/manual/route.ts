@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,11 +8,11 @@ import { logBackendError } from "@/lib/logger";
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user || !(session.user as any).id) {
+        if (!session || !session.user || !session.user.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = (session.user as any).id;
+        const userId = session.user.id;
         const body = await req.json();
         const { arrived, departed } = body;
 
@@ -56,7 +55,7 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ message: "Manual visit recorded successfully.", visit }, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Manual Attendance POST Error:", error);
         await logBackendError(error, "POST /api/attendance/manual");
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

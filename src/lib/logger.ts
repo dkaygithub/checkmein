@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "./prisma";
 
 export const logger = {
-    info: (...args: any[]) => console.info(...args),
-    warn: (...args: any[]) => console.warn(...args),
-    error: (...args: any[]) => console.error(...args),
+    info: (...args: unknown[]) => console.info(...args),
+    warn: (...args: unknown[]) => console.warn(...args),
+    error: (...args: unknown[]) => console.error(...args),
 };
 
 /**
@@ -14,7 +13,7 @@ export const logger = {
  * @param route The API route or function name where the error occurred
  * @param context Optional additional context to help with debugging
  */
-export async function logBackendError(error: unknown, route?: string, context?: any) {
+export async function logBackendError(error: unknown, route?: string, context?: unknown) {
     try {
         const message = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;

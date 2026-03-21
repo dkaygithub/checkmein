@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth";
@@ -24,7 +23,7 @@ export async function PUT(
 
         const body = await request.json();
         
-        const updateData: any = {};
+        const updateData: Record<string, NonNullable<unknown> | null | string | number | boolean | Date> = {};
         if (body.name !== undefined) updateData.name = body.name;
         if (body.email !== undefined) updateData.email = body.email;
         if (body.phone !== undefined) updateData.phone = body.phone;

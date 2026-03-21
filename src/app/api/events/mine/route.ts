@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -12,7 +11,7 @@ export async function GET() {
     }
 
     try {
-        const userId = parseInt((session.user as any).id, 10);
+        const userId = session.user.id;
 
         // Get programs the user is in
         const enrolledPrograms = await prisma.programParticipant.findMany({

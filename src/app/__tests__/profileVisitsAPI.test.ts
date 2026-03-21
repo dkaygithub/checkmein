@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -68,7 +67,7 @@ describe('Profile Visits API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue(null);
 
              const req = new Request('http://localhost:4000/api/profile/visits', { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -76,7 +75,7 @@ describe('Profile Visits API Integration Tests', () => {
             (getServerSession as jest.Mock).mockResolvedValue({ user: { id: testUserId } });
 
             const req = new Request('http://localhost:4000/api/profile/visits', { method: 'GET' });
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -93,7 +92,7 @@ describe('Profile Visits API Integration Tests', () => {
             const searchWindow = new Date(Date.now() - (9 * 86400000)).toISOString();
             
             const req = new Request(`http://localhost:4000/api/profile/visits?date=${encodeURIComponent(searchWindow)}`, { method: 'GET' });
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();

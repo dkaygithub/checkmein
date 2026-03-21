@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -40,7 +39,7 @@ export default function CreateProgramPage() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            const isAuthorized = (session.user as any)?.sysadmin || (session.user as any)?.boardMember;
+            const isAuthorized = session.user?.sysadmin || session.user?.boardMember;
             if (!isAuthorized) {
                 router.push('/admin');
             }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -84,7 +83,7 @@ describe('Events API Integration Tests', () => {
                  body: JSON.stringify({ name: 'Test Event' })
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -98,7 +97,7 @@ describe('Events API Integration Tests', () => {
                  body: JSON.stringify({ name: 'Test Event', programId: testProgramId, startDate: '2025-01-01', startTime: '10:00', endTime: '12:00' })
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -112,7 +111,7 @@ describe('Events API Integration Tests', () => {
                 body: JSON.stringify({ name: 'Test Event Missing Dates' }) // Missing startDate, etc
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
             
             const data = await res.json();
@@ -136,7 +135,7 @@ describe('Events API Integration Tests', () => {
                 })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -173,7 +172,7 @@ describe('Events API Integration Tests', () => {
                 })
             });
 
-            const res = await POST(req as any);
+            const res = await POST(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();

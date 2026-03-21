@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -12,7 +11,7 @@ export default function AdminVisitsPage() {
     const router = useRouter();
 
     const [loading, setLoading] = useState(true);
-    const [visits, setVisits] = useState<any[]>([]);
+    const [visits, setVisits] = useState<{ id: number, arrived: string | null, departed?: string | null, participant?: { name?: string | null, email?: string | null } | null, event?: { name?: string | null } | null }[]>([]);
     const [message, setMessage] = useState("");
 
     const [editingVisitId, setEditingVisitId] = useState<number | null>(null);
@@ -22,7 +21,7 @@ export default function AdminVisitsPage() {
         if (status === "unauthenticated") {
             router.push('/');
         } else if (status === "authenticated") {
-            if (!(session.user as any)?.sysadmin) {
+            if (!session.user?.sysadmin) {
                 router.push('/');
             } else {
                 fetchVisits();
@@ -46,7 +45,7 @@ export default function AdminVisitsPage() {
         }
     };
 
-    const handleEditClick = (visit: any) => {
+    const handleEditClick = (visit: { id: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => {
         const confirmEdit = window.confirm("Warning: You are editing a past visit record using Admin overrides. This will be permanently logged.");
         if (!confirmEdit) return;
 
@@ -57,8 +56,8 @@ export default function AdminVisitsPage() {
             return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         };
         setEditForm({
-            arrived: formatForInput(visit.arrived),
-            departed: formatForInput(visit.departed)
+            arrived: formatForInput(visit.arrived as string | null),
+            departed: formatForInput(visit.departed as string | null)
         });
     };
 
@@ -95,7 +94,7 @@ export default function AdminVisitsPage() {
         );
     }
 
-    if (!session || !(session.user as any)?.sysadmin) return null;
+    if (!session || !session.user?.sysadmin) return null;
 
     return (
         <main className={styles.main}>

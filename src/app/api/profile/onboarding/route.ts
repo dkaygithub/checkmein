@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withAuth } from "@/lib/auth";
@@ -29,9 +28,9 @@ export const POST = withAuth(
                 });
             }
 
-            const isLead = user.householdId && user.householdLeads.some((lead: any) => lead.householdId === user.householdId);
+            const isLead = user.householdId && user.householdLeads.some((lead: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => lead.householdId === user.householdId);
             if (isLead && user.householdId && (emergencyContactName !== undefined || emergencyContactPhone !== undefined)) {
-                const updateData: any = {};
+                const updateData: Record<string, NonNullable<unknown> | null | string | number | boolean | Date> = {};
                 if (emergencyContactName !== undefined) updateData.emergencyContactName = emergencyContactName;
                 if (emergencyContactPhone !== undefined) updateData.emergencyContactPhone = emergencyContactPhone;
                 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -17,7 +16,7 @@ export async function GET(req: Request) {
         let canSeeMemberOnly = false;
 
         if (session && session.user) {
-            const user = session.user as any;
+            const user = session.user;
             if (user.sysadmin || user.boardMember) {
                 canSeeMemberOnly = true;
             } else {
@@ -36,7 +35,7 @@ export async function GET(req: Request) {
             }
         }
 
-        const andClauses: any[] = [];
+        const andClauses: Record<string, unknown>[] = [];
 
         if (activeOnly) {
             andClauses.push({
@@ -54,8 +53,8 @@ export async function GET(req: Request) {
         let canSeeDrafts = false;
         let userId: number | undefined;
         if (session && session.user) {
-            userId = parseInt((session.user as any).id, 10);
-            if ((session.user as any).sysadmin || (session.user as any).boardMember) {
+            userId = session.user.id;
+            if (session.user.sysadmin || session.user.boardMember) {
                 canSeeDrafts = true;
             }
         }
@@ -96,7 +95,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
-    const canCreate = (session?.user as any)?.sysadmin || (session?.user as any)?.boardMember;
+    const canCreate = session?.user?.sysadmin || session?.user?.boardMember;
 
     if (!session || !canCreate) {
         return NextResponse.json({ error: "Forbidden: Only Admin or Board Members can create programs" }, { status: 403 });
@@ -146,7 +145,7 @@ export async function POST(req: Request) {
 
         await prisma.auditLog.create({
             data: {
-                actorId: parseInt((session.user as any).id, 10),
+                actorId: session.user.id,
                 action: 'CREATE',
                 tableName: 'Program',
                 affectedEntityId: newProgram.id,
@@ -158,14 +157,14 @@ export async function POST(req: Request) {
             await sendNotification(newProgram.leadMentorId, 'PROGRAM_ASSIGNMENT', { programName: newProgram.name });
         }
 
-        const responseObj: any = { success: true, program: newProgram };
+        const responseObj: Record<string, unknown> = { success: true, program: newProgram };
         if (((mPrice && mPrice > 0) || (nmPrice && nmPrice > 0)) && !shopifyData) {
             responseObj.warning = "Program created, but Shopify integration failed or is not configured. Payment links will not work.";
         }
 
         return NextResponse.json(responseObj);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Program creation error:", error);
-        return NextResponse.json({ error: error?.message || "Failed to create program" }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create program" }, { status: 500 });
     }
 }

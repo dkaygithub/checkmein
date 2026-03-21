@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -26,7 +25,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: "Invalid RSVP status" }, { status: 400 });
         }
 
-        const currentUserId = parseInt((session.user as any).id, 10);
+        const currentUserId = session.user.id;
 
         // Verify the event exists and the user is enrolled in the program (if applicable)
         const event = await prisma.event.findUnique({
@@ -69,12 +68,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 }
             },
             update: {
-                status: status as any
+                status: status as 'ATTENDING' | 'NOT_ATTENDING' | 'NO_RESPONSE' | 'MAYBE'
             },
             create: {
                 eventId,
                 participantId: currentUserId,
-                status: status as any
+                status: status as 'ATTENDING' | 'NOT_ATTENDING' | 'NO_RESPONSE' | 'MAYBE'
             }
         });
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -150,7 +149,7 @@ describe('General Attendance API Integration Tests', () => {
              (verifyKiosk.getKioskPublicKeys as jest.Mock).mockReturnValue([Buffer.from('mock-public-key')]);
 
              const req = new Request(`http://localhost:4000/api/attendance`, { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(401);
              
              jest.restoreAllMocks();
@@ -169,7 +168,7 @@ describe('General Attendance API Integration Tests', () => {
                      'x-kiosk-timestamp': Date.now().toString()
                  })
              });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(403);
              
              jest.restoreAllMocks();
@@ -179,14 +178,14 @@ describe('General Attendance API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId, sysadmin: true } });
 
              const req = new Request(`http://localhost:4000/api/attendance`, { method: 'GET' });
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
              expect(data.access).toBe('full');
              expect(data.counts).toBeDefined();
              expect(data.counts.total).toBeGreaterThanOrEqual(2);
-             const emails = data.attendance.map((v: any) => v.participant.email);
+             const emails = data.attendance.map((v: { participant: { email: string } }) => v.participant.email);
              expect(emails).toContain('common-attend-api-test@example.com');
              expect(emails).toContain('child-attend-api-test@example.com');
         });
@@ -200,7 +199,7 @@ describe('General Attendance API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ type: 'MANUAL_CHECKIN', participantId: adminId })
              });
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -214,7 +213,7 @@ describe('General Attendance API Integration Tests', () => {
                  method: 'POST',
                  body: JSON.stringify({ type: 'MANUAL_CHECKIN', participantId: commonId }) // commonId is already checked in from beforeAll
              });
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(400);
              
              const data = await res.json();
@@ -239,7 +238,7 @@ describe('General Attendance API Integration Tests', () => {
                  user: { id: householdLeadId, householdId: childRecord!.householdId, householdLead: true } 
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -255,7 +254,7 @@ describe('General Attendance API Integration Tests', () => {
                  body: JSON.stringify({ type: 'MANUAL_CHECKIN', participantId: householdLeadId })
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -273,7 +272,7 @@ describe('General Attendance API Integration Tests', () => {
                  body: JSON.stringify({ type: 'TWO_DEEP_VIOLATION', message: 'Only 1 adult is in the building!' })
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -283,7 +282,7 @@ describe('General Attendance API Integration Tests', () => {
              // Prove debounce log was created
              const logs = await prisma.auditLog.findMany({ where: { tableName: 'SYSTEM_NOTIFY' } });
              expect(logs.length).toBe(1);
-             expect((logs[0].newData as any).message).toMatch(/Sent Two-Deep warning/);
+             expect((logs[0].newData as { message: string }).message).toMatch(/Sent Two-Deep warning/);
         });
 
         it('should debounce subsequent TWO_DEEP_VIOLATION triggers if within 5 minutes', async () => {
@@ -294,7 +293,7 @@ describe('General Attendance API Integration Tests', () => {
                  body: JSON.stringify({ type: 'TWO_DEEP_VIOLATION', message: 'Spam trigger!' })
              });
 
-             const res = await POST(req as any);
+             const res = await POST(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -313,7 +312,7 @@ describe('General Attendance API Integration Tests', () => {
                  body: JSON.stringify({ visitId: childActiveVisitId }) // the child's visit
              });
 
-             const res = await DELETE(req as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -328,7 +327,7 @@ describe('General Attendance API Integration Tests', () => {
                  body: JSON.stringify({ visitId: activeVisitId }) // their own visit
              });
 
-             const res = await DELETE(req as any);
+             const res = await DELETE(req as unknown as import("next/server").NextRequest) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -80,7 +79,7 @@ describe('Admin Participant Household API Integration Tests', () => {
                 body: JSON.stringify({ householdId: testHouseholdId })
             });
 
-            const res = await POST(req as any, { params: Promise.resolve({ id: String(testParticipantId) }) });
+            const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testParticipantId) }) });
             expect(res.status).toBe(403);
         });
 
@@ -94,7 +93,7 @@ describe('Admin Participant Household API Integration Tests', () => {
                 body: JSON.stringify({ householdId: testHouseholdId })
             });
 
-            const res = await POST(req as any, { params: Promise.resolve({ id: String(testParticipantId) }) });
+            const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testParticipantId) }) });
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -115,7 +114,7 @@ describe('Admin Participant Household API Integration Tests', () => {
                 body: JSON.stringify({ createNew: true })
             });
 
-            const res = await POST(req as any, { params: Promise.resolve({ id: String(testParticipantId) }) });
+            const res = await POST(req as unknown as import("next/server").NextRequest, { params: Promise.resolve({ id: String(testParticipantId) }) });
             expect(res.status).toBe(200);
 
             const data = await res.json();

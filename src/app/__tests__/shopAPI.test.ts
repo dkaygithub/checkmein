@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -70,7 +69,7 @@ describe('Shop API Integration Tests', () => {
             data: { 
                 email: 'common-shop-api-test@example.com', 
                 name: 'Common',
-                memberships: { create: { type: 'VOLUNTEER', active: true } as any }
+                memberships: { create: { type: 'VOLUNTEER', active: true } }
             }
         });
         commonId = commonUser.id;
@@ -126,7 +125,7 @@ describe('Shop API Integration Tests', () => {
         });
     });
 
-    const createReq = (method: string, queryAndBody?: { searchParams?: string, body?: any }) => {
+    const createReq = (method: string, queryAndBody?: { searchParams?: string, body?: Record<string, unknown> }) => {
         let url = `http://localhost:4000/api/shop/route`;
         if (queryAndBody?.searchParams) url += `?${queryAndBody.searchParams}`;
 
@@ -134,26 +133,26 @@ describe('Shop API Integration Tests', () => {
             url,
             method,
             json: queryAndBody?.body ? jest.fn().mockResolvedValue(queryAndBody.body) : undefined
-        } as any;
+        } as unknown as never;
     };
 
     describe('/api/shop/active', () => {
         it('should return 403 for common users', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
-             const res = await getActive(createReq('GET'));
+             const res = await getActive() as Response;
              expect(res.status).toBe(403);
         });
 
         it('should return 200 and active occupants for standard shop steward', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: stewardId, shopSteward: true } });
 
-             const res = await getActive(createReq('GET'));
+             const res = await getActive() as Response;
              expect(res.status).toBe(200);
              const data = await res.json();
              
              // The common user we made has an active visit
-             const occupantEmails = data.map((d: any) => d.participant.email);
+             const occupantEmails = data.map((d: { participant: { email: string } }) => d.participant.email);
              expect(occupantEmails).toContain('common-shop-api-test@example.com');
         });
 
@@ -163,7 +162,7 @@ describe('Shop API Integration Tests', () => {
                  user: { id: certifierId, toolStatuses: [{ level: 'MAY_CERTIFY_OTHERS' }] }
              });
 
-             const res = await getActive(createReq('GET'));
+             const res = await getActive() as Response;
              expect(res.status).toBe(200);
         });
     });
@@ -172,19 +171,19 @@ describe('Shop API Integration Tests', () => {
         it('should return 403 for common users', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
-             const res = await getMembers(createReq('GET'));
+             const res = await getMembers() as Response;
              expect(res.status).toBe(403);
         });
 
         it('should return 200 and members for an admin', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId, sysadmin: true } });
 
-             const res = await getMembers(createReq('GET'));
+             const res = await getMembers() as Response;
              expect(res.status).toBe(200);
              const data = await res.json();
              
              // Our common user has an active membership so they should appear
-             const memberEmails = data.members.map((m: any) => m.email);
+             const memberEmails = data.members.map((m: { email: string }) => m.email);
              expect(memberEmails).toContain('common-shop-api-test@example.com');
         });
     });
@@ -193,18 +192,18 @@ describe('Shop API Integration Tests', () => {
         it('should allow anyone authenticated to GET tool list', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
-             const res = await getTools(createReq('GET'));
+             const res = await getTools() as Response;
              expect(res.status).toBe(200);
              const data = await res.json();
              expect(Array.isArray(data)).toBe(true);
-             expect(data.some((t: any) => t.name === 'Shop Test Tool Alpha')).toBe(true);
+             expect(data.some((t: { name: string }) => t.name === 'Shop Test Tool Alpha')).toBe(true);
         });
 
         it('should return 403 for common users attempting a POST', async () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
              const req = createReq('POST', { body: { name: 'Shop Test Tool Beta' } });
-             const res = await postTools(req);
+             const res = await postTools(req) as Response;
              expect(res.status).toBe(403);
         });
 
@@ -212,7 +211,7 @@ describe('Shop API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: adminId, sysadmin: true } });
 
              const req = createReq('POST', { body: { name: 'Shop Test Tool Admin' } });
-             const res = await postTools(req);
+             const res = await postTools(req) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -224,7 +223,7 @@ describe('Shop API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: stewardId, shopSteward: true } });
 
              const req = createReq('POST', { body: { name: 'Shop Test Tool Steward' } });
-             const res = await postTools(req);
+             const res = await postTools(req) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -238,7 +237,7 @@ describe('Shop API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
              const req = createReq('GET', { searchParams: `toolId=${mockToolId}` });
-             const res = await getCerts(req);
+             const res = await getCerts(req) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();
@@ -252,7 +251,7 @@ describe('Shop API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: commonId } });
 
              const req = createReq('POST', { body: { participantId: commonId, toolId: mockToolId, level: 'BASIC' } });
-             const res = await postCerts(req);
+             const res = await postCerts(req) as Response;
              expect(res.status).toBe(403);
         });
 
@@ -260,7 +259,7 @@ describe('Shop API Integration Tests', () => {
              (getServerSession as jest.Mock).mockResolvedValue({ user: { id: certifierId } });
 
              const req = createReq('POST', { body: { participantId: commonId, toolId: mockToolId, level: 'BASIC' } });
-             const res = await postCerts(req);
+             const res = await postCerts(req) as Response;
              expect(res.status).toBe(200);
              
              const data = await res.json();

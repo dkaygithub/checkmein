@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -25,17 +24,17 @@ export default function ShopStewardPage() {
         return null;
     }
 
-    const isSysadmin = (session?.user as any)?.sysadmin;
-    const isBoardMember = (session?.user as any)?.boardMember;
-    const isShopSteward = (session?.user as any)?.shopSteward;
+    const isSysadmin = session?.user?.sysadmin;
+    const isBoardMember = session?.user?.boardMember;
+    const isShopSteward = session?.user?.shopSteward;
     const isAdmin = isSysadmin || isBoardMember || isShopSteward;
 
     // Certifier check: either Shop Steward, Board Member, Admin, or explicitly has MAY_CERTIFY_OTHERS
-    const certs = (session?.user as any)?.toolStatuses || [];
-    const hasCertifierAuth = certs.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
+    const certs = session?.user?.toolStatuses || [];
+    const hasCertifierAuth = certs.some((ts: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => ts.level === 'MAY_CERTIFY_OTHERS');
     const isCertifier = isSysadmin ||
         isBoardMember ||
-        (session?.user as any)?.shopSteward ||
+        session?.user?.shopSteward ||
         hasCertifierAuth;
 
     if (!isCertifier && !isAdmin) {

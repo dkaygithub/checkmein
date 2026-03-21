@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withAuth } from "@/lib/auth";
@@ -23,7 +22,7 @@ export const GET = withAuth(
             }
 
             const needsPhone = !user.phone;
-            const isLead = user.householdId && user.householdLeads.some((lead: any) => lead.householdId === user.householdId);
+            const isLead = user.householdId && user.householdLeads.some((lead: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => lead.householdId === user.householdId);
             
             const needsEmergencyContact = isLead && (!user.household?.emergencyContactName || !user.household?.emergencyContactPhone);
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -13,12 +12,12 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const certs = (session.user as any)?.toolStatuses || [];
-    const hasCertifierAuth = certs.some((ts: any) => ts.level === 'MAY_CERTIFY_OTHERS');
+    const certs = session.user?.toolStatuses || [];
+    const hasCertifierAuth = certs.some((ts: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => ts.level === 'MAY_CERTIFY_OTHERS');
 
-    const isAuthorized = (session.user as any)?.sysadmin ||
-        (session.user as any)?.boardMember ||
-        (session.user as any)?.shopSteward ||
+    const isAuthorized = session.user?.sysadmin ||
+        session.user?.boardMember ||
+        session.user?.shopSteward ||
         hasCertifierAuth;
 
     if (!isAuthorized) {

@@ -1,20 +1,30 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 export default function MergeParticipants() {
     const router = useRouter();
     const [searchA, setSearchA] = useState("");
     const [searchB, setSearchB] = useState("");
-    const [resultsA, setResultsA] = useState<any[]>([]);
-    const [resultsB, setResultsB] = useState<any[]>([]);
+    interface ParticipantMergeView {
+        id: number;
+        email?: string;
+        name?: string;
+        phone?: string;
+        googleId?: string;
+        _count: { visits: number, rawBadgeEvents: number, programParticipants: number, programVolunteers: number };
+        household?: { id: number, name: string, leads: { participant: { name: string, email: string } }[], _count?: { participants: number }, participants: Record<string, unknown>[] } | null;
+        [key: string]: unknown;
+    }
 
-    const [pA, setPA] = useState<any>(null);
-    const [pB, setPB] = useState<any>(null);
+    const [resultsA, setResultsA] = useState<ParticipantMergeView[]>([]);
+    const [resultsB, setResultsB] = useState<ParticipantMergeView[]>([]);
 
-    const [analyzedA, setAnalyzedA] = useState<any>(null);
-    const [analyzedB, setAnalyzedB] = useState<any>(null);
+    const [pA, setPA] = useState<ParticipantMergeView | null>(null);
+    const [pB, setPB] = useState<ParticipantMergeView | null>(null);
+
+    const [analyzedA, setAnalyzedA] = useState<ParticipantMergeView | null>(null);
+    const [analyzedB, setAnalyzedB] = useState<ParticipantMergeView | null>(null);
 
     const [keepId, setKeepId] = useState<number | null>(null);
 
@@ -56,7 +66,7 @@ export default function MergeParticipants() {
                         setAnalyzedB(d.participants[1]);
 
                         // Recommend keeping the one with more activity or better data
-                        const score = (p: any) => {
+                        const score = (p: ParticipantMergeView) => {
                             let s = 0;
                             s += p._count.visits * 2;
                             s += p._count.rawBadgeEvents;
@@ -101,14 +111,14 @@ export default function MergeParticipants() {
             } else {
                 setError(data.error || "Failed to merge");
             }
-        } catch (e: any) {
-            setError(e.message || "Network error");
+        } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : "Network error");
         } finally {
             setMerging(false);
         }
     };
 
-    const renderSearch = (label: string, value: string, setValue: (v: string) => void, results: any[], selected: any, setSelected: (p: any) => void) => (
+    const renderSearch = (label: string, value: string, setValue: (v: string) => void, results: ParticipantMergeView[], selected: ParticipantMergeView | null, setSelected: (p: ParticipantMergeView | null) => void) => (
         <div style={{ flex: 1, position: "relative" }}>
             <label style={{ display: "block", marginBottom: "0.5rem" }}>{label}</label>
             {selected ? (
@@ -143,7 +153,7 @@ export default function MergeParticipants() {
         </div>
     );
 
-    const renderStats = (p: any, isKept: boolean, isLeadWithOthers: boolean) => (
+    const renderStats = (p: ParticipantMergeView, isKept: boolean, isLeadWithOthers: boolean) => (
         <div className="glass-container" style={{ padding: "1.5rem", border: isKept ? "2px solid #22c55e" : "2px solid #ef4444", background: isKept ? "rgba(34, 197, 94, 0.05)" : "rgba(239, 68, 68, 0.05)" }}>
             <h3 style={{ marginTop: 0, color: isKept ? "#4ade80" : "#f87171" }}>
                 {isKept ? "Keep and augment" : "Merge and delete"}
@@ -164,10 +174,10 @@ export default function MergeParticipants() {
 
                 <div style={{ marginTop: "1rem" }}>
                     Household: {p.household ? p.household.name || `Household #${p.household.id}` : "None"}
-                    {p.household && (
+                    {p.household && p.household.participants && (
                         <ul style={{ margin: "0.25rem 0", paddingLeft: "1.2rem" }}>
-                            {p.household.participants.map((hp: any) => (
-                                <li key={hp.id}>{hp.name} {hp.id === p.id && "(This)"} {p.household.leads.find((l:any) => l.participantId === hp.id) && "[Lead]"}</li>
+                            {(p.household.participants as { id: number, name: string | null }[]).map((hp) => (
+                                <li key={hp.id}>{hp.name} {hp.id === p.id && "(This)"} {((p.household!.leads as unknown) as { participantId: number }[]).find((l) => l.participantId === hp.id) && "[Lead]"}</li>
                             ))}
                         </ul>
                     )}
@@ -180,7 +190,7 @@ export default function MergeParticipants() {
                 </div>
             )}
 
-            {!isKept && p.household && !isLeadWithOthers && p.household.participants.length > 1 && (
+            {!isKept && p.household && p.household.participants && !isLeadWithOthers && p.household.participants.length > 1 && (
                 <div style={{ marginTop: "1rem", color: "#eab308", fontWeight: "bold", background: "rgba(234, 179, 8, 0.2)", padding: "0.5rem", borderRadius: "4px" }}>
                     Warning: This participant is in a household with others. They will be removed from that household during deletion.
                 </div>
@@ -210,9 +220,9 @@ export default function MergeParticipants() {
 
     let isLeadWithOthers = false;
     if (mergeParticipant && !previewMode) {
-        const isLead = mergeParticipant.household?.leads.find((l:any) => l.participantId === mergeParticipant.id);
-        const othersCount = mergeParticipant.household?.participants.filter((p:any) => p.id !== mergeParticipant.id).length || 0;
-        isLeadWithOthers = isLead && othersCount > 0;
+        const isLead = mergeParticipant.household?.leads.find((l: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => l.participantId === mergeParticipant.id);
+        const othersCount = (mergeParticipant.household?.participants as { id: number }[] | undefined)?.filter((p) => p.id !== mergeParticipant.id).length || 0;
+        isLeadWithOthers = !!isLead && othersCount > 0;
     }
 
     return (
@@ -265,7 +275,7 @@ export default function MergeParticipants() {
                         </div>
                     )}
                 </>
-            ) : (
+            ) : mergeParticipant && keepParticipant ? (
                 <div className="glass-container" style={{ padding: "2rem", border: "1px solid #eab308" }}>
                     <h2 style={{ marginTop: 0, color: "#facc15" }}>Preview & Confirm Merge</h2>
                     <p><strong>This action is extremely difficult to undo.</strong> Please review the changes below.</p>
@@ -284,7 +294,7 @@ export default function MergeParticipants() {
                         </button>
                     </div>
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

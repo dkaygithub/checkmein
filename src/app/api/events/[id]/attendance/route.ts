@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
@@ -27,9 +26,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ error: "Event not found" }, { status: 404 });
         }
 
-        const currentUserId = (session.user as any).id;
+        const currentUserId = session.user.id;
         const isLeadMentor = event.program?.leadMentorId === currentUserId;
-        const isSysAdminOrBoardOrKeyholder = (session.user as any)?.sysadmin || (session.user as any)?.boardMember || (session.user as any)?.keyholder;
+        const isSysAdminOrBoardOrKeyholder = session.user?.sysadmin || session.user?.boardMember || session.user?.keyholder;
 
         if (!isLeadMentor && !isSysAdminOrBoardOrKeyholder) {
             return NextResponse.json({ error: "Forbidden: Not authorized to validate attendance" }, { status: 403 });

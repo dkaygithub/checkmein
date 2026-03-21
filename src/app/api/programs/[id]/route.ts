@@ -131,8 +131,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             leadMentorId = parseInt(leadMentorId);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
             ...(name !== undefined && { name }),
             ...(leadMentorId !== undefined && { leadMentorId }),
             ...(begin !== undefined && { begin: begin ? new Date(begin) : null }),

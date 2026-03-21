@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @jest-environment node
  */
@@ -84,7 +83,7 @@ describe('Admin Roles API Integration Tests', () => {
 
              const req = new Request('http://localhost:4000/api/admin/roles', { method: 'GET' });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -95,7 +94,7 @@ describe('Admin Roles API Integration Tests', () => {
 
              const req = new Request('http://localhost:4000/api/admin/roles', { method: 'GET' });
 
-             const res = await GET(req as any);
+             const res = await GET(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
              
              const data = await res.json();
@@ -109,14 +108,14 @@ describe('Admin Roles API Integration Tests', () => {
 
             const req = new Request('http://localhost:4000/api/admin/roles', { method: 'GET' });
 
-            const res = await GET(req as any);
+            const res = await GET(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
             expect(data.participants).toBeDefined();
             expect(Array.isArray(data.participants)).toBe(true);
 
-            const ids = data.participants.map((p: any) => p.id);
+            const ids = data.participants.map((p: { id?: number; email?: string; name?: string; participantId?: number; level?: string; status?: string; role?: string; type?: string; [key: string]: unknown }) => p.id);
             expect(ids).toContain(testTargetUserId);
             expect(ids).not.toContain(testStudentId); // Students are filtered out
         });
@@ -131,7 +130,7 @@ describe('Admin Roles API Integration Tests', () => {
                  body: JSON.stringify({ targetUserId: testTargetUserId, boardMember: true })
              });
 
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(401);
         });
 
@@ -145,7 +144,7 @@ describe('Admin Roles API Integration Tests', () => {
                  body: JSON.stringify({ targetUserId: testTargetUserId, boardMember: true })
              });
 
-             const res = await PATCH(req as any);
+             const res = await PATCH(req as unknown as import("next/server").NextRequest);
              expect(res.status).toBe(403);
         });
 
@@ -159,7 +158,7 @@ describe('Admin Roles API Integration Tests', () => {
                 body: JSON.stringify({ boardMember: true })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(400);
         });
 
@@ -173,7 +172,7 @@ describe('Admin Roles API Integration Tests', () => {
                 body: JSON.stringify({ targetUserId: testTargetUserId, sysadmin: true })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(403);
             
             const data = await res.json();
@@ -190,7 +189,7 @@ describe('Admin Roles API Integration Tests', () => {
                 body: JSON.stringify({ targetUserId: testTargetUserId, boardMember: true })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
@@ -211,7 +210,7 @@ describe('Admin Roles API Integration Tests', () => {
                 body: JSON.stringify({ targetUserId: testTargetUserId, sysadmin: true })
             });
 
-            const res = await PATCH(req as any);
+            const res = await PATCH(req as unknown as import("next/server").NextRequest);
             expect(res.status).toBe(200);
 
             const data = await res.json();
