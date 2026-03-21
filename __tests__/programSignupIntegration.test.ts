@@ -68,8 +68,8 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockGetSession = require('next-auth/next').getServerSession;
+import { getServerSession } from 'next-auth/next';
+const mockGetSession = getServerSession;
 
 describe('Full Program Signup Integration Flow', () => {
     const sysAdminId = 1;
@@ -144,8 +144,7 @@ describe('Full Program Signup Integration Flow', () => {
             method: 'POST',
         });
         // @ts-expect-error - Mocking auth session internally used via second argument
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const createHouseholdRes = await CreateHousehold(createHouseholdReq as any, { type: 'session', user: { id: leadUserId } } as any);
+        const createHouseholdRes = await CreateHousehold(createHouseholdReq as unknown as import('next/server').NextRequest, { type: 'session', user: { id: leadUserId } } as unknown as import('next-auth').Session);
         expect(createHouseholdRes.status).toBe(201);
         const createHouseholdData = await createHouseholdRes.json();
         expect(createHouseholdData.household.id).toBe(householdId);
@@ -162,8 +161,7 @@ describe('Full Program Signup Integration Flow', () => {
             }),
         });
         // @ts-expect-error - Mocking auth session internally used via second argument
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const addChildRes = await AddHouseholdMember(addChildReq as any, { type: 'session', user: { id: leadUserId } } as any);
+        const addChildRes = await AddHouseholdMember(addChildReq as unknown as import('next/server').NextRequest, { type: 'session', user: { id: leadUserId } } as unknown as import('next-auth').Session);
         expect(addChildRes.status).toBe(200);
         const addChildData = await addChildRes.json();
         expect(addChildData.member.id).toBe(childParticipantId);

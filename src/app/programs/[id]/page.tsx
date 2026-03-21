@@ -78,8 +78,7 @@ export default function ProgramEnrollmentPage({ params }: { params: Promise<{ id
                 const data = await res.json();
                 if (data.household && data.household.participants) {
                     setHouseholdMembers(data.household.participants);
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const me = data.household.participants.find((p: any) => p.id === currentUserId);
+                    const me = data.household.participants.find((p: { id: number }) => p.id === currentUserId);
                     if (me) setSelectedParticipantId(me.id);
                     else setSelectedParticipantId(data.household.participants[0]?.id || currentUserId);
                 } else {
@@ -170,8 +169,7 @@ export default function ProgramEnrollmentPage({ params }: { params: Promise<{ id
                     let isMember = false;
                     if (householdRes.ok) {
                         const householdData = await householdRes.json();
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        isMember = householdData.household?.memberships?.some((m: any) => m.active) || false;
+                        isMember = householdData.household?.memberships?.some((m: { active: boolean }) => m.active) || false;
                     }
 
                     const variantId = isMember ? program.shopifyMemberVariantId : program.shopifyNonMemberVariantId;
