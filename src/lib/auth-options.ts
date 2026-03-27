@@ -40,6 +40,7 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: config.googleClientId(),
             clientSecret: config.googleClientSecret(),
+            allowDangerousEmailAccountLinking: true,
             authorization: {
                 params: {
                     prompt: "select_account",
